@@ -1,0 +1,15 @@
+# Written and committed BEFORE any .env file exists. Do not reorder this.
+.env
+.env.*
+!.env.example
+node_modules
+dist
+.vercel
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+test-results
+playwright-report
+.DS_Store
+*.log
