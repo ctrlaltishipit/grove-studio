@@ -14,7 +14,7 @@ Budget: ~45 minutes the first time. Every command is copy-paste.
    password manager. Wait for provisioning (~2 min).
 3. **Vercel** — vercel.com → sign up **with your GitHub account** (this is
    what makes deploys automatic).
-4. **Anthropic** — console.anthropic.com → API keys → Create key. Buy the
+4. **Google AI Studio** — aistudio.google.com → Get API key → Create key. The free tier is enough for the demo (note: free-tier content is used by Google to improve products; switch to a paid key before real customer research).
    minimum $5 credit (₹~480). Save the key; it is shown once.
 
 ## Phase 1 — Supabase setup (10 min)
@@ -65,8 +65,8 @@ ever be committed by accident.)
 | `VITE_SUPABASE_ANON_KEY` | the anon public key | public by design |
 | `SUPABASE_URL` | same Project URL | for the Python function |
 | `SUPABASE_SERVICE_ROLE_KEY` | the service_role key | SECRET — never VITE_ |
-| `LLM_API_KEY` | your Anthropic key | SECRET — never VITE_ |
-| `LLM_MODEL` | `claude-sonnet-5` | optional, this is the default |
+| `LLM_API_KEY` | your Google AI Studio key | SECRET — never VITE_ |
+| `LLM_MODEL` | `gemini-2.5-flash` | optional, this is the default; `gemini-3.7-flash` also works |
 
    Leave `VITE_USE_REALTIME` **unset**. Polling is the shipping config.
 4. **Deploy.** You now have `https://grove-app-<something>.vercel.app`.
