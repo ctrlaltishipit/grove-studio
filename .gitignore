@@ -1,0 +1,11 @@
+# Written and committed BEFORE any .env file exists. Do not reorder this.
+node_modules
+dist
+.vercel
+.DS_Store
+
+.env
+.env.*
+!.env.example
+
+*.log
