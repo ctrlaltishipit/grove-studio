@@ -599,11 +599,19 @@ class handler(BaseHTTPRequestHandler):
 
             # --- 4. read the session and every lane (service role bypasses RLS)
             sessions = supa(
-                f"/rest/v1/sessions?id=eq.{sid}&select=id,title,research_question"
+                f"/rest/v1/sessions?id=eq.{sid}"
+                "&select=id,title,research_question,status,created_by"
             )
             if not sessions:
                 return self._fail(404, "SESSION_NOT_FOUND", FAIL)
             session = sessions[0]
+
+            # A finished set of findings may be replaced, but only by the
+            # person who created the session. Otherwise anyone in the room
+            # could overwrite the findings everyone else has already read.
+            if session.get("status") == "synthesised" and session.get("created_by") != uid:
+                return self._fail(403, "NOT_CREATOR",
+                                  "Only the person who created the session can synthesise again.")
 
             participants = supa(
                 f"/rest/v1/participants?session_id=eq.{sid}"
@@ -632,6 +640,17 @@ class handler(BaseHTTPRequestHandler):
         # Nothing about that path is dressed up to look corroborated — every
         # badge reads "1 of 1 observer", in the grey ladder step. Grove does
         # not tell you your own notes agree with you.
+        #
+        # Only notes whose lane belongs to THIS session count. A note carrying
+        # a participant id from anywhere else is discarded here, before either
+        # observer_total or any observer_count is taken, so it cannot raise
+        # either number.
+        valid = {p["id"] for p in participants}
+        kept = [n for n in notes if n["participant_id"] in valid]
+        if len(kept) != len(notes):
+            print(f"[grove] discarded {len(notes) - len(kept)} note(s) "
+                  "with a participant outside this session")
+        notes = kept
         with_notes = {n["participant_id"] for n in notes}
         if len(with_notes) == 1 and len(notes) < SOLO_NOTE_GATE:
             return self._fail(409, "TOO_FEW_NOTES",
@@ -645,9 +664,6 @@ class handler(BaseHTTPRequestHandler):
         # participant uuids are NEVER sent to the model. It has no need for
         # identity, so it does not get identity.
         ordered = [p["id"] for p in participants if p["id"] in with_notes]
-        for pid in with_notes:                       # defensive: a note whose
-            if pid not in ordered:                   # participant row vanished
-                ordered.append(pid)
         label = {pid: f"Observer {i + 1}" for i, pid in enumerate(ordered)}
 
         # owner maps note id -> participant id. THIS is what makes the count
