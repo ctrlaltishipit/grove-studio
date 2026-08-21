@@ -6,7 +6,7 @@ import { Notice } from '../ds/Notice';
 import { OfflineBanner } from '../ds/OfflineBanner';
 import { ensureUser } from '../lib/auth';
 import { loadName, saveLastSession, saveName } from '../lib/storage';
-import { configured, createSession, joinSession } from '../lib/supabase';
+import { configured, createSession } from '../lib/supabase';
 
 export default function Create() {
   const [title, setTitle] = useState('');
@@ -31,8 +31,8 @@ export default function Create() {
     setFailed(false);
     try {
       const user = await ensureUser();
-      const session = await createSession({ title, researchQuestion: question, userId: user.id });
-      await joinSession({ sessionId: session.id, displayName: name, userId: user.id });
+      // createSession joins the creator through join_session() — the one write path for participants.
+      const session = await createSession({ title, researchQuestion: question, displayName: name, userId: user.id });
       saveName(name.trim());
       saveLastSession({ sessionId: session.id, title: session.title, joinCode: session.join_code });
       navigate(`/s/${session.id}`, { replace: true });

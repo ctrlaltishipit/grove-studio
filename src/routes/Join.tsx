@@ -53,8 +53,9 @@ export default function Join() {
     setNameError(null);
     setBusy(true);
     try {
-      const user = await ensureUser();
-      await joinSession({ sessionId: session.id, displayName: name, userId: user.id });
+      // Identity is auth.uid() inside join_session(); the route only has to make sure one exists.
+      await ensureUser();
+      await joinSession({ code, displayName: name });
       saveName(name.trim());
       saveLastSession({ sessionId: session.id, title: session.title, joinCode: session.join_code });
       navigate(`/s/${session.id}`, { replace: true });

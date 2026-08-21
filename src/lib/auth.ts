@@ -8,21 +8,21 @@
 //   2. ensureUser() may be imported only by routes/Create.tsx and routes/Join.tsx —
 //      the two places a person deliberately becomes a participant.
 import type { User } from '@supabase/supabase-js';
-import { supabase } from './supabase';
+import { authClient, configured } from './supabase';
 
 /** The cached session's user, or null. Never signs in. Safe on every route. */
 export async function getCachedUser(): Promise<User | null> {
-  if (!supabase) return null;
-  const { data } = await supabase.auth.getSession();
+  if (!configured) return null;
+  const { data } = await authClient().getSession();
   return data.session?.user ?? null;
 }
 
 /** Sign in anonymously — but NEVER when a cached session exists. */
 export async function ensureUser(): Promise<User> {
-  if (!supabase) throw new Error('not configured');
+  if (!configured) throw new Error('not configured');
   const existing = await getCachedUser();
   if (existing) return existing;
-  const { data, error } = await supabase.auth.signInAnonymously();
+  const { data, error } = await authClient().signInAnonymously();
   if (error) throw error;
   if (!data.user) throw new Error('sign-in returned no user');
   return data.user;
@@ -30,8 +30,8 @@ export async function ensureUser(): Promise<User> {
 
 /** The JWT for the serverless functions. null when there is no session. */
 export async function accessToken(): Promise<string | null> {
-  if (!supabase) return null;
-  const { data } = await supabase.auth.getSession();
+  if (!configured) return null;
+  const { data } = await authClient().getSession();
   return data.session?.access_token ?? null;
 }
 

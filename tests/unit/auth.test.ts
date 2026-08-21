@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { getSession, signInAnonymously } = vi.hoisted(() => ({ getSession: vi.fn(), signInAnonymously: vi.fn() }));
-vi.mock('../../src/lib/supabase', () => ({ supabase: { auth: { getSession, signInAnonymously } } }));
+vi.mock('../../src/lib/supabase', () => ({ configured: true, authClient: () => ({ getSession, signInAnonymously }) }));
 
 import { ensureUser, getCachedUser, isPermanent } from '../../src/lib/auth';
 
