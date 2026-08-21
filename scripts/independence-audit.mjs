@@ -346,11 +346,16 @@ if (exists('dist')) {
   const strip = 'src/ds/RosterStrip.tsx';
   if (exists(strip)) {
     const text = readText(strip) ?? '';
-    const clicks = [...text.matchAll(/onClick/g)];
-    if (clicks.length > 1) {
-      for (const m of clicks) {
-        hit(8, strip, lineOf(text, m.index), `onClick appears ${clicks.length} times (max 1): ${lineText(text, m.index)}`);
+    // The strip's ONLY permitted handler is the collapse toggle. It legitimately
+    // appears in both the collapsed and the expanded render, so the rule is
+    // "every onClick is onClick={onToggle}", not "at most one onClick".
+    for (const m of text.matchAll(/onClick\s*=\s*\{?\s*([A-Za-z_$][\w$.]*|\([^)]*\)\s*=>[^}]*)/g)) {
+      if (m[1] !== 'onToggle') {
+        hit(8, strip, lineOf(text, m.index), `onClick other than onToggle: ${lineText(text, m.index)}`);
       }
+    }
+    for (const m of text.matchAll(/on(MouseEnter|MouseOver|MouseDown|TouchStart|Focus|DoubleClick|ContextMenu)\s*=/g)) {
+      hit(8, strip, lineOf(text, m.index), `hover/press handler on the roster strip: ${lineText(text, m.index)}`);
     }
     for (const [n, l] of eachLine(strip)) {
       if (l.includes('title=')) hit(8, strip, n, l);
