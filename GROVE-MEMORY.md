@@ -13,7 +13,7 @@ private lanes, merge on demand, rank findings by distinct-observer count,
 flag disagreement without resolving it. First for UX research / discovery
 teams and consultancies; hackathon demo is milestone one, not the product.
 
-## 0. v1 — consolidated codebase (started 22 Aug 2026)
+## 0.1 v1 — consolidated codebase (started 22 Aug 2026)
 
 - 2026-08-22 00:44 IST · v1 scaffolded at `~/grove app v1/` (Vite + React 18 + TypeScript strict, plain CSS, tokens verbatim). Build 1 prepared for tonight's submission at `~/grove-submission/` (Gemini `synthesise.py` dropped in — the shipped package was missing it; runbook paths fixed).
 - 2026-08-22 · Decisions (user): Gemini via generateContent · scope MVP + MVP+ · TypeScript · in-app inbox only (no email) · magic link + Google for members, anonymous guests · follow-up agent nudges the owner, escalates to the project owner on "blocked" or 2+ days overdue · Build 1 ships tonight, v1 built properly.
