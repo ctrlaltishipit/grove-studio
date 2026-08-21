@@ -49,7 +49,7 @@ SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or ""
 LLM_API_KEY = os.environ.get("LLM_API_KEY") or ""
 # Model IDs are ENV VARS, not constants, precisely so a stale ID is never
 # discovered at demo time. Verify the current free-tier id at ai.google.dev.
-LLM_MODEL = os.environ.get("LLM_MODEL", "gemini-3.7-flash")
+LLM_MODEL = os.environ.get("LLM_MODEL", "gemini-3.5-flash")
 
 # Same-origin in production (the SPA and the function share a Vercel domain),
 # so CORS is belt-and-braces.  Set ALLOWED_ORIGIN to your production URL if you

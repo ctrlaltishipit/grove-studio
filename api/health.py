@@ -19,7 +19,7 @@ def report():
         "configured": not missing,
         "missing": missing,
         "optional_unset": [n for n in OPTIONAL if not os.environ.get(n)],
-        "model": os.environ.get("LLM_MODEL", "gemini-3.7-flash"),
+        "model": os.environ.get("LLM_MODEL", "gemini-3.5-flash"),
     }
 
 
