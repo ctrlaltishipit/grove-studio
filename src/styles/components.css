@@ -159,8 +159,9 @@
 .chip[data-colour="0"] { background: var(--observer-1); }
 .chip[data-colour="1"] { background: var(--observer-2); }
 /* The one documented light-mode exception: white fails at 3.30:1 on
-   --observer-3; --ink gives 4.61:1. §11.1 */
-.chip[data-colour="2"] { background: var(--observer-3); color: #2A2620; }
+   --observer-3; --ink gives 4.61:1. A token, never a hardcoded label
+   colour. §5.3, §11.1 */
+.chip[data-colour="2"] { background: var(--observer-3); color: var(--ink); }
 .chip[data-colour="3"] { background: var(--observer-4); }
 .chip[data-colour="4"] { background: var(--observer-5); }
 :root[data-theme="dark"] .chip[data-colour="2"] { color: var(--observer-initial-ink); }
@@ -181,8 +182,14 @@
 
 .strip { display: flex; align-items: center; gap: var(--space-4); height: 36px; overflow-x: auto; border-bottom: 1px solid var(--border); background: var(--bg); scrollbar-width: none; }
 .strip::-webkit-scrollbar { display: none; }
+.strip__list  { display: flex; align-items: center; gap: var(--space-4); }
 .strip__item  { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; }
 .strip__count { font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; color: var(--ink); }
+/* Collapsed: a 20px summary row. overflow returns to visible so the toggle's
+   44px hit area (::before, 20 + 12 + 12) is not clipped by the scroll box. */
+.strip--collapsed { height: 20px; overflow: visible; }
+.strip--collapsed .btn { position: relative; height: 20px; padding: 0; font-size: 12px; }
+.strip--collapsed .btn::before { content: ''; position: absolute; inset: -12px 0; }
 @media (max-width: 639px) { .strip { position: sticky; top: 56px; z-index: 14; box-shadow: 0 1px 2px rgba(42,38,32,0.06); } }
 
 /* ---------- 8.9 Corroboration badge — the hero component ---------- */
@@ -219,7 +226,9 @@
 .finding__theme   { margin-top: var(--space-3); }
 .finding__summary { margin-top: var(--space-3); color: var(--ink); max-width: 68ch; }
 .finding__by      { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4); flex-wrap: wrap; }
-.finding:target, .finding--targeted { outline: 2px solid var(--primary); outline-offset: 2px; }
+/* Targeted from the grid: the ring rides on focus itself — the row label
+   moves focus to the card, and the ring leaves when focus does. §8.10 */
+.finding:focus { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 /* ---------- 8.11 Disagreement banner — amber, NEVER red ---------- */
 .disagree {
@@ -241,7 +250,8 @@
    PATTERN reads before any individual dot does. Below 640px the table keeps
    its intrinsic width and scrolls inside the container instead. */
 @media (min-width: 640px) { .cgrid { width: 100%; table-layout: fixed; } }
-.cgrid caption { text-align: left; color: var(--ink-muted); font-size: 13px; margin-bottom: var(--space-3); }
+/* The visible caption is a Label 13 muted paragraph ABOVE the container; the
+   <caption> element itself is visually hidden (.vh) and needs no styling. */
 .cgrid th, .cgrid td { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 0; }
 .cgrid__rowlabel {
   width: var(--grid-label-w-sm);
@@ -269,6 +279,10 @@
 .cgrid__dot[data-colour="4"] { background: var(--observer-5); }
 .cgrid__count { width: 40px; text-align: center; font-size: 12px; font-weight: 500; color: var(--ink-muted); font-variant-numeric: tabular-nums; border-right: 0; }
 .cgrid__head { width: var(--grid-cell-sm); height: 40px; text-align: center; border-bottom: 1px solid var(--border); }
+/* Column-header chips drop to 20px below 640px. §8.7, §8.12 */
+@media (max-width: 639px) {
+  .cgrid__head .chip { width: 20px; height: 20px; flex-basis: 20px; font-size: 10px; }
+}
 @media (min-width: 640px) {
   .cgrid__rowlabel { width: auto; max-width: none; min-width: var(--grid-label-w); position: static; }
   .cgrid__rowlabel button { height: 32px; }
@@ -337,7 +351,11 @@
   animation: grove-fade var(--motion-slow) var(--ease);
   box-shadow: 0 1px 2px rgba(42, 38, 32, 0.06);
 }
-@media (max-width: 639px) { .toast { bottom: 140px; } }
+/* 180ms opacity out, no movement. §8.16 */
+.toast--leaving { opacity: 0; transition: opacity var(--motion-slow) var(--ease); }
+/* On mobile the toast sits 16px clear above the sticky composer, whose
+   measured height the composer publishes as --composer-h. §8.16 */
+@media (max-width: 639px) { .toast { bottom: calc(var(--composer-h, 0px) + var(--space-4)); } }
 
 /* ---------- 8.17 Empty state ---------- */
 .empty { text-align: center; color: var(--ink-muted); padding: var(--space-12) 0; }
@@ -356,6 +374,9 @@
 /* ---------- 8.20 / 8.21 Dictation (amendment A1) ---------- */
 /* Active state is a held --sunken fill. NO colour change, no pulse, no ring,
    no red dot. Capture Mode animates nothing. §8.20 */
+/* The 36px control pads its tap target to 44 × 44. §8.20 */
+.mic { position: relative; }
+.mic::before { content: ''; position: absolute; inset: -4px; }
 .mic[aria-pressed="true"] { background: var(--sunken); color: var(--ink); }
 .recording { display: inline-flex; align-items: center; gap: var(--space-2); margin-left: auto; }
 .recording__time { color: var(--ink-muted); font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
@@ -385,7 +406,6 @@
 .map__hub   { fill: var(--surface); stroke: var(--border-strong); stroke-width: 1; }
 .map__edge  { stroke: var(--border); stroke-width: 1; fill: none; }
 .map__label { fill: var(--ink); font-size: 13px; font-weight: 500; }
-.map__count { fill: var(--ink-muted); font-size: 12px; }
 .map__hubtext { fill: var(--ink); font-size: 13px; font-weight: 500; }
 /* Node size is CONSTANT. Never scaled by count — that would be a heat scale. */
 .map__node[data-colour="0"] { fill: var(--observer-1); }

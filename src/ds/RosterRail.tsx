@@ -24,14 +24,18 @@ export function RosterRail({ roster, meId, loading }: RosterRailProps) {
         <p className="t-body muted">Loading observers.</p>
       ) : (
         <ul aria-live="polite">
+          {/* The accessible name of a row is the display name plus the count,
+              once, and nothing more: the chip is unnamed here because the
+              visible name beside it already carries it. The self marker on
+              the rail is the "(you)" suffix; the chip ring belongs to the
+              strip, where the name drops out. §8.8, §11.3, §11.5 */}
           {roster.map((p) => (
             <li key={p.participant_id} className="rosteritem">
-              <Chip name={p.display_name} colourIndex={p.colour_index} self={p.participant_id === meId} />
+              <Chip name={p.display_name} colourIndex={p.colour_index} named={false} />
               <span className="rosteritem__name">
                 {p.display_name}{p.participant_id === meId ? ' (you)' : ''}
               </span>
               <span className="rosteritem__count">{p.note_count}</span>
-              <span className="vh">{p.display_name}, {p.note_count} notes</span>
             </li>
           ))}
         </ul>

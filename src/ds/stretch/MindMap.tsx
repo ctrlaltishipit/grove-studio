@@ -30,7 +30,8 @@ export function MindMap({ question, findings, roster, supporters }: MindMapProps
   const hubY = H / 2;
   const branchX = 330;
 
-  const short = (t: string) => (t.length > 26 ? `${t.slice(0, 25)}…` : t);
+  // Theme labels truncate at 24 characters, ellipsis included. §8.23
+  const short = (t: string) => (t.length > 24 ? `${t.slice(0, 23)}…` : t);
 
   // Wrap the question into at most two 11-character lines so it sits inside
   // the hub rather than spilling over its edge.
@@ -47,7 +48,9 @@ export function MindMap({ question, findings, roster, supporters }: MindMapProps
     if (out.length === 2 && words.join(' ').length > out.join(' ').length) {
       out[1] = `${out[1].slice(0, 10)}…`;
     }
-    return out.length ? out : ['Session'];
+    // No question → an empty hub. A placeholder standing in for an unknown is
+    // worse than the gap. §9.3
+    return out;
   })();
 
   return (
@@ -82,6 +85,9 @@ export function MindMap({ question, findings, roster, supporters }: MindMapProps
                 <line className="map__disagree" x1={branchX - 8} y1={y - 12} x2={branchX - 8} y2={y + 12} />
               )}
               <text className="map__label" x={branchX} y={y + 4}>{short(f.theme)}</text>
+              {/* One node per contributing observer — the nodes ARE the count.
+                  Printing the number beside them would say it twice; the grid
+                  and the badge already carry the numeral. §8.23 */}
               {supporting.map((p, j) => (
                 <circle
                   key={p.participant_id}
@@ -92,9 +98,6 @@ export function MindMap({ question, findings, roster, supporters }: MindMapProps
                   r={NODE_R}
                 />
               ))}
-              <text className="map__count" x={W - 24} y={y + 4} textAnchor="end">
-                {f.observer_count}/{roster.length}
-              </text>
             </g>
           );
         })}

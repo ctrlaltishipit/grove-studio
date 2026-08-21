@@ -2,21 +2,13 @@
 // GROVE-MASTER.md §8.4, §8.5, §8.20, §8.21.
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from './Icon';
+import { Notice } from './Notice';
 import { Recording } from './Recording';
 import { createDictation, dictationSupported } from '../lib/dictation';
 import type { Dictation } from '../lib/dictation';
+import { DEFAULT_KIND, KINDS } from '../lib/kinds';
+import { loadKind, saveKind } from '../lib/storage';
 import type { NoteKind } from '../lib/models';
-
-interface KindOption {
-  value: NoteKind;
-  label: string;
-}
-
-const KINDS: KindOption[] = [
-  { value: 'observation', label: 'Observation' },
-  { value: 'quote',       label: 'Quote' },
-  { value: 'question',    label: 'Question' },
-];
 
 export interface ComposerProps {
   value: string;
@@ -25,18 +17,31 @@ export interface ComposerProps {
   submitting?: boolean;
   sticky?: boolean;
   error?: boolean;
+  /** When given, the kind selector remembers its choice for this session on
+   *  the device (grove:kind:<sessionId>). §8.5 */
+  sessionId?: string;
 }
 
-export function Composer({ value, onChange, onSubmit, submitting, sticky, error }: ComposerProps) {
-  const [kind, setKind] = useState<NoteKind>('observation');
+export function Composer({ value, onChange, onSubmit, submitting, sticky, error, sessionId }: ComposerProps) {
+  const [kind, setKind] = useState<NoteKind>(() => (sessionId ? loadKind(sessionId) : DEFAULT_KIND));
   const [listening, setListening] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [micError, setMicError] = useState(false);
+  const form = useRef<HTMLFormElement>(null);
   const area = useRef<HTMLTextAreaElement>(null);
   const dictation = useRef<Dictation | null>(null);
   const baseText = useRef('');
+  // Mirrors `listening` for handlers that fire before React re-renders — the
+  // blur that follows Escape, for example.
+  const listeningRef = useRef(false);
+  // Whether the textarea takes focus back when dictation ends. A stop caused
+  // by the textarea losing focus must not steal focus from wherever it went.
+  const refocusOnEnd = useRef(true);
 
   useEffect(() => { area.current?.focus(); }, []);
+
+  // The remembered kind follows the session. §8.5
+  useEffect(() => { if (sessionId) setKind(loadKind(sessionId)); }, [sessionId]);
 
   useEffect(() => {
     if (!listening) return undefined;
@@ -52,14 +57,38 @@ export function Composer({ value, onChange, onSubmit, submitting, sticky, error 
     return () => { document.removeEventListener('visibilitychange', hide); dictation.current?.stop(); };
   }, []);
 
+  // Below 640px the composer is sticky at the bottom; it publishes its height
+  // so the toast can sit 16px clear above it. §8.16
+  useEffect(() => {
+    const el = form.current;
+    if (!sticky || !el || typeof ResizeObserver === 'undefined') return undefined;
+    const root = document.documentElement;
+    const publish = () => root.style.setProperty('--composer-h', `${el.offsetHeight}px`);
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(el);
+    return () => { observer.disconnect(); root.style.removeProperty('--composer-h'); };
+  }, [sticky]);
+
+  const chooseKind = (next: NoteKind) => {
+    setKind(next);
+    if (sessionId) saveKind(sessionId, next);
+  };
+
   const join = (base: string, addition: string): string => {
     if (!addition) return base;
     if (!base) return addition;
     return /\s$/.test(base) ? base + addition : `${base} ${addition}`;
   };
 
+  function stopDictation(refocus: boolean) {
+    if (!listeningRef.current) return;
+    refocusOnEnd.current = refocus;
+    dictation.current?.stop();
+  }
+
   function toggleDictation() {
-    if (listening) { dictation.current?.stop(); return; }
+    if (listeningRef.current) { stopDictation(true); return; }
     setMicError(false);
     setSeconds(0);
     baseText.current = value;
@@ -71,10 +100,16 @@ export function Composer({ value, onChange, onSubmit, submitting, sticky, error 
       onError: (code) => {
         if (code === 'not-allowed' || code === 'service-not-allowed') setMicError(true);
       },
-      onEnd: () => { setListening(false); area.current?.focus(); },
+      onEnd: () => {
+        listeningRef.current = false;
+        setListening(false);
+        if (refocusOnEnd.current) area.current?.focus();
+        refocusOnEnd.current = true;
+      },
     });
     if (!dictation.current) return;
     dictation.current.start();
+    listeningRef.current = true;
     setListening(true);
   }
 
@@ -84,11 +119,12 @@ export function Composer({ value, onChange, onSubmit, submitting, sticky, error 
   return (
     <div>
       {error && (
-        <div className="notice" role="alert" style={{ marginBottom: 'var(--space-4)' }}>
-          <p className="t-body">That note didn&rsquo;t save. It&rsquo;s still in the box — try again.</p>
+        <div style={{ marginBottom: 'var(--space-4)' }}>
+          <Notice>That note didn&rsquo;t save. It&rsquo;s still in the box — try again.</Notice>
         </div>
       )}
       <form
+        ref={form}
         className={`composer${sticky ? ' composer--sticky' : ''}`}
         onSubmit={(e) => { e.preventDefault(); if (!empty) onSubmit(value, kind); }}
       >
@@ -102,11 +138,11 @@ export function Composer({ value, onChange, onSubmit, submitting, sticky, error 
                 aria-checked={kind === k.value}
                 tabIndex={kind === k.value ? 0 : -1}
                 className="segmented__item"
-                onClick={() => setKind(k.value)}
+                onClick={() => chooseKind(k.value)}
                 onKeyDown={(e) => {
                   const i = KINDS.findIndex((x) => x.value === kind);
-                  if (e.key === 'ArrowRight') setKind(KINDS[(i + 1) % KINDS.length].value);
-                  if (e.key === 'ArrowLeft')  setKind(KINDS[(i + KINDS.length - 1) % KINDS.length].value);
+                  if (e.key === 'ArrowRight') chooseKind(KINDS[(i + 1) % KINDS.length].value);
+                  if (e.key === 'ArrowLeft')  chooseKind(KINDS[(i + KINDS.length - 1) % KINDS.length].value);
                 }}
               >
                 {k.label}
@@ -115,21 +151,24 @@ export function Composer({ value, onChange, onSubmit, submitting, sticky, error 
           </div>
 
           {/* Where SpeechRecognition is absent the control does not render.
-              Silently. No message, no disabled state. §8.20 */}
-          {dictationSupported && !listening && (
+              Silently. No message, no disabled state. While listening the same
+              control stays in place as the stop toggle — only the hint slot
+              swaps for the recording indicator. §8.20 */}
+          {dictationSupported && (
             <button
               type="button"
               className="btn btn--ghost btn--icon mic"
-              aria-pressed="false"
-              aria-label="Dictate a note"
+              aria-pressed={listening}
+              aria-label={listening ? 'Stop dictating' : 'Dictate a note'}
               onClick={toggleDictation}
+              onKeyDown={(e) => { if (e.key === 'Escape') stopDictation(false); }}
             >
               <Icon name="mic" />
             </button>
           )}
 
           {listening
-            ? <Recording seconds={seconds} onStop={() => dictation.current?.stop()} />
+            ? <Recording seconds={seconds} onStop={() => stopDictation(true)} />
             : <span className="composer__hint">{modKey} + Enter to add</span>}
         </div>
 
@@ -144,7 +183,16 @@ export function Composer({ value, onChange, onSubmit, submitting, sticky, error 
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !empty) { e.preventDefault(); onSubmit(value, kind); }
-            if (e.key === 'Escape') e.currentTarget.blur(); // blurs WITHOUT clearing
+            // Escape stops dictation first, then blurs WITHOUT clearing. §8.4, §11.4
+            if (e.key === 'Escape') { stopDictation(false); e.currentTarget.blur(); }
+          }}
+          onBlur={(e) => {
+            // Pressing the dictate control or Stop moves focus there first;
+            // that press stops dictation itself and returns focus here. Any
+            // other blur stops it where focus now lives. §8.20
+            const to = e.relatedTarget;
+            if (to instanceof HTMLElement && to.closest('.mic, .recording')) return;
+            stopDictation(false);
           }}
         />
 

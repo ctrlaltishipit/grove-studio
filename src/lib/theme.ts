@@ -13,7 +13,18 @@ export function initTheme(): void {
 
 export function setTheme(next: Theme | null): void {
   saveTheme(next);
+  // No cross-fade between themes (§6.5, §8.19). Every transition is suppressed
+  // while the attribute flips and released two frames later, once the new
+  // colours have painted — so the switch is a cut, not a blend.
+  const root = document.documentElement;
+  root.classList.add('theme-switching');
   initTheme();
+  const release = () => root.classList.remove('theme-switching');
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(() => requestAnimationFrame(release));
+  } else {
+    release();
+  }
 }
 
 export function storedTheme(): Theme | null {

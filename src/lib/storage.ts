@@ -1,6 +1,8 @@
 // Grove — device storage. GROVE-MASTER.md §5.6 / §9.5.
 // EVERY accessor is wrapped in try/catch. Safari private mode throws on write,
 // and an uncaught throw here white-screens the app.
+import type { NoteKind } from './models';
+import { DEFAULT_KIND, isKind } from './kinds';
 
 function get(key: string): string | null {
   try { return localStorage.getItem(key); } catch { return null; }
@@ -22,6 +24,14 @@ export const saveName = (v: string): void => set('grove:displayName', v);
 
 export const loadDraft = (sessionId: string): string => get(`grove:draft:${sessionId}`) || '';
 export const saveDraft = (sessionId: string, v: string): void => set(`grove:draft:${sessionId}`, v);
+
+// The kind selector remembers its choice for the session on the device. §8.5
+// An unknown or missing value renders as the default, never as a blank.
+export const loadKind = (sessionId: string): NoteKind => {
+  const v = get(`grove:kind:${sessionId}`);
+  return isKind(v) ? v : DEFAULT_KIND;
+};
+export const saveKind = (sessionId: string, kind: NoteKind): void => set(`grove:kind:${sessionId}`, kind);
 
 export const loadRosterCollapsed = (): boolean => get('grove:rosterCollapsed') === '1';
 export const saveRosterCollapsed = (v: boolean): void => set('grove:rosterCollapsed', v ? '1' : '0');
