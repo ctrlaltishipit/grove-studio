@@ -17,7 +17,7 @@ One repo, one host, one database, one AI key.
 - Vite + React 18 + react-router v6. Plain CSS custom properties. No UI kit.
 - Supabase: Postgres + anonymous auth. Polling sync by default (`VITE_USE_REALTIME` unset).
 - One Vercel Python function, `api/synthesise.py`, standard library only.
-- Anthropic Messages API (`claude-sonnet-5`), called only from the function.
+- Google Gemini `generateContent` (`gemini-2.5-flash`, env-configurable), called only from the function.
 
 ## Run it
 
@@ -43,6 +43,6 @@ caller's own participant id. RLS stage S5 makes it impossible, not just wrong.
 
 ## Project memory
 
-`CLAUDE.md` (repo root) is the build memory — read it before changing
+`GROVE-MEMORY.md` (repo root) is the build memory — read it before changing
 anything. `GROVE-MEMORY.md` is the living product memory — append what you
 learn, prune what proved false.

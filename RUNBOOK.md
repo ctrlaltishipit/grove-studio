@@ -15,7 +15,6 @@ Budget: ~45 minutes the first time. Every command is copy-paste.
 3. **Vercel** — vercel.com → sign up **with your GitHub account** (this is
    what makes deploys automatic).
 4. **Google AI Studio** — aistudio.google.com → Get API key → Create key. The free tier is enough for the demo (note: free-tier content is used by Google to improve products; switch to a paid key before real customer research).
-   minimum $5 credit (₹~480). Save the key; it is shown once.
 
 ## Phase 1 — Supabase setup (10 min)
 
