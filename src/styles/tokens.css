@@ -1,0 +1,157 @@
+/* ============================================================
+   Grove design tokens.
+   Every value is locked. Do not tune, do not "improve", do not swap
+   in a colour you like more.
+   Every token has a value on bare :root. No colour is defined ONLY
+   inside a media query or a [data-theme] block.
+   ============================================================ */
+
+:root {
+  /* ---------- LIGHT (base) ---------- */
+  --bg:            #FAF8F3;
+  --surface:       #FFFFFF;
+  --sunken:        #F2EEE5;
+  --border:        #E4DDD0;
+  --border-strong: #CFC4B0;
+
+  --ink:        #2A2620;
+  --ink-muted:  #6B6355;
+  --ink-faint:  #9A9080;
+
+  --primary:       #4F7A52;   /* moss */
+  --primary-hover: #3E6341;
+  --primary-soft:  #E8F0E6;
+  --primary-text:  #2F4D31;
+
+  /* CORROBORATION LADDER — the only semantic colour scale in Grove */
+  --corrob-1: #A8A090;   /* 1 observer  */
+  --corrob-2: #7FA37E;   /* 2 observers */
+  --corrob-3: #4F7A52;   /* 3+ observers */
+
+  /* DISAGREEMENT — amber/ochre. NEVER red. */
+  --disagree:      #B07D2E;
+  --disagree-soft: #FAF1E0;
+
+  /* DANGER — destructive actions ONLY. Never for disagreement. */
+  --danger: #A34A3C;
+
+  /* OBSERVER IDENTITY — join order. Identity only, never status. */
+  --observer-1: #4A6FA5;
+  --observer-2: #8E5DA0;
+  --observer-3: #C77D3E;
+  --observer-4: #B5566A;
+  --observer-5: #3F7D8C;
+
+  --badge-ink-1: #2A2620;   /* ink on corrob-1  5.8:1  */
+  --badge-ink-2: #2A2620;   /* ink on corrob-2  5.3:1  */
+  --badge-ink-3: #FFFFFF;   /* white on corrob-3 4.95:1 */
+  --observer-initial-ink: #FFFFFF;
+
+  /* ---------- non-colour tokens ---------- */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --radius-card:  12px;
+  --radius-input: 10px;
+  --radius-badge: 999px;
+
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  --motion-fast: 120ms;
+  --motion-slow: 180ms;
+  --ease: ease-out;          /* ease-out only. Nothing else. */
+
+  --note-size: 17px;         /* capture mode note text */
+
+  color-scheme: light;
+}
+
+/* ---------- DARK via system setting (manual light override wins) ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:            #1B1917;
+    --surface:       #24211E;
+    --sunken:        #151312;
+    --border:        #35312C;
+    --border-strong: #4A443C;
+
+    --ink:       #F0EBE1;
+    --ink-muted: #A79E8F;
+    --ink-faint: #776F63;
+
+    --primary:       #7FB183;
+    --primary-hover: #96C299;
+    --primary-soft:  #2A3529;
+    --primary-text:  #F0EBE1;
+
+    --corrob-1: #6E675C;
+    --corrob-2: #6E9B72;
+    --corrob-3: #7FB183;
+
+    --disagree:      #D9A458;
+    --disagree-soft: #332A1B;
+
+    --danger: #D97A6B;
+
+    --observer-1: #91ADD8;
+    --observer-2: #C4A0CF;
+    --observer-3: #E5B281;
+    --observer-4: #E196A4;
+    --observer-5: #85B6C3;
+
+    --badge-ink-1: #F0EBE1;
+    --badge-ink-2: #1B1917;
+    --badge-ink-3: #1B1917;
+    --observer-initial-ink: #1B1917;
+
+    color-scheme: dark;
+  }
+}
+
+/* ---------- DARK via manual toggle (wins over a light system setting) ---------- */
+:root[data-theme="dark"] {
+  --bg:            #1B1917;
+  --surface:       #24211E;
+  --sunken:        #151312;
+  --border:        #35312C;
+  --border-strong: #4A443C;
+
+  --ink:       #F0EBE1;
+  --ink-muted: #A79E8F;
+  --ink-faint: #776F63;
+
+  --primary:       #7FB183;
+  --primary-hover: #96C299;
+  --primary-soft:  #2A3529;
+  --primary-text:  #F0EBE1;
+
+  --corrob-1: #6E675C;
+  --corrob-2: #6E9B72;
+  --corrob-3: #7FB183;
+
+  --disagree:      #D9A458;
+  --disagree-soft: #332A1B;
+
+  --danger: #D97A6B;
+
+  --observer-1: #91ADD8;
+  --observer-2: #C4A0CF;
+  --observer-3: #E5B281;
+  --observer-4: #E196A4;
+  --observer-5: #85B6C3;
+
+  --badge-ink-1: #F0EBE1;
+  --badge-ink-2: #1B1917;
+  --badge-ink-3: #1B1917;
+  --observer-initial-ink: #1B1917;
+
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] { color-scheme: light; }
