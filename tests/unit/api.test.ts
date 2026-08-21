@@ -35,6 +35,17 @@ describe('synthesise()', () => {
     expect((err as ApiError).message).toBe(CLIENT_COPY.TOO_FEW_OBSERVERS);
   });
 
+  it('NOT_CREATOR maps to its own calm sentence with no exclamation mark', async () => {
+    mockFetch(403, { ok: false, code: 'NOT_CREATOR', message: 'server text never shown' });
+    const err = await synthesise('s').catch((e: unknown) => e as ApiError);
+    expect(err).toBeInstanceOf(ApiError);
+    expect((err as ApiError).status).toBe(403);
+    expect((err as ApiError).code).toBe('NOT_CREATOR');
+    expect((err as ApiError).message).toBe('Only the person who created the session can synthesise again.');
+    expect((err as ApiError).message).toBe(CLIENT_COPY.NOT_CREATOR);
+    expect((err as ApiError).message).not.toMatch(/!/);
+  });
+
   it('falls back to the one generic sentence on an unknown code or a non-JSON body', async () => {
     mockFetch(500, { ok: false, code: 'SOMETHING_NEW' });
     const a = await synthesise('s').catch((e: unknown) => e as ApiError);

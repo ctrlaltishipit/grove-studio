@@ -6,7 +6,7 @@ import { accessToken } from './auth';
 import type { Finding } from './models';
 
 export type ApiCode =
-  | 'BAD_REQUEST' | 'UNAUTHORISED' | 'NOT_A_PARTICIPANT' | 'SESSION_NOT_FOUND'
+  | 'BAD_REQUEST' | 'UNAUTHORISED' | 'NOT_A_PARTICIPANT' | 'NOT_CREATOR' | 'SESSION_NOT_FOUND'
   | 'TOO_FEW_OBSERVERS' | 'TOO_FEW_NOTES' | 'LLM_BAD_JSON' | 'LLM_TIMEOUT' | 'INTERNAL' | 'FALLBACK';
 
 export class ApiError extends Error {
@@ -24,6 +24,7 @@ export const CLIENT_COPY: Record<ApiCode, string> = {
   BAD_REQUEST: 'Something went wrong with that request. Your notes are saved.',
   UNAUTHORISED: 'Your session expired. Reload the page.',
   NOT_A_PARTICIPANT: 'You are not a participant of this session.',
+  NOT_CREATOR: 'Only the person who created the session can synthesise again.',
   SESSION_NOT_FOUND: "Synthesis didn't complete. Your notes are saved. Try again.",
   TOO_FEW_OBSERVERS: 'Synthesis needs at least two observers with notes.',
   TOO_FEW_NOTES: 'Synthesis needs at least 3 notes.',

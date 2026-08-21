@@ -12,8 +12,15 @@
 //   - `.from(`, `.rpc(`, `createClient(` appear nowhere else in src/.
 //   - every from('notes') statement carries .eq('participant_id', …) and an
 //     explicit column list — never select('*').
-//   - this module never calls supabase.auth.* — identity is passed in as a
+//   - this module never calls auth.* itself — identity is passed in as a
 //     userId by the route (see auth.ts), so nothing here can sign anyone in.
+//     authClient() hands the auth surface to auth.ts; the raw client is private.
+//
+// Participants have ONE write path: the SECURITY DEFINER function join_session().
+//   Direct INSERT on public.participants is revoked from anon and authenticated,
+//   so the client cannot create a second row for the same (session, user) and
+//   inflate observer_count — the one number Grove exists to produce. Creating a
+//   session joins its creator through the same function as everyone else.
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Finding, FindingObserver, Note, NoteKind, Participant, RosterRow, Session } from './models';
 
@@ -23,14 +30,18 @@ const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
 /** False until VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set. The UI renders a notice, not a crash. */
 export const configured = Boolean(url && key);
 
-export const supabase: SupabaseClient | null = configured
+// Module-private on purpose: no other file may hold the client, so no other file can query.
+const client: SupabaseClient | null = configured
   ? createClient(url as string, key as string, { auth: { persistSession: true, autoRefreshToken: true } })
   : null;
 
 function db(): SupabaseClient {
-  if (!supabase) throw new Error('not configured');
-  return supabase;
+  if (!client) throw new Error('not configured');
+  return client;
 }
+
+/** The only auth surface leaving this module. Consumed by auth.ts alone; nothing here calls it. */
+export const authClient = () => db().auth;
 
 const SESSION_COLS = 'id, title, research_question, join_code, status, created_by, created_at';
 const PARTICIPANT_COLS = 'id, session_id, display_name, user_id, colour_index, last_seen_at, joined_at';
@@ -48,7 +59,9 @@ export interface SessionLookup {
 
 /* ---------------- sessions ---------------- */
 
-export async function createSession(args: { title: string; researchQuestion: string; userId: string }): Promise<Session> {
+/** Inserts the session row, then joins its creator through join_session() — the same path as
+ *  every other observer, so there is no second way to become a participant. */
+export async function createSession(args: { title: string; researchQuestion: string; displayName: string; userId: string }): Promise<Session> {
   const { data, error } = await db()
     .from('sessions')
     .insert({ title: args.title.trim(), research_question: args.researchQuestion.trim(), created_by: args.userId })
@@ -56,7 +69,9 @@ export async function createSession(args: { title: string; researchQuestion: str
     .single();
   if (error) throw error;
   // join_code comes from the Postgres column default (gen_join_code()) — never the client.
-  return data as Session;
+  const session = data as Session;
+  await joinSession({ code: session.join_code, displayName: args.displayName });
+  return session;
 }
 
 export async function getSession(sessionId: string): Promise<Session | null> {
@@ -77,27 +92,20 @@ export async function lookupSessionByCode(rawCode: string): Promise<SessionLooku
 
 /* ---------------- participants ---------------- */
 
-/** Reuses an existing participant row for this (session, user). A duplicate would silently
- *  inflate observer_count — the one number Grove exists to produce. colour_index is assigned
- *  by a SECURITY DEFINER trigger in Postgres; the client never sends it. */
-export async function joinSession(args: { sessionId: string; displayName: string; userId: string }): Promise<Participant> {
-  const mine = await getMyParticipant(args.sessionId, args.userId);
-  if (mine) return mine;
-
-  const { data, error } = await db()
-    .from('participants')
-    .insert({ session_id: args.sessionId, display_name: args.displayName.trim(), user_id: args.userId })
-    .select(PARTICIPANT_COLS)
-    .single();
-  if (error) {
-    // 23505 = unique_violation on (session_id, user_id): two tabs raced. The row exists; read it.
-    if ((error as { code?: string }).code === '23505') {
-      const again = await getMyParticipant(args.sessionId, args.userId);
-      if (again) return again;
-    }
-    throw error;
-  }
-  return data as Participant;
+/** THE ONLY WRITE PATH FOR PARTICIPANTS. join_session() is a SECURITY DEFINER function that
+ *  resolves the code, requires the session to be live, and reuses an existing participant row
+ *  for this (session, user) before it inserts one. A duplicate would silently inflate
+ *  observer_count — the one number Grove exists to produce — and because the reuse happens
+ *  inside Postgres, two tabs racing cannot produce one. colour_index is assigned by a
+ *  SECURITY DEFINER trigger in Postgres; the client never sends it. Identity is auth.uid()
+ *  on the server, so no userId crosses the wire. */
+export async function joinSession(args: { code: string; displayName: string }): Promise<Participant> {
+  const { data, error } = await db().rpc('join_session', { p_code: args.code, p_display_name: args.displayName });
+  if (error) throw error;
+  const rows = (data as Participant[] | null) ?? [];
+  const row = rows[0];
+  if (!row) throw new Error('join returned no row');
+  return row;
 }
 
 export async function getMyParticipant(sessionId: string, userId: string): Promise<Participant | null> {
