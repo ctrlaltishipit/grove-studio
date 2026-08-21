@@ -57,19 +57,20 @@ export function Receipt({ observers, notes, at, solo }: ReceiptProps) {
         {tail && <span className="receipt__sep" aria-hidden="true"> · </span>}
         {tail && <span className="receipt__seg">{tail}</span>}
       </p>
-      {!solo && (
-        <details className="receipt__more" open={open} onToggle={onToggle}>
-          <summary>
-            <span className="receipt__chev" aria-hidden="true"><Icon name="chev" size={12} /></span>
-            How this was enforced
-          </summary>
-          <p className="t-body receipt__body">
-            During capture, each observer&rsquo;s notes are readable only by that observer. The roster
-            query returns names, colours and note counts, and never note bodies. Synthesis is the
-            first and only read across lanes, and it runs on the server.
-          </p>
-        </details>
-      )}
+      {/* The disclosure is part of the receipt's anatomy in every state — solo
+          included. Only the lane CLAUSE is omitted in solo mode; how the lanes
+          were enforced is still true and still worth stating. §8.14, S10 */}
+      <details className="receipt__more" open={open} onToggle={onToggle}>
+        <summary>
+          <span className="receipt__chev" aria-hidden="true"><Icon name="chev" size={12} /></span>
+          How this was enforced
+        </summary>
+        <p className="t-body receipt__body">
+          During capture, each observer&rsquo;s notes are readable only by that observer. The roster
+          query returns names, colours and note counts, and never note bodies. Synthesis is the
+          first and only read across lanes, and it runs on the server.
+        </p>
+      </details>
       <hr className="rule" style={{ marginTop: 'var(--space-6)' }} />
     </section>
   );

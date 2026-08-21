@@ -3,6 +3,8 @@
 // for another observer's note; that view does not exist. GROVE-MASTER.md §8.6.
 import { useState } from 'react';
 import type { Note } from '../lib/models';
+import { kindLabel } from '../lib/kinds';
+import { istTime } from '../lib/time';
 
 export interface NoteCardProps {
   note: Note;
@@ -15,9 +17,8 @@ export function NoteCard({ note, onSave, onDelete }: NoteCardProps) {
   const [confirming, setConfirming] = useState(false);
   const [draft, setDraft] = useState(note.body);
 
-  const time = new Date(note.created_at).toLocaleTimeString('en-IN', {
-    hour: '2-digit', minute: '2-digit', hour12: false,
-  });
+  // Times are IST, 24-hour, wherever Grove shows one. §9.3
+  const time = istTime(note.created_at);
 
   if (editing) {
     return (
@@ -55,7 +56,7 @@ export function NoteCard({ note, onSave, onDelete }: NoteCardProps) {
           </>
         ) : (
           <>
-            <span>{note.kind}</span>
+            <span>{kindLabel(note.kind)}</span>
             <span aria-hidden="true">·</span>
             <span className="tabular">{note.pending ? 'Saving.' : note.failed ? 'Not saved.' : time}</span>
             {!note.pending && !note.failed && (

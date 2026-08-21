@@ -141,6 +141,12 @@ a.wordmark { text-decoration: none; }
 .fade-in-once { animation: grove-fade var(--motion-slow) var(--ease) both; }
 @keyframes grove-fade { from { opacity: 0; } to { opacity: 1; } }
 
+/* Theme switches are a cut, never a cross-fade. §6.5, §8.19. The class is
+   held on <html> by setTheme() for two frames around the attribute flip. */
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after { transition: none !important; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

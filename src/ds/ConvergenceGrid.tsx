@@ -3,6 +3,7 @@ import type { Finding, RosterRow } from '../lib/models';
 import { Chip } from './Chip';
 
 export interface ConvergenceGridProps {
+  /** Row order is the CARD order — observer_count descending, as ranked. §8.12 */
   findings: Finding[];
   /** Columns are roster rows, in join order: names, colours, counts — never note text. */
   roster: RosterRow[];
@@ -29,51 +30,60 @@ export function ConvergenceGrid({ findings, roster, supporters }: ConvergenceGri
   const focusCard = (id: string) => {
     const el = document.getElementById(`finding-${id}`);
     if (!el) return;
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Instant, not smooth — nothing in Grove glides. §6.5
+    el.scrollIntoView({ block: 'center' });
     el.focus({ preventScroll: true });
   };
 
   return (
-    <div className="gridbox">
-      <table className="cgrid">
-        <caption>{caption}</caption>
-        <thead>
-          <tr>
-            <th scope="col" className="cgrid__rowlabel"><span className="vh">Finding</span></th>
-            {roster.map((p) => (
-              <th key={p.participant_id} scope="col" className="cgrid__head">
-                <span style={{ display: 'inline-flex' }}>
-                  <Chip name={p.display_name} colourIndex={p.colour_index} />
-                </span>
-              </th>
-            ))}
-            <th scope="col" className="cgrid__count"><span className="vh">Observers</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((f) => {
-            const set = supporters.get(f.id) || new Set<string>();
-            return (
-              <tr key={f.id}>
-                <th
-                  scope="row"
-                  className={`cgrid__rowlabel${f.has_disagreement ? ' cgrid__rowlabel--disagree' : ''}`}
-                >
-                  <button type="button" onClick={() => focusCard(f.id)}>{f.theme}</button>
+    <>
+      {/* The caption sits ABOVE the container (§8.12); the <caption> itself is
+          visually hidden so screen readers keep the table's name without the
+          text rendering twice. */}
+      <p className="t-label muted" aria-hidden="true" style={{ marginBottom: 'var(--space-3)' }}>
+        {caption}
+      </p>
+      <div className="gridbox">
+        <table className="cgrid">
+          <caption className="vh">{caption}</caption>
+          <thead>
+            <tr>
+              <th scope="col" className="cgrid__rowlabel"><span className="vh">Finding</span></th>
+              {roster.map((p) => (
+                <th key={p.participant_id} scope="col" className="cgrid__head">
+                  <span style={{ display: 'inline-flex' }}>
+                    <Chip name={p.display_name} colourIndex={p.colour_index} />
+                  </span>
                 </th>
-                {roster.map((p) => (
-                  <td key={p.participant_id} className="cgrid__cell">
-                    {set.has(p.participant_id)
-                      ? <><span className="cgrid__dot" data-colour={p.colour_index % 5} /><span className="vh">{p.display_name} supported this</span></>
-                      : <span className="vh">{p.display_name} did not support this</span>}
-                  </td>
-                ))}
-                <td className="cgrid__count">{f.observer_count}/{roster.length}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+              ))}
+              <th scope="col" className="cgrid__count"><span className="vh">Observers</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((f) => {
+              const set = supporters.get(f.id) || new Set<string>();
+              return (
+                <tr key={f.id}>
+                  <th
+                    scope="row"
+                    className={`cgrid__rowlabel${f.has_disagreement ? ' cgrid__rowlabel--disagree' : ''}`}
+                  >
+                    <button type="button" onClick={() => focusCard(f.id)}>{f.theme}</button>
+                  </th>
+                  {roster.map((p) => (
+                    <td key={p.participant_id} className="cgrid__cell">
+                      {set.has(p.participant_id)
+                        ? <><span className="cgrid__dot" data-colour={p.colour_index % 5} /><span className="vh">{p.display_name} supported this</span></>
+                        : <span className="vh">not supported</span>}
+                    </td>
+                  ))}
+                  <td className="cgrid__count">{f.observer_count}/{roster.length}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }

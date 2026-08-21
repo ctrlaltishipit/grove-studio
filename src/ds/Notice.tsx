@@ -9,7 +9,9 @@ export interface NoticeProps {
 
 export function Notice({ children, action }: NoticeProps) {
   return (
-    <div className="notice" role="alert">
+    // Polite, not assertive: nothing in Grove interrupts a screen-reader user
+    // mid-sentence. §11.5
+    <div className="notice" role="status">
       <p className="t-body">{children}</p>
       {action && <div style={{ marginTop: 'var(--space-3)' }}>{action}</div>}
     </div>
