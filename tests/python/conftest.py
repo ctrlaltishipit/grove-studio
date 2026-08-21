@@ -68,7 +68,7 @@ class FakeSupa:
         return None
 
 
-def seeded_reads(notes=None, participants=None):
+def seeded_reads(notes=None, participants=None, status="live", created_by="user-1"):
     notes = notes if notes is not None else [
         {"id": N[0], "participant_id": P1, "kind": "observation", "body": "Insurance number step is where she stopped"},
         {"id": N[1], "participant_id": P2, "kind": "observation", "body": "Abandoned at the insurance field"},
@@ -87,7 +87,8 @@ def seeded_reads(notes=None, participants=None):
     return {
         f"/rest/v1/participants?session_id=eq.{SESSION_ID}&user_id=": [{"id": P1}],
         f"/rest/v1/participants?session_id=eq.{SESSION_ID}&select=id,joined_at": participants,
-        f"/rest/v1/sessions?id=eq.{SESSION_ID}": [{"id": SESSION_ID, "title": "Clinic booking", "research_question": "Why abandon?"}],
+        f"/rest/v1/sessions?id=eq.{SESSION_ID}": [{"id": SESSION_ID, "title": "Clinic booking", "research_question": "Why abandon?",
+                                                   "status": status, "created_by": created_by}],
         f"/rest/v1/notes?session_id=eq.{SESSION_ID}": notes,
     }
 

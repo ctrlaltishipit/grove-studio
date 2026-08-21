@@ -231,3 +231,78 @@ def test_model_never_sees_names_or_participant_uuids(server, monkeypatch):
     assert "Observer 1" in prompt and "Observer 3" in prompt
     for pid in (P1, P2, P3):
         assert pid not in prompt
+
+
+# ---------------------------------------------------------------- lane integrity
+# A note whose participant_id belongs to some OTHER session must not count.
+# Before the filter, one planted row raised observer_total and any
+# observer_count that cited it — the number the product is built on.
+NX = "bbbbbbbb-0000-4000-8000-000000000009"
+PX = "a4444444-4444-4444-8444-444444444444"
+
+
+def test_note_from_outside_the_session_is_discarded_before_counting(server, monkeypatch):
+    monkeypatch.setattr(synthesise, "auth_user", lambda jwt: "user-1")
+    notes = seeded_reads()[f"/rest/v1/notes?session_id=eq.{SESSION_ID}"] + [
+        {"id": NX, "participant_id": PX, "kind": "observation", "body": "Planted from another session"}]
+    fake = FakeSupa(seeded_reads(notes=notes))
+    monkeypatch.setattr(synthesise, "supa", fake)
+    out = good_findings()
+    out["findings"][0]["supporting_note_ids"] = [N[0], N[1], N[2], NX]
+    seen = {}
+    monkeypatch.setattr(synthesise, "call_llm", lambda p: (seen.setdefault("prompt", p), json.dumps(out))[1])
+    status, body = post(server)
+    assert status == 200 and body["observer_total"] == 3
+    top = body["findings"][0]
+    assert top["observer_count"] == 3 and top["supporting_note_ids"] == [N[0], N[1], N[2]]
+    assert NX not in seen["prompt"] and "Observer 4" not in seen["prompt"]
+
+
+def test_foreign_notes_alone_cannot_arm_synthesis(server, monkeypatch):
+    monkeypatch.setattr(synthesise, "auth_user", lambda jwt: "user-1")
+    notes = [{"id": N[i], "participant_id": PX, "kind": "observation", "body": f"planted {i}"} for i in range(4)]
+    fake = FakeSupa(seeded_reads(notes=notes))
+    monkeypatch.setattr(synthesise, "supa", fake)
+    calls = []
+    monkeypatch.setattr(synthesise, "call_llm", lambda p: (calls.append(1), json.dumps(good_findings()))[1])
+    status, body = post(server)
+    assert status == 409 and body["code"] == "TOO_FEW_OBSERVERS"
+    assert calls == []
+    assert not [c for c in fake.calls if c[0] in ("POST", "DELETE", "PATCH")]
+
+
+# ---------------------------------------------------------------- re-synthesis gate
+def test_resynthesis_by_non_creator_403_and_no_writes(server, monkeypatch):
+    monkeypatch.setattr(synthesise, "auth_user", lambda jwt: "user-1")
+    fake = FakeSupa(seeded_reads(status="synthesised", created_by="user-2"))
+    monkeypatch.setattr(synthesise, "supa", fake)
+    calls = []
+    monkeypatch.setattr(synthesise, "call_llm", lambda p: (calls.append(1), json.dumps(good_findings()))[1])
+    status, body = post(server)
+    assert status == 403 and body["code"] == "NOT_CREATOR"
+    assert body["message"] == "Only the person who created the session can synthesise again."
+    assert calls == []
+    assert not [c for c in fake.calls if c[0] in ("POST", "DELETE", "PATCH")]
+    # The gate can only work if the session read asks for both columns.
+    session_read = [c[1] for c in fake.calls if c[0] == "GET" and c[1].startswith("/rest/v1/sessions?")][0]
+    assert "status" in session_read and "created_by" in session_read
+
+
+def test_creator_may_resynthesise(server, monkeypatch):
+    monkeypatch.setattr(synthesise, "auth_user", lambda jwt: "user-1")
+    fake = FakeSupa(seeded_reads(status="synthesised", created_by="user-1"))
+    monkeypatch.setattr(synthesise, "supa", fake)
+    monkeypatch.setattr(synthesise, "call_llm", lambda p: json.dumps(good_findings()))
+    status, body = post(server)
+    assert status == 200 and body["ok"] and body["observer_total"] == 3
+    assert [c[0] for c in fake.calls if c[0] in ("POST", "DELETE", "PATCH")] == ["DELETE", "POST", "PATCH"]
+
+
+def test_live_session_does_not_need_the_creator(server, monkeypatch):
+    monkeypatch.setattr(synthesise, "auth_user", lambda jwt: "user-1")
+    fake = FakeSupa(seeded_reads(status="live", created_by="user-2"))
+    monkeypatch.setattr(synthesise, "supa", fake)
+    monkeypatch.setattr(synthesise, "call_llm", lambda p: json.dumps(good_findings()))
+    status, body = post(server)
+    assert status == 200 and body["ok"]
+    assert [c[0] for c in fake.calls if c[0] in ("POST", "DELETE", "PATCH")] == ["DELETE", "POST", "PATCH"]
