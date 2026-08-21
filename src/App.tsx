@@ -1,4 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { Styleguide } from './routes/Styleguide';
+import { DevCapture } from './routes/dev/DevCapture';
+import { DevFindings } from './routes/dev/DevFindings';
 
 // Routes are added phase by phase. Until Phase 2 lands, every path renders the
 // wordmark so the build, the theme and the tokens can be verified.
@@ -16,6 +19,11 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Placeholder />} />
+        <Route path="/styleguide" element={<Styleguide />} />
+        {/* Fixture data. Dev builds only — a production build must never
+            render fabricated findings. */}
+        {import.meta.env.DEV && <Route path="/__preview/capture" element={<DevCapture />} />}
+        {import.meta.env.DEV && <Route path="/__preview/findings" element={<DevFindings />} />}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
