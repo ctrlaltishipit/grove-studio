@@ -13,6 +13,15 @@ private lanes, merge on demand, rank findings by distinct-observer count,
 flag disagreement without resolving it. First for UX research / discovery
 teams and consultancies; hackathon demo is milestone one, not the product.
 
+## 0. v1 — consolidated codebase (started 22 Aug 2026)
+
+- 2026-08-22 00:44 IST · v1 scaffolded at `~/grove app v1/` (Vite + React 18 + TypeScript strict, plain CSS, tokens verbatim). Build 1 prepared for tonight's submission at `~/grove-submission/` (Gemini `synthesise.py` dropped in — the shipped package was missing it; runbook paths fixed).
+- 2026-08-22 · Decisions (user): Gemini via generateContent · scope MVP + MVP+ · TypeScript · in-app inbox only (no email) · magic link + Google for members, anonymous guests · follow-up agent nudges the owner, escalates to the project owner on "blocked" or 2+ days overdue · Build 1 ships tonight, v1 built properly.
+- 2026-08-22 · Engine ported (`api/synthesise.py`): Gemini 3 schema ladder responseJsonSchema → responseSchema → plain; temperature left at default on 3.x; thinkingLevel LOW; thought parts ignored. 38 pytest cases pin validate(), ranking, hallucinated-id discard, distinct-observer counting, the ladder, and the handler's status codes.
+- 2026-08-22 · VERIFIED with the user's key: `gemini-2.5-flash` and `gemini-2.5-flash-lite` return 404 "no longer available to new users" — every default of `gemini-2.5-flash` in older files is dead. `gemini-3.7-flash` at LOW thinking timed out (66–75 s) on tiny prompts; `gemini-3.5-flash-lite` (MINIMAL) answered in 1.4 s. `MINIMAL` is rejected by 3.7-flash. Final model choice recorded below once the 24-note seed run completes.
+- 2026-08-22 · Bugs fixed by design in v1 (both React builds shared them): colour index collapsing to 0 after RLS (SECURITY DEFINER trigger); share link signing visitors in anonymously (getCachedUser never signs in); four Findings reads that return only your own rows under RLS (all roster/observer data via RPCs); `sessions_select using (true)` leaking join codes (lookup_session_by_code RPC + tightened policy); `notes` in the Realtime publication (removed — DELETE events bypass RLS).
+- 2026-08-22 · Security incident, contained: the user pasted the AI Studio key into `.env.example` (working tree only, never committed). Moved to git-ignored `.env.local`; placeholder restored; audit rule 10 now catches `AQ.`-format keys as well as `AIza`.
+
 ## 1. Current state — update every session
 
 - 2026-08-21 (late) · THE FORK: a second, parallel build discovered in the
