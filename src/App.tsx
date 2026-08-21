@@ -4,9 +4,9 @@ import Create from './routes/Create';
 import Join from './routes/Join';
 import Capture from './routes/Capture';
 import Findings from './routes/Findings';
-import Styleguide from './routes/Styleguide';
-import DevCapture from './routes/dev/DevCapture';
-import DevFindings from './routes/dev/DevFindings';
+import { Styleguide } from './routes/Styleguide';
+import { DevCapture } from './routes/dev/DevCapture';
+import { DevFindings } from './routes/dev/DevFindings';
 
 export default function App() {
   return (
