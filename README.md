@@ -17,7 +17,7 @@ One repo, one host, one database, one AI key.
 - Vite + React 18 + react-router v6. Plain CSS custom properties. No UI kit.
 - Supabase: Postgres + anonymous auth. Polling sync by default (`VITE_USE_REALTIME` unset).
 - One Vercel Python function, `api/synthesise.py`, standard library only.
-- Google Gemini `generateContent` (`gemini-2.5-flash`, env-configurable), called only from the function.
+- Google Gemini `generateContent` (`gemini-3.5-flash-lite`, env-configurable), called only from the function.
 
 ## Run it
 

@@ -65,7 +65,7 @@ ever be committed by accident.)
 | `SUPABASE_URL` | same Project URL | for the Python function |
 | `SUPABASE_SERVICE_ROLE_KEY` | the service_role key | SECRET — never VITE_ |
 | `LLM_API_KEY` | your Google AI Studio key | SECRET — never VITE_ |
-| `LLM_MODEL` | `gemini-2.5-flash` | optional, this is the default; `gemini-3.7-flash` also works |
+| `LLM_MODEL` | `gemini-3.5-flash-lite` | set it explicitly. Verified 22 Aug 2026: 24-note synthesis in 5 s. `gemini-2.5-*` ids return 404 for new keys. |
 
    Leave `VITE_USE_REALTIME` **unset**. Polling is the shipping config.
 4. **Deploy.** You now have `https://grove-app-<something>.vercel.app`.
