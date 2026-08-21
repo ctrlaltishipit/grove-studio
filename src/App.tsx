@@ -1,0 +1,23 @@
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+
+// Routes are added phase by phase. Until Phase 2 lands, every path renders the
+// wordmark so the build, the theme and the tokens can be verified.
+function Placeholder() {
+  return (
+    <main className="page col-content" style={{ paddingTop: 'var(--space-12)' }}>
+      <span className="wordmark">Grove</span>
+      <p className="t-body muted" style={{ marginTop: 'var(--space-4)' }}>Scaffold. Routes arrive in Phase 2.</p>
+    </main>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Placeholder />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}

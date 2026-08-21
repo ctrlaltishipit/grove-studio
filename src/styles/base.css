@@ -1,0 +1,151 @@
+/* ============================================================
+   GROVE — base
+   Reset, type scale, layout primitives, focus, motion.
+   Imported after tokens.css and before components.css.
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  /* body ALWAYS paints an explicit background. A transparent body borrows
+     its host's colour and looks broken in the opposite theme. §5.1 */
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* The page body NEVER scrolls horizontally. §10 */
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, p, figure, blockquote { margin: 0; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+img, svg { display: block; max-width: 100%; }
+
+button, input, textarea, select {
+  font: inherit;
+  color: inherit;
+  margin: 0;
+}
+button { background: none; border: none; padding: 0; cursor: pointer; }
+
+/* ---------- focus: 2px --primary ring at 2px offset, both themes ---------- */
+:focus { outline: none; }
+:focus-visible {
+  outline: var(--focus-ring) solid var(--primary);
+  outline-offset: var(--focus-offset);
+  border-radius: var(--radius-input);
+}
+
+/* ---------- type scale (§6.1) ---------- */
+.t-display  { font-size: 32px; line-height: 1.15; font-weight: 650; letter-spacing: -0.02em; }
+.t-h1       { font-size: 24px; line-height: 1.25; font-weight: 650; letter-spacing: -0.01em; }
+.t-h2       { font-size: 20px; line-height: 1.30; font-weight: 650; }
+.t-h3       { font-size: 17px; line-height: 1.35; font-weight: 500; }
+.t-note     { font-size: var(--note-size); line-height: 1.60; font-weight: 400; }
+.t-body     { font-size: 15px; line-height: 1.55; font-weight: 400; }
+.t-badge    { font-size: 15px; line-height: 1.00; font-weight: 650; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.t-label    { font-size: 13px; line-height: 1.40; font-weight: 500; }
+.t-receipt  { font-size: var(--receipt-size); line-height: 1.50; font-weight: 400; letter-spacing: 0.005em; font-variant-numeric: tabular-nums; }
+.t-micro    { font-size: 12px; line-height: 1.40; font-weight: 500; }
+.t-tracked  { font-size: 11px; line-height: 1.20; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; }
+.t-code     { font-family: var(--font-mono); font-size: 20px; line-height: 1.20; font-weight: 650; letter-spacing: 0.12em; }
+
+.muted  { color: var(--ink-muted); }
+/* DECORATIVE ONLY — fails AA in both themes. Never for read text. §11.2 */
+.faint  { color: var(--ink-faint); }
+.tabular{ font-variant-numeric: tabular-nums; }
+/* Measure cap: 68–72 characters. §6.1 */
+.measure{ max-width: 68ch; }
+
+/* ---------- layout ---------- */
+.page {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+}
+@media (min-width: 640px)  { .page { padding: 0 var(--space-6); } }
+@media (min-width: 1024px) { .page { padding: 0 var(--space-8); } }
+
+.col-narrow  { max-width: 480px; margin: 0 auto; }
+.col-form    { max-width: 560px; margin: 0 auto; }
+.col-content { max-width: 880px; margin: 0 auto; }
+.col-read    { max-width: var(--column-max); }
+
+.stack       { display: flex; flex-direction: column; }
+.stack-2 > * + * { margin-top: var(--space-2); }
+.stack-3 > * + * { margin-top: var(--space-3); }
+.stack-4 > * + * { margin-top: var(--space-4); }
+.stack-6 > * + * { margin-top: var(--space-6); }
+.stack-8 > * + * { margin-top: var(--space-8); }
+.row  { display: flex; align-items: center; gap: var(--space-2); }
+.spacer { flex: 1 1 auto; }
+.center { text-align: center; }
+
+/* ---------- surfaces: elevation 0 and 1. There is no level 2. §6.4 ---------- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--space-4);
+}
+@media (min-width: 640px) { .card { padding: var(--space-6); } }
+
+.elev-1 { box-shadow: 0 1px 2px rgba(42, 38, 32, 0.06); }
+:root[data-theme="dark"] .elev-1 { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.40); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .elev-1 { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.40); }
+}
+
+.rule { height: 1px; background: var(--border); border: 0; }
+
+/* ---------- header ---------- */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.wordmark { font-size: 17px; font-weight: 650; color: var(--ink); letter-spacing: -0.01em; }
+a.wordmark { text-decoration: none; }
+
+/* ---------- accessibility helpers ---------- */
+.vh {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- motion: 120/180ms ease-out. Nothing else. §6.5 ---------- */
+.transition-colour {
+  transition: background-color var(--motion-fast) var(--ease),
+              border-color     var(--motion-fast) var(--ease),
+              color            var(--motion-fast) var(--ease);
+}
+/* Synthesis Mode only, once, on first paint. Never per re-render. */
+.fade-in-once { animation: grove-fade var(--motion-slow) var(--ease) both; }
+@keyframes grove-fade { from { opacity: 0; } to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

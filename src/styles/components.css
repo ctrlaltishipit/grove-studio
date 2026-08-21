@@ -1,0 +1,417 @@
+/* ============================================================
+   GROVE — components
+   23 components. Numbering matches GROVE-MASTER.md §8.
+   ============================================================ */
+
+/* ---------- 8.1 Button ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: var(--control-h);
+  padding: 0 20px;
+  border-radius: var(--radius-input);
+  font-size: 15px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: background-color var(--motion-fast) var(--ease),
+              border-color var(--motion-fast) var(--ease);
+}
+.btn--sm    { height: 36px; padding: 0 12px; font-size: 13px; }
+.btn--icon  { width: 36px; height: 36px; padding: 0; }
+.btn--block { display: flex; width: 100%; }
+
+.btn--primary { background: var(--primary); color: var(--badge-ink-3); }
+.btn--primary:hover:not(:disabled) { background: var(--primary-hover); }
+
+.btn--secondary { background: var(--surface); color: var(--ink); border-color: var(--border-strong); }
+.btn--secondary:hover:not(:disabled) { background: var(--sunken); }
+
+.btn--ghost { background: transparent; color: var(--ink-muted); }
+.btn--ghost:hover:not(:disabled) { background: var(--sunken); color: var(--ink); }
+
+/* Never a solid red fill. A filled red button in a product this quiet reads
+   as an emergency. Destructive is never disabled. §8.1 */
+.btn--destructive { background: var(--surface); color: var(--danger); border-color: var(--danger); }
+.btn--destructive:hover { border-width: 2px; }
+.btn--destructive:focus-visible { outline-color: var(--danger); }
+
+.btn:disabled {
+  background: var(--sunken);
+  color: var(--ink-faint);
+  border-color: transparent;
+  cursor: not-allowed;
+}
+/* No transform on press. No shadow. No spinner inside. */
+.btn:active:not(:disabled) { transform: none; }
+
+/* ---------- 8.2 Text input / 8.3 Textarea ---------- */
+.field { display: block; }
+.field__label { display: block; margin-bottom: 6px; color: var(--ink); font-size: 13px; font-weight: 500; }
+.field__help  { display: block; margin-top: 6px; color: var(--ink-muted); font-size: 13px; line-height: 1.4; }
+.field__error { display: block; margin-top: 6px; color: var(--danger); font-size: 13px; line-height: 1.4; }
+
+.input, .textarea {
+  display: block;
+  width: 100%;
+  /* 16px minimum, ALWAYS — iOS Safari zooms below this and the layout jumps. */
+  font-size: 16px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-input);
+  padding: 12px 14px;
+  transition: border-color var(--motion-fast) var(--ease);
+}
+.input { height: var(--input-h); }
+.textarea { min-height: 84px; line-height: 1.55; padding-bottom: 12px; resize: vertical; }
+.input::placeholder, .textarea::placeholder { color: var(--ink-faint); }
+.input:hover, .textarea:hover { border-color: var(--ink-faint); }
+.input:focus, .textarea:focus { border-color: var(--primary); }
+.input[aria-invalid="true"], .textarea[aria-invalid="true"] { border-color: var(--danger); }
+.input:disabled, .textarea:disabled { background: var(--sunken); color: var(--ink-faint); }
+/* The research question is visually the heavier of the two fields. §7 S2 */
+.textarea--heavy { font-size: 17px; }
+
+/* ---------- 8.4 Composer ---------- */
+.composer {
+  background: var(--surface);
+  /* border-strong, heavier than a note card — this is where the user acts */
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-card);
+  padding: var(--space-4);
+  transition: border-color var(--motion-fast) var(--ease);
+}
+.composer:focus-within { border-color: var(--primary); }
+.composer__top    { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
+.composer__hint   { margin-left: auto; color: var(--ink-faint); font-size: 12px; font-weight: 500; white-space: nowrap; }
+/* There is no Cmd key on a phone. Below 640px the hint is decorative noise
+   that squeezes the kind selector, so it does not render. */
+@media (max-width: 639px) { .composer__hint { display: none; } }
+.composer__bottom { display: flex; justify-content: flex-end; margin-top: var(--space-3); }
+.composer__area   { font-size: var(--note-size); }
+
+@media (max-width: 639px) {
+  .composer--sticky {
+    position: sticky;
+    bottom: 0;
+    z-index: 15;
+    box-shadow: 0 1px 2px rgba(42, 38, 32, 0.06);
+    padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+  }
+}
+
+/* ---------- 8.5 Kind selector (segmented) ---------- */
+.segmented {
+  display: inline-flex;
+  gap: 0;
+  background: var(--sunken);
+  border-radius: var(--radius-badge);
+  padding: 3px;
+}
+.segmented__item {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-badge);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  border: 1px solid transparent;
+  transition: background-color var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease);
+}
+.segmented__item:hover { color: var(--ink); }
+/* No kind gets a colour — that would create a second semantic scale. §4.1 */
+.segmented__item[aria-checked="true"] { background: var(--surface); color: var(--ink); border-color: var(--border); }
+
+/* ---------- 8.6 Note card ---------- */
+.note {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--space-4);
+  transition: border-color var(--motion-fast) var(--ease);
+}
+@media (min-width: 640px) { .note { padding: var(--space-6); } }
+.note:hover { border-color: var(--border-strong); }
+.note__body { font-size: var(--note-size); line-height: 1.60; color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+.note__meta { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-3); color: var(--ink-muted); font-size: 12px; font-weight: 500; }
+/* Actions are ALWAYS visible, never hover-revealed — hover-reveal fails on
+   touch and hides destructive actions. §8.6 */
+.note__actions { margin-left: auto; display: flex; gap: var(--space-1); }
+.note--pending { opacity: 0.6; }
+.note--failed  { border-left: 3px solid var(--danger); }
+
+/* ---------- 8.7 Observer chip ---------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px; height: 26px;
+  flex: 0 0 26px;
+  border-radius: var(--radius-badge);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--observer-initial-ink);
+  background: var(--observer-1);
+}
+.chip--sm { width: 20px; height: 20px; flex-basis: 20px; font-size: 10px; }
+.chip[data-colour="0"] { background: var(--observer-1); }
+.chip[data-colour="1"] { background: var(--observer-2); }
+/* The one documented light-mode exception: white fails at 3.30:1 on
+   --observer-3; --ink gives 4.61:1. §11.1 */
+.chip[data-colour="2"] { background: var(--observer-3); color: #2A2620; }
+.chip[data-colour="3"] { background: var(--observer-4); }
+.chip[data-colour="4"] { background: var(--observer-5); }
+:root[data-theme="dark"] .chip[data-colour="2"] { color: var(--observer-initial-ink); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .chip[data-colour="2"] { color: var(--observer-initial-ink); }
+}
+.chip--self { box-shadow: 0 0 0 1.5px var(--border-strong); }
+
+/* ---------- 8.8 Roster ---------- */
+.rail { width: var(--rail-w); flex: 0 0 var(--rail-w); position: sticky; top: calc(56px + var(--space-8)); align-self: start; border-left: 1px solid var(--border); padding-left: var(--space-4); }
+.rail__head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); }
+.rail__foot { margin-top: var(--space-4); color: var(--ink-muted); font-size: 13px; line-height: 1.4; }
+
+/* NOT interactive. No click, no hover reveal, no focus target, no title. §8.8 */
+.rosteritem { display: flex; align-items: center; gap: var(--space-3); height: 44px; }
+.rosteritem__name  { font-size: 13px; font-weight: 500; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rosteritem__count { margin-left: auto; font-size: 15px; font-weight: 650; font-variant-numeric: tabular-nums; color: var(--ink); }
+
+.strip { display: flex; align-items: center; gap: var(--space-4); height: 36px; overflow-x: auto; border-bottom: 1px solid var(--border); background: var(--bg); scrollbar-width: none; }
+.strip::-webkit-scrollbar { display: none; }
+.strip__item  { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.strip__count { font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; color: var(--ink); }
+@media (max-width: 639px) { .strip { position: sticky; top: 56px; z-index: 14; box-shadow: 0 1px 2px rgba(42,38,32,0.06); } }
+
+/* ---------- 8.9 Corroboration badge — the hero component ---------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 16px;
+  border-radius: var(--radius-badge);
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  background: var(--corrob-1);
+  color: var(--badge-ink-1);
+}
+.badge[data-corrob="2"] { background: var(--corrob-2); color: var(--badge-ink-2); }
+.badge[data-corrob="3"] { background: var(--corrob-3); color: var(--badge-ink-3); }
+
+/* ---------- 8.10 Finding card ---------- */
+.finding {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--corrob-1);
+  border-radius: var(--radius-card);
+  padding: var(--space-4);
+  max-width: var(--column-max);
+}
+@media (min-width: 640px) { .finding { padding: var(--space-6); } }
+.finding[data-corrob="2"] { border-left-color: var(--corrob-2); }
+.finding[data-corrob="3"] { border-left-color: var(--corrob-3); border-left-width: 6px; }
+.finding__theme   { margin-top: var(--space-3); }
+.finding__summary { margin-top: var(--space-3); color: var(--ink); max-width: 68ch; }
+.finding__by      { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4); flex-wrap: wrap; }
+.finding:target, .finding--targeted { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* ---------- 8.11 Disagreement banner — amber, NEVER red ---------- */
+.disagree {
+  background: var(--disagree-soft);
+  border-left: 3px solid var(--disagree);
+  border-radius: var(--radius-input);
+  padding: var(--space-3) var(--space-4);
+  margin: var(--space-4) 0;
+}
+.disagree__label { color: var(--disagree); }
+/* Body text inside the block is --ink, not amber. §8.11 */
+.disagree__body  { margin-top: 6px; color: var(--ink); max-width: 68ch; }
+
+/* ---------- 8.12 / 8.13 Convergence grid ---------- */
+.gridbox { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); padding: var(--space-4); overflow-x: auto; }
+.cgrid { border-collapse: collapse; }
+/* At >=640px the table fills the container (up to 880px) and the row-label
+   column absorbs the slack — the observer columns stay a fixed 32px so the
+   PATTERN reads before any individual dot does. Below 640px the table keeps
+   its intrinsic width and scrolls inside the container instead. */
+@media (min-width: 640px) { .cgrid { width: 100%; table-layout: fixed; } }
+.cgrid caption { text-align: left; color: var(--ink-muted); font-size: 13px; margin-bottom: var(--space-3); }
+.cgrid th, .cgrid td { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 0; }
+.cgrid__rowlabel {
+  width: var(--grid-label-w-sm);
+  max-width: var(--grid-label-w-sm);
+  text-align: left;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  padding: 0 var(--space-2);
+  position: sticky; left: 0;
+  background: var(--surface);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cgrid__rowlabel button { width: 100%; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; height: 44px; color: inherit; font: inherit; }
+.cgrid tr:hover .cgrid__rowlabel { background: var(--sunken); }
+.cgrid__rowlabel--disagree { border-left: 3px solid var(--disagree); }
+/* Cells are NOT interactive and carry NO tooltip — a cell tooltip is the
+   shortest path to leaking note text. §8.12 */
+.cgrid__cell { width: var(--grid-cell-sm); height: 44px; text-align: center; vertical-align: middle; }
+.cgrid__dot  { display: block; width: 10px; height: 10px; border-radius: 999px; margin: 0 auto; }
+.cgrid__dot[data-colour="0"] { background: var(--observer-1); }
+.cgrid__dot[data-colour="1"] { background: var(--observer-2); }
+.cgrid__dot[data-colour="2"] { background: var(--observer-3); }
+.cgrid__dot[data-colour="3"] { background: var(--observer-4); }
+.cgrid__dot[data-colour="4"] { background: var(--observer-5); }
+.cgrid__count { width: 40px; text-align: center; font-size: 12px; font-weight: 500; color: var(--ink-muted); font-variant-numeric: tabular-nums; border-right: 0; }
+.cgrid__head { width: var(--grid-cell-sm); height: 40px; text-align: center; border-bottom: 1px solid var(--border); }
+@media (min-width: 640px) {
+  .cgrid__rowlabel { width: auto; max-width: none; min-width: var(--grid-label-w); position: static; }
+  .cgrid__rowlabel button { height: 32px; }
+  .cgrid__cell { width: var(--grid-cell); height: 32px; }
+  .cgrid__head { width: var(--grid-cell); }
+  .cgrid__dot  { width: 12px; height: 12px; }
+}
+
+/* ---------- 8.14 Independence receipt ---------- */
+.receipt__line { color: var(--ink-muted); }
+/* The receipt wraps to at most two lines, and it breaks BETWEEN clauses,
+   never through one. §8.14, §10 */
+.receipt__seg { display: block; }
+.receipt__sep { display: none; }
+@media (min-width: 640px) {
+  .receipt__seg { display: inline; }
+  .receipt__sep { display: inline; }
+}
+.receipt__more { margin-top: var(--space-3); }
+.receipt__more summary { display: flex; align-items: center; gap: var(--space-2); cursor: pointer; color: var(--ink-muted); font-size: 13px; font-weight: 500; list-style: none; }
+.receipt__more summary::-webkit-details-marker { display: none; }
+.receipt__chev { transition: transform var(--motion-fast) var(--ease); }
+.receipt__more[open] .receipt__chev { transform: rotate(90deg); }
+.receipt__body { margin-top: var(--space-3); padding-left: var(--space-3); border-left: 2px solid var(--border); color: var(--ink); max-width: 68ch; }
+
+/* ---------- 8.15 Code input ---------- */
+.codeinput { display: flex; gap: var(--space-2); }
+.codeinput__box {
+  width: 48px; height: 56px;
+  text-align: center;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  font-size: 20px; font-weight: 650; letter-spacing: 0.12em;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-input);
+  padding: 0;
+  transition: border-color var(--motion-fast) var(--ease);
+}
+.codeinput__box:focus { border-color: var(--primary); }
+.codeinput--error .codeinput__box { border-color: var(--danger); }
+@media (max-width: 400px) { .codeinput__box { width: 100%; min-width: 0; } }
+
+.codechip {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  background: var(--sunken);
+  border-radius: var(--radius-badge);
+  padding: 4px 6px 4px 12px;
+}
+.codechip__value { font-family: var(--font-mono); font-size: 15px; font-weight: 650; letter-spacing: 0.12em; color: var(--ink); }
+
+/* ---------- 8.16 Toast ---------- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-8);
+  transform: translateX(-50%);
+  z-index: 60;
+  max-width: 400px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  padding: var(--space-3) var(--space-4);
+  color: var(--ink);
+  animation: grove-fade var(--motion-slow) var(--ease);
+  box-shadow: 0 1px 2px rgba(42, 38, 32, 0.06);
+}
+@media (max-width: 639px) { .toast { bottom: 140px; } }
+
+/* ---------- 8.17 Empty state ---------- */
+.empty { text-align: center; color: var(--ink-muted); padding: var(--space-12) 0; }
+.empty > * + * { margin-top: var(--space-4); }
+
+/* ---------- inline notice — errors are inline and PERSIST, never a toast ---------- */
+.notice { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--danger); border-radius: var(--radius-input); padding: var(--space-3) var(--space-4); }
+.banner { background: var(--sunken); color: var(--ink-muted); font-size: 13px; padding: 6px var(--space-4); text-align: center; }
+
+/* ---------- 8.19 / S8 appearance popover — non-blocking, no scrim ---------- */
+.popover { position: absolute; right: 0; top: calc(100% + 8px); width: 220px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); z-index: 40; box-shadow: 0 1px 2px rgba(42,38,32,0.06); }
+.popover__row { display: flex; align-items: center; gap: var(--space-2); width: 100%; min-height: 44px; padding: var(--space-2) var(--space-3); text-align: left; }
+.popover__row[aria-checked="true"] { background: var(--primary-soft); color: var(--primary-text); }
+.popover__row:hover { background: var(--sunken); }
+
+/* ---------- 8.20 / 8.21 Dictation (amendment A1) ---------- */
+/* Active state is a held --sunken fill. NO colour change, no pulse, no ring,
+   no red dot. Capture Mode animates nothing. §8.20 */
+.mic[aria-pressed="true"] { background: var(--sunken); color: var(--ink); }
+.recording { display: inline-flex; align-items: center; gap: var(--space-2); margin-left: auto; }
+.recording__time { color: var(--ink-muted); font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+/* ---------- 8.22 Listen block + media transport (amendment A2) ---------- */
+.listen { max-width: var(--player-max); }
+.transport { display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-4); flex-wrap: wrap; }
+.transport__time { color: var(--ink-muted); font-variant-numeric: tabular-nums; font-size: 13px; white-space: nowrap; }
+/* THE ONLY BAR IN GROVE. Elapsed media time, never task progress. §4.7 A2 */
+.scrub {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1 1 160px;
+  min-width: 120px;
+  height: var(--scrub-h);
+  border-radius: 999px;
+  background: var(--sunken);
+  cursor: pointer;
+}
+.scrub::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 999px; background: var(--primary); border: none; }
+.scrub::-moz-range-thumb     { width: 14px; height: 14px; border-radius: 999px; background: var(--primary); border: none; }
+.scrub::-moz-range-progress  { height: var(--scrub-h); border-radius: 999px; background: var(--primary); }
+@media (max-width: 639px) { .scrub { flex-basis: 100%; order: 3; } }
+
+/* ---------- 8.23 Mind map (amendment A3) ---------- */
+.map { overflow-x: auto; }
+.map__hub   { fill: var(--surface); stroke: var(--border-strong); stroke-width: 1; }
+.map__edge  { stroke: var(--border); stroke-width: 1; fill: none; }
+.map__label { fill: var(--ink); font-size: 13px; font-weight: 500; }
+.map__count { fill: var(--ink-muted); font-size: 12px; }
+.map__hubtext { fill: var(--ink); font-size: 13px; font-weight: 500; }
+/* Node size is CONSTANT. Never scaled by count — that would be a heat scale. */
+.map__node[data-colour="0"] { fill: var(--observer-1); }
+.map__node[data-colour="1"] { fill: var(--observer-2); }
+.map__node[data-colour="2"] { fill: var(--observer-3); }
+.map__node[data-colour="3"] { fill: var(--observer-4); }
+.map__node[data-colour="4"] { fill: var(--observer-5); }
+.map__disagree { stroke: var(--disagree); stroke-width: 3; }
+
+/* ---------- research question band ---------- */
+.question { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); padding: var(--space-4); }
+@media (min-width: 640px) { .question { padding: var(--space-6); } }
+.question__label { color: var(--ink-muted); margin-bottom: var(--space-2); }
+/* 20px — never shrinks, at any breakpoint. §10 */
+.question__text  { font-size: 20px; line-height: 1.30; font-weight: 650; color: var(--ink); }
+
+/* Static placeholder — no shimmer, no pulse, replaced without a fade. §8.18 */
+.placeholder-block { background: var(--sunken); border-radius: var(--radius-input); height: 26px; }
+
+/* ---------- capture layout ---------- */
+.capture { display: block; }
+@media (min-width: 1024px) {
+  .capture { display: flex; align-items: flex-start; gap: var(--space-8); }
+  .capture__main { flex: 1 1 auto; min-width: 0; max-width: var(--column-max); }
+}
+
+/* ---------- S1 home cards ---------- */
+.home-cards { display: grid; grid-template-columns: 1fr; gap: var(--space-4); }
+@media (min-width: 1024px) { .home-cards { grid-template-columns: 1fr 1fr; gap: var(--space-6); } }

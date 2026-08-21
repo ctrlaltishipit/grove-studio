@@ -1,0 +1,7 @@
+# Grove — Vercel Python functions use the STANDARD LIBRARY ONLY.
+#
+# Deliberately empty. Every package is cold-start latency and a version to pin,
+# and a web framework here (fastapi, flask, django) makes Vercel's framework
+# preset take precedence over the file-based /api functions — the routes stop
+# resolving entirely. Do not add anything. Dev-only tooling lives in
+# requirements-dev.txt.
