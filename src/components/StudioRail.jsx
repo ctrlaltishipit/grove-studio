@@ -787,10 +787,24 @@ function FullscreenDeck({ data, onClose }) {
 
 function DeckPlayer({ data }) {
   const p = useDeckPlayback(data);
+  // Fit the preview into 320×240 whatever the deck's aspect — a portrait
+  // deck must not grow so tall it pushes the controls out of view.
+  const fitW = Math.min(320, Math.round(240 * (data.width / data.height))) || 320;
   return (
     <>
       <div style={{ border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden', background: '#F7F6F2' }}>
-        <div style={{ width: '100%' }}><SlideFrame data={data} idx={p.idx} width={320} /></div>
+        <div style={{ position: 'relative', display: 'grid', placeItems: 'center' }}>
+          <SlideFrame data={data} idx={p.idx} width={fitW} />
+          {!p.playing && (
+            <button
+              onClick={() => p.playFrom(p.idx)}
+              aria-label="Play the deck"
+              title="Play"
+              style={{ position: 'absolute', inset: 0, margin: 'auto', width: 52, height: 52, borderRadius: 99, border: 'none', background: 'rgba(20, 24, 18, 0.62)', color: '#FFFFFF', cursor: 'pointer', display: 'grid', placeItems: 'center' }}>
+              <svg width="20" height="20" viewBox="0 0 14 14" style={{ marginLeft: 2 }}><path d="M4 2.5 L11.5 7 L4 11.5 Z" fill="currentColor" /></svg>
+            </button>
+          )}
+        </div>
         <div style={{ padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
           <button
             onClick={() => (p.playing ? p.stop() : p.playFrom(p.idx))}

@@ -793,7 +793,7 @@
 .deck-fs .deck-fs-nav:hover { background: rgba(255,255,255,.18); }
 .deck-fs .deck-fs-nav:disabled { opacity: .25; cursor: default; }
 .deck-fs .deck-fs-bar {
-  position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+  position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 2;
   display: flex; align-items: center; gap: 12px;
   background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.14);
   border-radius: 99px; padding: 8px 16px;
