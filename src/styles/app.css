@@ -916,7 +916,7 @@
   color: var(--amber); display: grid; place-items: center; flex: none;
 }
 .demo-checkin .label {
-  flex: 1; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--faint);
+  flex: 1; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
 }
 .demo-checkin .x {
   width: 24px; height: 24px; border: none; background: transparent; border-radius: 6px;
@@ -928,7 +928,7 @@
 .demo-checkin .meter { display: flex; align-items: center; gap: 10px; }
 .demo-checkin .meter .bar { flex: 1; height: 4px; border-radius: 99px; background: var(--border); overflow: hidden; }
 .demo-checkin .meter .bar > div { height: 100%; border-radius: 99px; transition: width .2s ease-out; }
-.demo-checkin .meter .mono { font-size: 11px; color: var(--faint); flex: none; }
+.demo-checkin .meter .mono { font-size: 11px; color: var(--muted); flex: none; }
 .demo-checkin .acts { display: flex; gap: 6px; padding-top: 2px; }
 @media (max-width: 860px) { .demo-checkin { left: 12px; right: 12px; width: auto; bottom: 12px; } } }
 .toast {
