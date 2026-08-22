@@ -4,7 +4,7 @@ import { useAuth, useData, useStudio, useToast } from '../state/Store';
 import { createNote, deleteNote } from '../lib/api';
 import { startSpaceLive } from '../lib/live';
 import { spaceTile, hashCode } from '../lib/colors';
-import { Spinner, AvatarStack, SparkIcon, LockIcon } from '../components/ui';
+import { Spinner, AvatarStack, LockIcon } from '../components/ui';
 import NotesList from '../components/NotesList';
 import NoteEditor from '../components/NoteEditor';
 import Board from '../components/Board';
@@ -173,14 +173,6 @@ function LiveSpace() {
                 <button className="btn btn-sm" onClick={() => setModal({ name: 'share' })}>Share</button>
               </>
             )}
-            <button
-              className="btn btn-sm"
-              style={studio.expanded
-                ? { background: 'var(--vio)', borderColor: 'var(--vio)', color: 'var(--acc-ink)', fontWeight: 600 }
-                : { background: 'var(--vio-soft)', color: 'var(--vio-deep)', fontWeight: 600 }}
-              onClick={() => studio.setExpanded(!studio.expanded)}>
-              <SparkIcon size={12} />Studio
-            </button>
           </div>
         </div>
         <div className="space-tabs">

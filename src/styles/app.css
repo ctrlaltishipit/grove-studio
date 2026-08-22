@@ -185,6 +185,24 @@
   background: var(--surface); display: flex; flex-direction: column;
   padding: 14px 10px 12px;
 }
+.sidebar-head { display: flex; align-items: center; gap: 2px; }
+.sidebar-head .sidebar-logo { flex: 1; min-width: 0; }
+.sidebar-collapse {
+  width: 30px; height: 30px; flex: none; border: none; background: transparent;
+  color: var(--faint); cursor: pointer; border-radius: 8px;
+  display: grid; place-items: center;
+}
+.sidebar-collapse:hover { background: var(--sunken); color: var(--ink); }
+.sidebar-min {
+  width: 46px; flex: none; border-right: 1px solid var(--border); background: var(--surface);
+  display: flex; flex-direction: column; align-items: center; padding-top: 14px;
+}
+.sidebar-min-btn {
+  width: 32px; height: 32px; border-radius: 10px; border: 1px solid var(--border);
+  background: transparent; color: var(--muted); cursor: pointer;
+  display: grid; place-items: center;
+}
+.sidebar-min-btn:hover { background: var(--sunken); color: var(--ink); }
 .sidebar-logo {
   display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 15.5px;
   letter-spacing: -0.01em; color: var(--ink); padding: 6px 10px; border: none;
@@ -728,10 +746,6 @@
   display: grid; place-items: center;
 }
 .studio-min-btn:hover { background: var(--vio); color: var(--acc-ink); }
-.studio-min-label {
-  writing-mode: vertical-rl; font-size: 11px; font-weight: 600; letter-spacing: .08em;
-  text-transform: uppercase; color: var(--faint); user-select: none;
-}
 
 .studio-scopebar {
   display: flex; align-items: center; padding: 7px 16px;
@@ -889,6 +903,8 @@
     box-shadow: var(--shadow-lg);
   }
   .sidebar.open { transform: none; }
+  /* Collapse is a desktop affordance; mobile keeps the topbar burger + drawer. */
+  .sidebar-min, .sidebar-collapse { display: none; }
   .nav-veil {
     position: fixed; inset: 0; background: rgba(20, 18, 14, .38); z-index: 91;
     border: none; padding: 0; cursor: pointer;
@@ -900,7 +916,6 @@
     position: fixed; right: 16px; bottom: 16px; z-index: 60;
     width: auto; border: none; background: transparent; padding: 0;
   }
-  .studio-min-label { display: none; }
   .studio-min-btn {
     width: 54px; height: 54px; border-radius: 99px; box-shadow: var(--shadow-lg);
     background: var(--acc); border-color: var(--acc); color: var(--acc-ink);

@@ -80,6 +80,14 @@ export function SparkIcon({ size = 12 }) {
   );
 }
 
+export function MenuIcon({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16">
+      <path d="M2.5 4.5 h11 M2.5 8 h11 M2.5 11.5 h11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function LockIcon({ size = 12, color = 'currentColor' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 12 12" style={{ flex: 'none' }}>

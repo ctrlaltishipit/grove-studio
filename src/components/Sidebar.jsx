@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth, useData } from '../state/Store';
 import { setTheme as applyTheme, currentTheme } from '../lib/theme';
 import { signOut } from '../lib/auth';
-import { Wordmark, Avatar, LockIcon } from './ui';
+import { Wordmark, Avatar, LockIcon, MenuIcon } from './ui';
 import { spaceTile } from '../lib/colors';
 
 const SunIcon = () => (
@@ -21,7 +21,7 @@ const THEMES = [
   { key: 'dark', label: 'Dark', icon: <MoonIcon /> },
 ];
 
-export default function Sidebar({ open = false, onNavigate }) {
+export default function Sidebar({ open = false, onNavigate, collapsed = false, onToggleCollapse }) {
   const navRaw = useNavigate();
   const nav = (to) => { navRaw(to); onNavigate?.(); };
   const { spaceId } = useParams();
@@ -64,9 +64,26 @@ export default function Sidebar({ open = false, onNavigate }) {
 
   const openSpace = (id) => nav(`/app/s/${id}`);
 
+  // Collapsed to a slim strip on desktop; the mobile drawer (open) still
+  // renders the full nav so the topbar burger keeps working.
+  if (collapsed && !open) {
+    return (
+      <aside className="sidebar-min">
+        <button className="sidebar-min-btn" aria-label="Open the menu" title="Open the menu" onClick={onToggleCollapse}>
+          <MenuIcon size={15} />
+        </button>
+      </aside>
+    );
+  }
+
   return (
     <aside className={'sidebar' + (open ? ' open' : '')}>
-      <Wordmark small onClick={() => nav('/')} />
+      <div className="sidebar-head">
+        <button className="sidebar-collapse" aria-label="Collapse the menu" title="Collapse the menu" onClick={onToggleCollapse}>
+          <MenuIcon size={15} />
+        </button>
+        <Wordmark small onClick={() => nav('/')} />
+      </div>
 
       <label className="sidebar-search">
         <svg width="13" height="13" viewBox="0 0 14 14" style={{ flex: 'none' }}>

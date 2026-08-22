@@ -10,10 +10,14 @@ import ModalHost from './components/Modals';
 import StudioRail from './components/StudioRail';
 import Toasts from './components/Toasts';
 import { Spinner } from './components/ui';
+import { loadNavMin, saveNavMin } from './lib/local';
 
 function AppShell() {
   const { user, loading } = useAuth();
   const [navOpen, setNavOpen] = useState(false);
+  // Desktop collapse for the left nav — sticky, like the studio's.
+  const [navMin, setNavMin] = useState(loadNavMin);
+  const toggleNavMin = () => setNavMin((v) => { saveNavMin(!v); return !v; });
   if (loading) {
     return <div className="signin-wrap"><Spinner /></div>;
   }
@@ -22,7 +26,7 @@ function AppShell() {
     <DataProvider>
       <StudioProvider>
         <div className="shell">
-          <Sidebar open={navOpen} onNavigate={() => setNavOpen(false)} />
+          <Sidebar open={navOpen} collapsed={navMin} onToggleCollapse={toggleNavMin} onNavigate={() => setNavOpen(false)} />
           {navOpen && <button className="nav-veil" aria-label="Close menu" onClick={() => setNavOpen(false)} />}
           <div className="shell-main">
             <div className="mobile-topbar">

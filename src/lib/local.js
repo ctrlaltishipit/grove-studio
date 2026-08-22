@@ -26,3 +26,5 @@ export function saveGuestName(n) { write('gs:guest-name', n); }
 
 export function loadStudioMin() { return read('gs:studio-min') === '1'; }
 export function saveStudioMin(min) { write('gs:studio-min', min ? '1' : null); }
+export function loadNavMin() { return read('gs:nav-min') === '1'; }
+export function saveNavMin(min) { write('gs:nav-min', min ? '1' : null); }

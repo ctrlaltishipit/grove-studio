@@ -6,7 +6,7 @@ import {
 } from '../lib/studioApi';
 import { listMembers, createTask, notify } from '../lib/api';
 import { isoDateInDays, fmtDue } from '../lib/fmt';
-import { Avatar, SparkIcon, Spinner } from './ui';
+import { Avatar, SparkIcon, Spinner, MenuIcon } from './ui';
 import { speechSupported, loadVoices, pickVoices, segmentsFromTurns, createSpeaker } from '../lib/speech';
 
 // NotebookLM-style tool cards, Ask first.
@@ -951,9 +951,8 @@ export default function StudioRail() {
     return (
       <aside className="studio-min">
         <button className="studio-min-btn" aria-label="Open the studio" title="Open the studio" onClick={() => setExpanded(true)}>
-          <SparkIcon size={14} />
+          <MenuIcon size={15} />
         </button>
-        <span className="studio-min-label">Studio</span>
       </aside>
     );
   }
@@ -970,7 +969,9 @@ export default function StudioRail() {
           <b>Studio</b>
           <span className="scope">Scope: {scopeLabel}</span>
         </div>
-        <button className="close" aria-label="Minimize studio" title="Minimize" onClick={() => setExpanded(false)}>—</button>
+        <button className="close" aria-label="Collapse the studio" title="Collapse the studio" onClick={() => setExpanded(false)}>
+          <MenuIcon size={15} />
+        </button>
       </div>
 
       <div className="studio-scopebar">

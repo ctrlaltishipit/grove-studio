@@ -240,14 +240,6 @@ export default function DemoSpace() {
           <SampleBadge />
           <div className="right">
             <AvatarStack people={DEMO_MEMBERS} size={26} max={5} />
-            <button
-              className="btn btn-sm"
-              style={studio.expanded
-                ? { background: 'var(--vio)', borderColor: 'var(--vio)', color: 'var(--acc-ink)', fontWeight: 600 }
-                : { background: 'var(--vio-soft)', color: 'var(--vio-deep)', fontWeight: 600 }}
-              onClick={() => studio.setExpanded(!studio.expanded)}>
-              <SparkIcon size={12} />Studio
-            </button>
           </div>
         </div>
         <div className="space-tabs">
