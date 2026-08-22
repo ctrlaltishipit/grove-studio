@@ -15,12 +15,6 @@ export function currentTheme() {
   return document.documentElement.getAttribute('data-theme'); // null = system
 }
 
-export function resolvedTheme() {
-  const t = currentTheme();
-  if (t) return t;
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
-
 // Cycles light -> dark -> system.
 export function cycleTheme() {
   const t = currentTheme();
@@ -28,4 +22,11 @@ export function cycleTheme() {
   saveTheme(next);
   initTheme();
   return next;
+}
+
+// Set an explicit theme, or null to follow the system.
+export function setTheme(next) {
+  saveTheme(next === 'light' || next === 'dark' ? next : null);
+  initTheme();
+  return currentTheme();
 }

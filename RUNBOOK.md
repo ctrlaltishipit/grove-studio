@@ -1,5 +1,11 @@
 # Grove — deploy runbook (zero → live URL)
 
+> **2026-08-22 — the app was rebuilt as GroveStudio.** For local dev and the
+> current backend steps, read `SETUP.md` first. This runbook's hosting flow
+> (GitHub → Vercel → env vars) still applies, but its SQL list describes the
+> OLD schema (now in `sql/legacy/`); the redesign needs only
+> `sql/06_grovestudio.sql` on top of the already-applied spaces backend.
+
 Follow in order. Nothing here is optional except the parts marked optional.
 Budget: ~45 minutes the first time. Every command is copy-paste.
 

@@ -1,48 +1,42 @@
-# Grove
+# GroveStudio
 
-Several people observe the same research session. Each writes notes in a
-private lane — they can see that others are writing, never what they wrote.
-One synthesis call merges every lane into findings ranked by how many
-distinct observers independently noted each one, with disagreements flagged
-rather than resolved.
-
-Every AI notetaker computes from one audio stream. Grove computes from N
-independent human interpretations. Corroboration across independent observers
-is information no transcript contains.
+Notes that don't stop at being notes. Write together in shared spaces —
+live, like a doc. Keep private spaces only you can see. A board turns notes
+into assigned, deadlined tasks; assignments notify their owner instantly;
+gentle check-ins keep work moving. The Studio (ask, summaries, audio/video overviews, mind maps,
+infographics) is live — grounded per-user in only the notes you can read,
+powered by Gemini (ask/summary/mind map/audio) and Claude (video slides,
+infographics).
 
 ## Stack
 
-One repo, one host, one database, one AI key.
+- Vite + React 18 + react-router v6. Plain CSS custom properties, no UI kit.
+- Supabase: Postgres + RLS, Google OAuth + anonymous guest auth, realtime
+  broadcast/presence for live co-writing, polling as the sync safety net.
+- A studio sidecar (`server/*.mjs`, Express) holds the AI keys: Gemini +
+  Claude. Vite proxies `/api` to it; `npm run dev` starts both.
+- Fonts: Inter / Source Serif 4 / JetBrains Mono.
+- Dictation via the browser's Web Speech API — nothing uploaded, ever.
 
-- Vite + React 18 + react-router v6. Plain CSS custom properties. No UI kit.
-- Supabase: Postgres + anonymous auth. Polling sync by default (`VITE_USE_REALTIME` unset).
-- One Vercel Python function, `api/synthesise.py`, standard library only.
-- Google Gemini `generateContent` (`gemini-3.5-flash-lite`, env-configurable), called only from the function.
+## Run
 
-## Run it
-
-See `RUNBOOK.md` for the full deploy sequence (Supabase → GitHub → Vercel).
-Local dev:
+See `SETUP.md`. Short version:
 
 ```bash
 npm install
-cp .env.example .env.local   # fill in VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY
-npm run dev
+npm run dev        # → http://localhost:3000
 ```
 
-`npm run dev` serves the SPA only. The synthesis endpoint needs `vercel dev`
-(or the deployed URL) because it is a Python function.
+Fill `.env.local` (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) and paste
+`sql/06_grovestudio.sql` into the Supabase SQL editor once.
 
-## The independence invariant
+## Layout
 
-Never write a query, component, API response, log line, tooltip or test
-fixture that exposes another participant's note body. The roster shows counts
-only. `src/lib/data.js` is the only module that talks to the database, and
-`listMyNotes` is the only client read of note bodies — always filtered to the
-caller's own participant id. RLS stage S5 makes it impossible, not just wrong.
+- `src/lib/api.js` — the only module that talks to the database.
+- `src/lib/live.js` — presence + broadcast + polling for an open space.
+- `src/lib/dictation.js` — speech-to-text, appended, never auto-submitted.
+- `src/routes/` — Landing, SignIn, Home (dashboard), Space (notes / board / studio).
+- `sql/06_grovestudio.sql` — the redesign's backend add-on (idempotent).
 
-## Project memory
-
-`GROVE-MEMORY.md` (repo root) is the build memory — read it before changing
-anything. `GROVE-MEMORY.md` is the living product memory — append what you
-learn, prune what proved false.
+`GROVE-MEMORY.md` is the living product memory — read it before changing
+strategy-level things; append what you learn.

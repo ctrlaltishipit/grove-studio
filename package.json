@@ -4,12 +4,16 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently -k -n studio,vite \"npm:studio\" \"vite\"",
+    "studio": "node --env-file-if-exists=.env.local server/index.mjs",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.45.4",
+    "@supabase/supabase-js": "^2.112.3",
+    "concurrently": "^10.0.5",
+    "express": "^5.2.1",
+    "nodemailer": "^9.0.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.2"

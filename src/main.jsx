@@ -4,7 +4,7 @@ import App from './App';
 import { initTheme } from './lib/theme';
 import './styles/tokens.css';
 import './styles/base.css';
-import './styles/components.css';
+import './styles/app.css';
 
 // Theme before first paint, so dark-mode users never see a light flash.
 initTheme();

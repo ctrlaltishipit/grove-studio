@@ -1,39 +1,28 @@
-// Every localStorage read and write is wrapped. Safari private mode throws
-// on write, and an uncaught throw here white-screens the app.
-
-const K = {
-  displayName:     'grove:displayName',
-  theme:           'grove:theme',
-  lastSession:     'grove:lastSession',
-  rosterCollapsed: 'grove:rosterCollapsed',
-  draft:           (sessionId) => `grove:draft:${sessionId}`,
-};
+// localStorage helpers — every access wrapped, storage can throw or vanish.
 
 function read(key) {
   try { return window.localStorage.getItem(key); } catch { return null; }
 }
-function write(key, value) {
+function write(key, val) {
   try {
-    if (value === null || value === undefined) window.localStorage.removeItem(key);
-    else window.localStorage.setItem(key, value);
-  } catch { /* private mode, quota, disabled storage — all non-fatal */ }
+    if (val == null) window.localStorage.removeItem(key);
+    else window.localStorage.setItem(key, val);
+  } catch { /* private windows etc. — losing a convenience is fine */ }
 }
 
-export const loadDisplayName = () => read(K.displayName) ?? '';
-export const saveDisplayName = (v) => write(K.displayName, v);
+export function loadTheme() { return read('gs:theme'); }
+export function saveTheme(t) { write('gs:theme', t); }
 
-export const loadTheme = () => read(K.theme);                 // 'light' | 'dark' | null
-export const saveTheme = (v) => write(K.theme, v);
-
-export const loadDraft = (sessionId) => read(K.draft(sessionId)) ?? '';
-export const saveDraft = (sessionId, v) => write(K.draft(sessionId), v);
-export const clearDraft = (sessionId) => write(K.draft(sessionId), null);
-
-export function loadLastSession() {
-  const raw = read(K.lastSession);
-  if (!raw) return null;
-  try { return JSON.parse(raw); } catch { return null; }
+// Check-in banner dismissal: remember per task per day.
+export function checkinDismissed(taskId) {
+  return read('gs:checkin:' + taskId) === new Date().toISOString().slice(0, 10);
 }
-export function saveLastSession(obj) {
-  try { write(K.lastSession, JSON.stringify(obj)); } catch { /* noop */ }
+export function dismissCheckin(taskId) {
+  write('gs:checkin:' + taskId, new Date().toISOString().slice(0, 10));
 }
+
+export function loadGuestName() { return read('gs:guest-name') ?? ''; }
+export function saveGuestName(n) { write('gs:guest-name', n); }
+
+export function loadStudioMin() { return read('gs:studio-min') === '1'; }
+export function saveStudioMin(min) { write('gs:studio-min', min ? '1' : null); }
