@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Modal } from './ui';
 import { useAuth, useData, useToast } from '../state/Store';
 import { joinSpace, createSpace, getSpace, notify, inviteByEmail } from '../lib/api';
+import { DEMO_SPACE_ID } from '../lib/demoData';
 import { spaceTile } from '../lib/colors';
 
 export function JoinModal({ onClose, initialCode = '' }) {
@@ -125,7 +126,9 @@ export function ShareSpacesModal({ onClose }) {
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const shareable = (spaces ?? []).filter((s) => s.kind === 'shared');
+  // The built-in sample presents as shared but is client-side only — the
+  // server can never authorize invites into it, so keep it out of the picker.
+  const shareable = (spaces ?? []).filter((s) => s.kind === 'shared' && s.id !== DEMO_SPACE_ID);
 
   const flip = (id) => setPicked((p) => {
     const next = new Set(p);
