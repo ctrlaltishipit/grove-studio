@@ -236,7 +236,10 @@ alter publication supabase_realtime
     ),
   }],
   [10, 'an API key committed in a source file', {
-    'src/lib/keys.ts': "export const KEY = 'AQ.Ab8RN6JzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';\n",
+    // Assembled at runtime so this file contains no literal that matches the
+    // secret scan. Excluding the self-test from the scan instead would carve
+    // out exactly the file a real key would hide in.
+    'src/lib/keys.ts': `export const KEY = '${['AQ', '.', `Ab8RN6Jz${'A'.repeat(42)}`].join('')}';\n`,
   }],
 ];
 

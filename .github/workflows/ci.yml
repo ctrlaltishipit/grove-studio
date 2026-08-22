@@ -28,6 +28,8 @@ jobs:
       - run: npm run typecheck
       - run: npm run build
       - run: npm run audit
+      # A gate nobody has tried to defeat is decoration.
+      - run: npm run audit:selftest
       - run: npx vitest run --passWithNoTests
 
   python:
