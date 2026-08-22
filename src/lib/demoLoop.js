@@ -7,19 +7,27 @@
 // the backend. Lives in localStorage per browser and updates live across
 // components via a subscriber list.
 //
-// Check-in policy (mirrors the real app's): the moment a task with a
-// deadline is assigned to you, check-ins begin — once a day while there's
-// time, twice a day in the final stretch — and stop when it's done. Time is
-// compressed for demoing: a sample "day" passes every minute, and the
-// sample deadline is ~10 hours out.
+// Check-in policy, tuned to never feel naggy:
+//   - nothing in the first minutes of a session (signing in, navigating);
+//   - the first nudge a few hours after a task with a deadline is assigned;
+//   - then every few hours, hourly only in the final two hours;
+//   - one task at a time, with a quiet period after any nudge is answered
+//     or dismissed, so nudges for several tasks never pile up;
+//   - stops when the task is done. The sample deadline is ~10 hours out.
 // =============================================================================
 import { useSyncExternalStore } from 'react';
 import { DEMO_TASKS, DEMO_MEMBERS } from './demoData';
 
 const KEY = 'gs:demo-loop';
-const SEED_V = 3;
-export const DEMO_DAY_MS = 60_000;            // one sample "day"
-export const DEMO_DEADLINE_MS = 10 * 3600_000; // armed when work starts
+const SEED_V = 4;
+const HOUR = 3600_000;
+export const DEMO_DEADLINE_MS = 10 * HOUR;     // sample deadline, from assignment
+export const CHECKIN_EVERY_MS = 3 * HOUR;      // regular cadence
+export const FINAL_STRETCH_MS = 2 * HOUR;      // last stretch before the deadline…
+export const FINAL_EVERY_MS = 1 * HOUR;        // …where nudges come hourly
+export const SESSION_QUIET_MS = 10 * 60_000;   // no nudges right after the app opens
+export const GLOBAL_COOLDOWN_MS = 2 * HOUR;    // between nudges, whatever the task
+const openedAt = Date.now();
 
 function seed() {
   return {
@@ -33,9 +41,10 @@ function seed() {
       sub: 'Getting started with GroveStudio — it’s in “Assigned to you” below',
     }],
     // Assigned-to-you tasks with a deadline are armed from the start: the
-    // clock runs from assignment, so the first nudge lands a sample day in.
+    // clock runs from assignment, so the first nudge lands a few hours in.
     checkins: Object.fromEntries(DEMO_TASKS.filter((t) => t.assignee_user === 'demo-you' && t.status !== 'done').map((t) => [t.id, Date.now()])),
     dueAt: Object.fromEntries(DEMO_TASKS.filter((t) => t.assignee_user === 'demo-you' && t.status !== 'done').map((t) => [t.id, Date.now() + DEMO_DEADLINE_MS])),
+    lastNudgeAt: 0, // when a nudge was last answered or dismissed
   };
 }
 
@@ -133,19 +142,23 @@ export function markDemoNotifsRead() {
 }
 
 export function recordDemoCheckin(id) {
-  commit({ ...state, checkins: { ...state.checkins, [id]: Date.now() } });
+  commit({ ...state, checkins: { ...state.checkins, [id]: Date.now() }, lastNudgeAt: Date.now() });
 }
 
-// How often to check in, given the time left: daily, and twice a day in
-// the final two days (sample-compressed: a day is a minute).
+// How often to check in, given the time left: every few hours, hourly in
+// the final stretch.
 export function checkinInterval(timeLeftMs) {
-  return timeLeftMs <= 2 * DEMO_DAY_MS ? DEMO_DAY_MS / 2 : DEMO_DAY_MS;
+  return timeLeftMs <= FINAL_STRETCH_MS ? FINAL_EVERY_MS : CHECKIN_EVERY_MS;
 }
 
-// The task the floating check-in should nag about: assigned to you with a
-// deadline, not done, and quiet for longer than its interval since the last
-// check-in (or since assignment). Soonest deadline first.
+// The one task the floating check-in may nudge about right now: assigned to
+// you with a deadline, not done, quiet for longer than its interval since
+// the last check-in (or since assignment) — and only outside the session's
+// opening minutes and the quiet period after the previous nudge. Soonest
+// deadline first.
 export function pickDemoCheckin(loop, now = Date.now()) {
+  if (now - openedAt < SESSION_QUIET_MS) return null;
+  if (now - (loop.lastNudgeAt ?? 0) < GLOBAL_COOLDOWN_MS) return null;
   const due = loop.tasks.filter((t) => t.assignee_user === 'demo-you'
     && t.status !== 'done'
     && loop.dueAt[t.id]

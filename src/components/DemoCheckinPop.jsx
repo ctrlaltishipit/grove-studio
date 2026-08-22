@@ -50,11 +50,11 @@ export default function DemoCheckinPop() {
           if (task.status === 'todo') setDemoTaskStatus(task.id, 'doing');
           nudgeDemoProgress(task.id);
           recordDemoCheckin(task.id);
-          toast('Logged, on track', 'Next check-in in about a minute (daily in the real app)', 'ok');
+          toast('Logged, on track', 'Next check-in in a few hours', 'ok');
         }}>{task.status === 'todo' ? 'Started' : 'On track'}</button>
         <button className="btn btn-sm" onClick={() => {
           recordDemoCheckin(task.id);
-          toast('Flagged as blocked', 'The assigner would be notified right away to unblock you', 'warn');
+          toast('Flagged as blocked', 'The assigner is notified right away to unblock you', 'warn');
         }}>Blocked</button>
         <button className="btn btn-sm" onClick={() => {
           setDemoTaskStatus(task.id, 'done');
