@@ -17,10 +17,24 @@ import { claudeConfigured } from './claude.mjs';
 import { emailConfigured, sendInviteEmail, sendNotesEmail } from './email.mjs';
 import * as studio from './studio.mjs';
 
-// Invite links point here. APP_URL wins when set; otherwise production
-// (Vercel) uses the real domain and local dev uses the Vite port.
-const APP_URL = process.env.APP_URL
-  || (process.env.VERCEL ? 'https://www.grovestudio.io' : 'http://localhost:3000');
+// Where links in emails point. Resolved per request so a real user never
+// gets a localhost link, whatever the environment looks like:
+//   1. the host the request actually came from (x-forwarded-host / host) —
+//      on production that is www.grovestudio.io;
+//   2. else APP_URL from the environment;
+//   3. else the Vite dev port.
+// A localhost APP_URL is ignored when the request came from a real host.
+const PROD_URL = 'https://www.grovestudio.io';
+function appUrlFor(req) {
+  const host = String(req?.headers?.['x-forwarded-host'] ?? req?.headers?.host ?? '').split(',')[0].trim();
+  const proto = String(req?.headers?.['x-forwarded-proto'] ?? '').split(',')[0].trim() || (host.startsWith('localhost') ? 'http' : 'https');
+  const isLocalHost = (h) => /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i.test(h);
+  if (host && !isLocalHost(host)) return `${proto}://${host}`;
+  const env = (process.env.APP_URL ?? '').trim();
+  if (env && !/localhost|127\.0\.0\.1/.test(env)) return env.replace(/\/$/, '');
+  if (process.env.VERCEL) return PROD_URL;
+  return env || 'http://localhost:3000';
+}
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 // The built-in sample space (mirrors src/lib/demoData.js). It has no DB row
@@ -154,7 +168,7 @@ app.post('/api/invite', withUser, async (req, res) => {
     if (emailConfigured()) {
       try {
         const inviterName = await callerName(req.userToken, req.user);
-        const joinUrl = `${APP_URL}/app?join=${encodeURIComponent(brief.joinCode)}`;
+        const joinUrl = `${appUrlFor(req)}/app?join=${encodeURIComponent(brief.joinCode)}`;
         await sendInviteEmail({ to: email, inviterName, spaceName: brief.name, code: brief.joinCode, joinUrl });
         emailed = true;
       } catch (e) {
@@ -205,7 +219,7 @@ app.post('/api/share-notes', withUser, async (req, res) => {
     if (!notes.length) return res.status(422).json({ error: 'Pick at least one note to share.' });
 
     const sharerName = await callerName(req.userToken, req.user);
-    await sendNotesEmail({ to: email, sharerName, spaceName, notes, appUrl: APP_URL });
+    await sendNotesEmail({ to: email, sharerName, spaceName, notes, appUrl: appUrlFor(req) });
     res.json({ ok: true, emailed: true, count: notes.length });
   } catch (e) {
     console.error('[share-notes] failed:', e.message);
