@@ -13,6 +13,11 @@
 -- have come from public.notes.body. If a future function needs a body, it
 -- is not SECURITY DEFINER, full stop.
 --
+-- THE SECOND RULE: public.join_session() is the ONLY write path for
+-- participants. Direct INSERT on public.participants is revoked from anon
+-- and authenticated in 03_rls.sql (stage S4). The client never inserts a
+-- participant row itself; it calls join_session() and is handed the row.
+--
 -- Spec: GROVE-MASTER.md §12.1 — "It returns integers. It is structurally
 -- incapable of returning note text."
 -- ============================================================
@@ -42,6 +47,8 @@ grant execute on function public.is_participant(uuid) to anon, authenticated;
 -- Roster counts under RLS. Returns integers. CANNOT return note text.
 -- This is the narrowest possible surface for the roster: a SECURITY DEFINER
 -- function whose return type has no text column carrying a note body.
+-- The notes join is pinned to the participant's own session, so a note
+-- that somehow carried a foreign session_id would not be counted here.
 create or replace function public.get_roster(p_session_id uuid)
 returns table (
   participant_id uuid,
@@ -60,7 +67,7 @@ as $$
          coalesce(count(n.id), 0)::int,
          p.last_seen_at, p.joined_at
   from public.participants p
-  left join public.notes n on n.participant_id = p.id
+  left join public.notes n on n.participant_id = p.id and n.session_id = p.session_id
   where p.session_id = p_session_id
     and public.is_participant(p_session_id)   -- caller must be in the session
   group by p.id
@@ -88,7 +95,7 @@ set search_path = public
 as $$
   select p.id, p.display_name, p.colour_index, coalesce(count(n.id), 0)::int
   from public.participants p
-  left join public.notes n on n.participant_id = p.id
+  left join public.notes n on n.participant_id = p.id and n.session_id = p.session_id
   where p.session_id = p_session_id
     and exists (select 1 from public.sessions s
                 where s.id = p_session_id and s.status = 'synthesised')
@@ -162,3 +169,121 @@ $$;
 
 revoke all on function public.lookup_session_by_code(text) from public;
 grant execute on function public.lookup_session_by_code(text) to anon, authenticated;
+
+
+-- Join a live session by code, or get back the row you already hold.
+-- This is the ONLY write path into public.participants. The client cannot
+-- INSERT directly (03_rls.sql, stage S4, revokes the privilege), so every
+-- participant row is created here, under the definer, with:
+--   · user_id taken from auth.uid(), never from the caller;
+--   · display_name trimmed and cut to 40 characters;
+--   · colour_index left to trg_participants_colour (01_schema.sql), which
+--     runs on this insert exactly as it runs on any other.
+-- Joining twice, or from two tabs at once, yields the one existing row. The
+-- unique constraint on (session_id, user_id) is the backstop for the race
+-- between two simultaneous first joins, and ON CONFLICT turns the loser's
+-- error into the winner's row.
+--
+-- Grant: authenticated only. Supabase anonymous sign-ins carry the
+-- authenticated role (with is_anonymous = true in the JWT). The bare anon
+-- role is a request with no user behind it, and it has no business joining.
+--
+-- Raises: 'not signed in' when there is no auth.uid();
+--         'session not found or not live' when the code resolves to nothing
+--         joinable. The client shows its own copy for each.
+--
+-- Return type: the participant row. No note text can appear here.
+create or replace function public.join_session(p_code text, p_display_name text)
+returns table (
+  id           uuid,
+  session_id   uuid,
+  display_name text,
+  user_id      uuid,
+  colour_index int,
+  last_seen_at timestamptz,
+  joined_at    timestamptz
+)
+language plpgsql
+volatile
+security definer
+set search_path = public
+as $$
+declare
+  v_uid     uuid := auth.uid();
+  v_session uuid;
+  v_name    text := left(trim(p_display_name), 40);
+begin
+  if v_uid is null then
+    raise exception 'not signed in';
+  end if;
+
+  if v_name is null or v_name = '' then
+    raise exception 'display name required';
+  end if;
+
+  select s.id into v_session
+  from public.sessions s
+  where s.join_code = upper(trim(p_code))
+    and s.status    = 'live'
+  limit 1;
+
+  if v_session is null then
+    raise exception 'session not found or not live';
+  end if;
+
+  -- Already in the room: hand back the existing row, untouched.
+  return query
+    select p.id, p.session_id, p.display_name, p.user_id,
+           p.colour_index, p.last_seen_at, p.joined_at
+    from public.participants p
+    where p.session_id = v_session
+      and p.user_id    = v_uid;
+  if found then
+    return;
+  end if;
+
+  -- First join. The BEFORE INSERT trigger assigns colour_index. If two
+  -- first joins race, the loser lands on the unique constraint and is
+  -- handed the winner's row instead of an error.
+  return query
+    insert into public.participants as p (session_id, display_name, user_id)
+    values (v_session, v_name, v_uid)
+    on conflict on constraint participants_session_user_uniq
+    do update set last_seen_at = now()
+    returning p.id, p.session_id, p.display_name, p.user_id,
+              p.colour_index, p.last_seen_at, p.joined_at;
+end;
+$$;
+
+revoke all on function public.join_session(text, text) from public;
+grant execute on function public.join_session(text, text) to authenticated;
+
+
+-- Is row-level security switched on? Booleans only, for /api/health, which
+-- relays them as "rls": {"sessions": …, "participants": …, "notes": …,
+-- "findings": …}. No public URL is shared until notes reads true
+-- (sql/README.md). Readable by anyone: the four booleans say nothing about
+-- the data, and hiding them would only hide a misconfiguration.
+-- service_role is named in the grant so the API path does not lean on the
+-- project's default privileges.
+create or replace function public.rls_status()
+returns table (
+  table_name text,
+  enabled    boolean
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select c.relname::text, c.relrowsecurity
+  from pg_catalog.pg_class c
+  join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public'
+    and c.relkind = 'r'
+    and c.relname in ('sessions', 'participants', 'notes', 'findings')
+  order by array_position(array['sessions', 'participants', 'notes', 'findings'], c.relname::text);
+$$;
+
+revoke all on function public.rls_status() from public;
+grant execute on function public.rls_status() to anon, authenticated, service_role;

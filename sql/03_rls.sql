@@ -84,7 +84,12 @@ create policy sessions_update
 -- ============================================================
 -- STAGE S4 — participants
 -- Read: participants of the same session (this powers the roster).
--- Write: your own row only.
+-- Write: the client does not INSERT here at all. Joining goes through
+--        public.join_session() (02_functions.sql), SECURITY DEFINER, the
+--        only write path; the INSERT privilege itself is revoked below.
+--        UPDATE is limited to display_name and last_seen_at on your own
+--        row, so session_id, user_id and colour_index are immutable from
+--        the client. DELETE: your own row.
 -- colour_index is set by trg_participants_colour (01_schema.sql), which is
 -- SECURITY DEFINER precisely so that this stage's select policy does not
 -- hide the existing rows from the count at the moment you join.
@@ -98,16 +103,28 @@ create policy participants_select
   -- the `or user_id = auth.uid()` arm matters at the moment you join,
   -- when your own row is what makes is_participant() true.
 
+-- NO participants_insert policy, on purpose, and no INSERT privilege
+-- either. Build 1 had `with check (user_id = auth.uid())`, which let the
+-- client write its own session_id and display_name straight onto the table.
+-- Joining is public.join_session() (02_functions.sql) and nothing else.
+-- Revoking the privilege outright means a later file that re-added a policy
+-- would still hit the missing grant.
 drop policy if exists participants_insert on public.participants;
-create policy participants_insert
-  on public.participants for insert to anon, authenticated
-  with check ( user_id = auth.uid() );
+revoke insert on public.participants from anon, authenticated;
 
+-- UPDATE: your own row, and only the two columns the client has any reason
+-- to touch — display_name (rename) and last_seen_at (presence ping).
+-- Revoking the table-level privilege and granting it back per column makes
+-- session_id, user_id and colour_index immutable from the client whatever
+-- any policy says.
 drop policy if exists participants_update on public.participants;
 create policy participants_update
   on public.participants for update to anon, authenticated
   using      ( user_id = auth.uid() )
   with check ( user_id = auth.uid() );
+
+revoke update on public.participants from anon, authenticated;
+grant  update (display_name, last_seen_at) on public.participants to anon, authenticated;
 
 drop policy if exists participants_delete on public.participants;
 create policy participants_delete
@@ -129,6 +146,10 @@ create policy participants_delete
 -- ============================================================
 -- STAGE S5 — notes   ← THE INDEPENDENCE INVARIANT, ENFORCED IN THE DATABASE
 -- You may read ONLY your own notes. Not "you should not"; you CANNOT.
+-- Every write policy requires the participant row to be YOURS and to belong
+-- to the NOTE'S session. Build 1 checked those two facts separately, which
+-- let a member of two sessions file a note in one under their participant
+-- row from the other.
 -- ============================================================
 alter table public.notes enable row level security;
 
@@ -145,22 +166,53 @@ drop policy if exists notes_insert_own on public.notes;
 create policy notes_insert_own
   on public.notes for insert to anon, authenticated
   with check (
-    participant_id in (
-      select pp.id from public.participants pp where pp.user_id = auth.uid()
+    exists (
+      select 1 from public.participants pp
+      where pp.id         = notes.participant_id
+        and pp.user_id    = auth.uid()
+        and pp.session_id = notes.session_id
     )
-    and public.is_participant(session_id)
   );
 
 drop policy if exists notes_update_own on public.notes;
 create policy notes_update_own
   on public.notes for update to anon, authenticated
-  using      ( participant_id in (select pp.id from public.participants pp where pp.user_id = auth.uid()) )
-  with check ( participant_id in (select pp.id from public.participants pp where pp.user_id = auth.uid()) );
+  using (
+    exists (
+      select 1 from public.participants pp
+      where pp.id         = notes.participant_id
+        and pp.user_id    = auth.uid()
+        and pp.session_id = notes.session_id
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.participants pp
+      where pp.id         = notes.participant_id
+        and pp.user_id    = auth.uid()
+        and pp.session_id = notes.session_id
+    )
+  );
 
 drop policy if exists notes_delete_own on public.notes;
 create policy notes_delete_own
   on public.notes for delete to anon, authenticated
-  using ( participant_id in (select pp.id from public.participants pp where pp.user_id = auth.uid()) );
+  using (
+    exists (
+      select 1 from public.participants pp
+      where pp.id         = notes.participant_id
+        and pp.user_id    = auth.uid()
+        and pp.session_id = notes.session_id
+    )
+  );
+
+-- UPDATE on notes is limited to body and kind. session_id and
+-- participant_id are not grantable from the client, so a note cannot be
+-- moved to another session or re-attributed, whatever any policy says.
+-- id, created_at and updated_at belong to the database (trg_notes_touch
+-- sets updated_at).
+revoke update on public.notes from anon, authenticated;
+grant  update (body, kind) on public.notes to anon, authenticated;
 
 
 -- ============================================================
@@ -170,3 +222,12 @@ create policy notes_delete_own
 -- alter table public.participants disable row level security;
 -- alter table public.sessions     disable row level security;
 -- alter table public.findings     disable row level security;
+--
+-- The grants S4 and S5 narrowed, should the rollback need them too. The
+-- shipping client never inserts into participants directly and never
+-- updates a column outside the grants, so disabling RLS alone is normally
+-- enough; re-grant only if you have also rolled the client back to direct
+-- table writes.
+-- grant insert on public.participants to anon, authenticated;
+-- grant update on public.participants to anon, authenticated;
+-- grant update on public.notes        to anon, authenticated;

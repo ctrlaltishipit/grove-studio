@@ -2,14 +2,14 @@
 
 Everything here runs in the Supabase SQL editor, which uses the service role
 and bypasses row-level security. Files are numbered in run order. Spec:
-GROVE-MASTER.md §12 (four tables, no fifth; two helper functions before RLS).
+GROVE-MASTER.md §12 (four tables, no fifth; helper functions before RLS).
 
 | File | What | When |
 |---|---|---|
 | `01_schema.sql` | Four tables, indexes, `gen_join_code()`, `touch_updated_at()`, and `trg_participants_colour`, the SECURITY DEFINER trigger that assigns `colour_index` server-side | First, whole file |
-| `02_functions.sql` | `is_participant`, `get_roster`, `get_public_roster`, `get_finding_observers`, `lookup_session_by_code` — all SECURITY DEFINER, none able to return a note body | Second, whole file, RLS still off |
+| `02_functions.sql` | `is_participant`, `get_roster`, `get_public_roster`, `get_finding_observers`, `lookup_session_by_code`, `join_session`, `rls_status` — all SECURITY DEFINER, none able to return a note body. `join_session` is the only write path for participants | Second, whole file, RLS still off |
 | `04_demo_seed.sql` | The GRVDEM fixture: 24 notes, three observers, one planted disagreement | Third, RLS still off. Re-run any time to reset |
-| `03_rls.sql` | Row-level security in four stages: S2 findings → S3 sessions → S4 participants → S5 notes | One stage at a time, notes LAST, after the polling sync path works end to end |
+| `03_rls.sql` | Row-level security in four stages: S2 findings → S3 sessions → S4 participants → S5 notes. S4 also revokes direct INSERT on participants and column-limits its UPDATE; S5 column-limits UPDATE on notes | One stage at a time, notes LAST, after the polling sync path works end to end |
 | `99_verify.sql` | Anon-key checks, with curl and SQL-editor forms | After every stage of 03, and once more before the demo |
 
 ## Run order
@@ -25,8 +25,21 @@ GROVE-MASTER.md §12 (four tables, no fifth; two helper functions before RLS).
    after each green run.
 6. `99_verify.sql` after each stage. Every check says which stage it needs.
 
+Two things to hold onto while working through that list:
+
+- **NO public URL may be shared until `/api/health` reports
+  `rls.notes = true`.** The health endpoint relays `public.rls_status()`,
+  which reads the real `pg_class.relrowsecurity` flags. Until notes reads
+  true, the independence invariant exists only as intention.
+- **With RLS off, the anon key can read every lane.** The client only ever
+  *asks* for its own notes, but the anon key is public by design, and anyone
+  holding it can ask for all of them with one curl. The client filter is a
+  courtesy, not a boundary; the boundary is stage S5.
+
 If a stage breaks the demo and fifteen minutes are gone, the rollback block at
-the foot of `03_rls.sql` disables RLS on that table. Commit it and say so.
+the foot of `03_rls.sql` disables RLS on that table. Commit it, say so, and
+stop sharing any public URL until `/api/health` shows `rls.notes = true`
+again.
 
 ## Why there is no 02_publication.sql
 
@@ -56,8 +69,19 @@ Run it whenever anyone has been near the Realtime settings.
 
 - A SECURITY DEFINER function's return type may never contain a column that
   can carry a note body. Every function in `02_functions.sql` returns ids,
-  names, colours, counts or session metadata. `99_verify.sql` CHECK 0 greps
-  the return types for `body`.
+  names, colours, counts or session metadata. `99_verify.sql` CHECK 0 scans
+  `pg_proc` for any SECURITY DEFINER function whose result type could smuggle
+  a body through (`notes`, `setof`, `json`, `record`) or whose source touches
+  one (`body`, `select *`, the json/array/string aggregate builders).
+- `public.join_session()` is the ONLY write path for participants. Stage S4
+  revokes direct INSERT from anon and authenticated, so the client cannot
+  invent a participant row: `user_id` comes from `auth.uid()`, the code is
+  normalised server-side, and the colour trigger runs on the one insert that
+  exists.
+- Client UPDATEs are column-limited by grant, not just by policy:
+  participants to (`display_name`, `last_seen_at`), notes to (`body`,
+  `kind`). `session_id`, `user_id`, `participant_id` and `colour_index` are
+  immutable from the client whatever any policy says.
 - `sessions_select` is not `using (true)`. Build 1's policy let any holder
   of the anon key list every session, title, research question and join code.
   Lookup-by-code goes through `lookup_session_by_code()` instead: exact code
@@ -65,8 +89,9 @@ Run it whenever anyone has been near the Realtime settings.
 - `colour_index` is assigned by the database. The trigger is SECURITY
   DEFINER because a plain trigger runs under the joiner's RLS, sees zero
   existing participants, and gives everyone colour 0.
-- The notes policies in `03_rls.sql` are the independence invariant. MVP+
-  files (05/06) must never modify them.
+- The notes policies in `03_rls.sql` are the independence invariant. Every
+  notes write policy requires the participant row to be yours AND to belong
+  to the note's session. MVP+ files (05/06) must never modify them.
 
 ## Type generation
 
