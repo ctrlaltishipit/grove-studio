@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Modal } from './ui';
 import { useAuth, useData, useToast } from '../state/Store';
 import { joinSpace, createSpace, getSpace, notify, inviteByEmail } from '../lib/api';
-import { DEMO_SPACE_ID } from '../lib/demoData';
+import { DEMO_SPACE_ID, DEMO_JOIN_CODE } from '../lib/demoData';
 import { spaceTile } from '../lib/colors';
 
 export function JoinModal({ onClose, initialCode = '' }) {
@@ -16,6 +16,14 @@ export function JoinModal({ onClose, initialCode = '' }) {
 
   const go = async () => {
     if (busy) return;
+    // The sample space's code — there's nothing to join server-side; the
+    // sample is already in everyone's GroveStudio.
+    if (code === DEMO_JOIN_CODE) {
+      onClose();
+      nav(`/app/s/${DEMO_SPACE_ID}`);
+      toast("That's the sample space", "It's already in your sidebar — take a look around", 'ok');
+      return;
+    }
     setBusy(true);
     try {
       const { projectId } = await joinSpace(code, displayName);
@@ -126,9 +134,9 @@ export function ShareSpacesModal({ onClose }) {
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
 
-  // The built-in sample presents as shared but is client-side only — the
-  // server can never authorize invites into it, so keep it out of the picker.
-  const shareable = (spaces ?? []).filter((s) => s.kind === 'shared' && s.id !== DEMO_SPACE_ID);
+  // The sample space is shareable too: the server special-cases it and
+  // sends a real invite email whose SAMPLE code opens the sample.
+  const shareable = (spaces ?? []).filter((s) => s.kind === 'shared');
 
   const flip = (id) => setPicked((p) => {
     const next = new Set(p);

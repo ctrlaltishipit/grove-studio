@@ -23,6 +23,12 @@ const APP_URL = process.env.APP_URL
   || (process.env.VERCEL ? 'https://www.grovestudio.io' : 'http://localhost:3000');
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
+// The built-in sample space (mirrors src/lib/demoData.js). It has no DB row
+// or membership, but invites to it still send a real email — the demo's
+// share flow works end-to-end, and the SAMPLE code drops recipients into
+// the sample, which every signed-in account sees.
+const DEMO_SPACE = { id: 'demo-grovestudio', name: 'Getting started with GroveStudio', joinCode: 'SAMPLE' };
+
 const PORT = Number(process.env.STUDIO_PORT || 8787);
 const app = express();
 app.use(express.json({ limit: '2mb' }));
@@ -107,12 +113,18 @@ app.post('/api/invite', withUser, async (req, res) => {
     const email = String(req.body?.email ?? '').trim();
     if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'That doesn’t look like an email address.' });
 
-    const brief = await spaceBrief(req.userToken, projectId);
+    const isDemo = projectId === DEMO_SPACE.id;
+    const brief = isDemo
+      ? { name: DEMO_SPACE.name, joinCode: DEMO_SPACE.joinCode }
+      : await spaceBrief(req.userToken, projectId);
     if (!brief) return res.status(403).json({ error: 'You can only invite people to a space you belong to.' });
 
-    // Membership add (existing accounts) — best effort, never blocks the email.
+    // Membership add (existing accounts) — best effort, never blocks the
+    // email. The sample has no membership to add to.
     let member = { invited: false };
-    try { member = await inviteMember(req.userToken, projectId, email); } catch { /* email still goes */ }
+    if (!isDemo) {
+      try { member = await inviteMember(req.userToken, projectId, email); } catch { /* email still goes */ }
+    }
 
     let emailed = false;
     let emailError = null;

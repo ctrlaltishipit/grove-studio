@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useStudio, useData, useToast } from '../state/Store';
-import { Avatar, AvatarStack, DocIcon, SparkIcon } from './ui';
+import { Avatar, AvatarStack, DocIcon, SparkIcon, Modal } from './ui';
+import { InviteRow } from './SpaceModals';
 import { spaceTile, labelChip } from '../lib/colors';
 import { shortTime, relTime, fmtDue, dueUrgency } from '../lib/fmt';
 import { STATUS_LABEL, StatusMenu, MemberMenu } from './TaskBits';
@@ -120,7 +121,7 @@ function MicIcon({ size = 14 }) {
   );
 }
 
-function DemoNoteView({ note, comments, onComment }) {
+function DemoNoteView({ note, comments, onComment, onShare }) {
   const author = memberByMemberId.get(note.author_id);
   const [draft, setDraft] = useState('');
   const [listening, setListening] = useState(false);
@@ -163,7 +164,10 @@ function DemoNoteView({ note, comments, onComment }) {
         <span className="crumb">{demoSpace.name} › {note.title}</span>
       </div>
       <h1 className="editor-title" style={{ cursor: 'default' }}>{note.title}</h1>
-      <div className="editor-meta">Created by {author?.name ?? 'a teammate'} · updated {relTime(note.updated_at)} · shared with {DEMO_MEMBERS.length} people</div>
+      <div className="editor-meta" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span>Created by {author?.name ?? 'a teammate'} · updated {relTime(note.updated_at)} · shared with {DEMO_MEMBERS.length} people</span>
+        <button className="btn btn-sm" style={{ marginLeft: 'auto', flex: 'none' }} onClick={onShare}>Share</button>
+      </div>
       {note.brief && (
         <div className="note-brief">
           <span className="spark"><SparkIcon size={10} /></span>
@@ -228,6 +232,7 @@ export default function DemoSpace() {
   const { toast } = useToast();
   const [tab, setTab] = useState('notes');
   const [openId, setOpenId] = useState(null);
+  const [shareOpen, setShareOpen] = useState(false);
   const [tasks, setTasks] = useState(() => DEMO_TASKS.map((t) => ({ ...t })));
   const [comments, setComments] = useState(() => JSON.parse(JSON.stringify(DEMO_COMMENTS)));
 
@@ -270,6 +275,7 @@ export default function DemoSpace() {
           <SampleBadge />
           <div className="right">
             <AvatarStack people={DEMO_MEMBERS} size={26} max={5} />
+            <button className="btn btn-sm" onClick={() => setShareOpen(true)}>Share</button>
           </div>
         </div>
         <div className="space-tabs">
@@ -316,13 +322,26 @@ export default function DemoSpace() {
               <div style={{ maxWidth: 760, margin: '0 auto', padding: '18px 28px 0' }}>
                 <button className="btn-ghost" onClick={() => setOpenId(null)}>← All notes</button>
               </div>
-              <DemoNoteView note={openNote} comments={comments[openNote.id] ?? []} onComment={addComment} />
+              <DemoNoteView note={openNote} comments={comments[openNote.id] ?? []} onComment={addComment} onShare={() => setShareOpen(true)} />
             </>
           )}
 
           {tab === 'board' && <DemoBoard tasks={tasks} onSetStatus={setStatus} onReassign={reassignTask} onCreate={createTask} />}
         </div>
       </div>
+      {shareOpen && (
+        <Modal onClose={() => setShareOpen(false)}>
+          <div className="modal-stack">
+            <div>
+              <h3>Share the sample space</h3>
+              <div className="sub">
+                A real invite email goes out with a join link and the code <b>{demoSpace.joinCode}</b> — the code opens this sample for them once they sign in.
+              </div>
+            </div>
+            <InviteRow spaceId={DEMO_SPACE_ID} onInvited={() => setShareOpen(false)} />
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
