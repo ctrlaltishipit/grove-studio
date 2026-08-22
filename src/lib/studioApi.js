@@ -15,7 +15,7 @@ const clone = (x) => JSON.parse(JSON.stringify(x));
 
 async function call(path, body = {}) {
   const token = await getAccessToken();
-  if (!token) throw new Error('Sign in to use the studio.');
+  if (!token) throw new Error('Your sign-in expired. Sign in again and ask that once more.');
   const res = await fetch(`/api/studio/${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },

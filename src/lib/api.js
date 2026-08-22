@@ -144,7 +144,7 @@ export async function heartbeat(projectId) {
 // reads them under your JWT); the sample sends its notes inline.
 export async function shareNotesByEmail(projectId, email, { noteIds, notes } = {}) {
   const token = await getAccessToken();
-  if (!token) throw new Error('Sign in to share notes.');
+  if (!token) throw new Error('Your sign-in expired. Sign in again and try once more.');
   const res = await fetch('/api/share-notes', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -158,7 +158,7 @@ export async function shareNotesByEmail(projectId, email, { noteIds, notes } = {
 
 export async function inviteByEmail(projectId, email) {
   const token = await getAccessToken();
-  if (!token) throw new Error('Sign in to invite people.');
+  if (!token) throw new Error('Your sign-in expired. Sign in again and try once more.');
   const res = await fetch('/api/invite', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },

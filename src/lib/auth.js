@@ -8,9 +8,19 @@ export async function getUser() {
   return session?.user ?? null;
 }
 
+// The token the studio/invite calls send. A tab left open for hours can hold
+// an expired session while the UI still shows cached data: try a refresh
+// first, and if that fails sign out cleanly so the app sends the person to
+// the sign-in screen instead of failing calls with a confusing message.
 export async function getAccessToken() {
   const { data: { session } } = await supabase.auth.getSession();
-  return session?.access_token ?? null;
+  if (session?.access_token) return session.access_token;
+  try {
+    const { data } = await supabase.auth.refreshSession();
+    if (data?.session?.access_token) return data.session.access_token;
+  } catch { /* fall through */ }
+  try { await supabase.auth.signOut(); } catch { /* already gone */ }
+  return null;
 }
 
 export function onAuth(cb) {

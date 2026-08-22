@@ -1,11 +1,13 @@
 // =============================================================================
 // GroveStudio server — Ask, grounded on the caller's notes, via Claude.
 //
-// Claude Opus 5 through the official SDK: adaptive thinking (the model's
-// default), high effort, the notes block cached so follow-up questions over
-// the same scope are cheap, and the server-side refusal fallback so a
-// policy decline re-runs on a fallback model instead of failing. If the key
-// can't reach Opus 5 (404), the next model in ASK_MODELS is tried.
+// Claude Opus 5 through the official SDK at medium effort: it still thinks
+// through the notes adaptively, but answers faster and cheaper than high —
+// the right trade for Q&A over a handful of notes (ASK_EFFORT overrides).
+// The notes block is cached so follow-up questions over the same scope are
+// cheap, and the server-side refusal fallback re-runs a policy decline on a
+// fallback model instead of failing. If the key can't reach Opus 5 (404),
+// the next model in MODELS is tried.
 // =============================================================================
 
 import Anthropic from '@anthropic-ai/sdk';
@@ -64,7 +66,7 @@ async function create(model, params, withFallback) {
   return client().beta.messages.create({
     model,
     max_tokens: 8000,
-    output_config: { effort: 'high' },
+    output_config: { effort: process.env.ASK_EFFORT || 'medium' },
     ...(withFallback ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' } : {}),
     ...params,
   });
