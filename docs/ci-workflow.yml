@@ -43,3 +43,10 @@ jobs:
           cache: pip
       - run: python -m pip install -r requirements-dev.txt
       - run: python -m pytest tests/python -q
+
+# NOTE: parked here rather than .github/workflows/ because the deploy token
+# lacks GitHub's `workflow` scope. To enable CI: add the `workflow` permission
+# to the token, then `git mv docs/ci-workflow.yml .github/workflows/ci.yml`.
+# Until then run the same gates locally:
+#   npm run typecheck && npm run build && npm run audit && npm run audit:selftest && npx vitest run
+#   .venv/bin/python -m pytest tests/python -q
