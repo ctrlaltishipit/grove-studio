@@ -14,7 +14,7 @@ import { pathToFileURL } from 'node:url';
 import { verifyUser, fetchScope, supabaseConfigured, spaceBrief, callerName, inviteMember } from './notes.mjs';
 import { geminiConfigured } from './gemini.mjs';
 import { claudeConfigured } from './claude.mjs';
-import { emailConfigured, sendInviteEmail } from './email.mjs';
+import { emailConfigured, sendInviteEmail, sendNotesEmail } from './email.mjs';
 import * as studio from './studio.mjs';
 
 // Invite links point here. APP_URL wins when set; otherwise production
@@ -97,8 +97,31 @@ const route = (engine, fn) => [
 
 app.post('/api/studio/summary', withUser, ...route('gemini', (scope) => studio.summary(scope)));
 app.post('/api/studio/notebrief', withUser, ...route('gemini', (scope) => studio.notebrief(scope)));
-app.post('/api/studio/ask', withUser, ...route('gemini', (scope, req) =>
-  studio.ask(scope, req.body?.question ?? '', req.body?.history ?? [])));
+// Ask runs on Claude. The sample space's notes live in the browser, not the
+// DB, so the client sends them inline (bounded) — Ask is real there too.
+function demoScope(s) {
+  const notes = (Array.isArray(s?.notes) ? s.notes : []).slice(0, 12).map((n) => ({
+    id: String(n.id ?? ''),
+    title: String(n.title ?? 'Untitled').slice(0, 200),
+    body: String(n.body ?? '').slice(0, 20000),
+    spaceName: DEMO_SPACE.name,
+    project_id: DEMO_SPACE.id,
+    updated_at: null,
+    visibility: 'shared',
+  }));
+  return { notes, spaces: [], label: notes.length === 1 ? 'the selected sample note' : `${notes.length} sample notes` };
+}
+app.post('/api/studio/ask', withUser, needs('claude'), async (req, res) => {
+  try {
+    const scope = req.body?.scope?.demo ? demoScope(req.body.scope) : await loadScope(req, res);
+    if (!scope) return;
+    if (!scope.notes.length) return res.status(422).json({ error: 'No readable notes in this scope — write a note or widen the selection.' });
+    res.json(await studio.ask(scope, req.body?.question ?? '', req.body?.history ?? []));
+  } catch (e) {
+    console.error('[studio] ask failed:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
 app.post('/api/studio/mindmap', withUser, ...route('gemini', (scope) => studio.mindmap(scope)));
 app.post('/api/studio/audio', withUser, ...route('gemini', (scope) => studio.audio(scope)));
 app.post('/api/studio/video', withUser, needs('gemini'), ...route('claude', (scope) => studio.video(scope)));
@@ -153,6 +176,39 @@ app.post('/api/invite', withUser, async (req, res) => {
     });
   } catch (e) {
     console.error('[invite] failed:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ---- email selected notes to a person ---------------------------------------
+// Real spaces: the notes are fetched under the caller's JWT (RLS decides what
+// they may share). The sample: its notes come inline from the browser.
+app.post('/api/share-notes', withUser, async (req, res) => {
+  try {
+    const email = String(req.body?.email ?? '').trim();
+    if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'That doesn’t look like an email address.' });
+    if (!emailConfigured()) return res.status(503).json({ error: 'Email isn’t set up on this server yet.' });
+    const projectId = String(req.body?.projectId ?? '');
+
+    let notes; let spaceName;
+    if (projectId === DEMO_SPACE.id) {
+      notes = demoScope({ notes: req.body?.notes }).notes;
+      spaceName = DEMO_SPACE.name;
+    } else {
+      const brief = await spaceBrief(req.userToken, projectId);
+      if (!brief) return res.status(403).json({ error: 'You can only share notes from a space you belong to.' });
+      const ids = (Array.isArray(req.body?.noteIds) ? req.body.noteIds : []).slice(0, 12);
+      const scope = await fetchScope(req.userToken, { noteIds: ids });
+      notes = scope.notes.filter((n) => n.project_id === projectId);
+      spaceName = brief.name;
+    }
+    if (!notes.length) return res.status(422).json({ error: 'Pick at least one note to share.' });
+
+    const sharerName = await callerName(req.userToken, req.user);
+    await sendNotesEmail({ to: email, sharerName, spaceName, notes, appUrl: APP_URL });
+    res.json({ ok: true, emailed: true, count: notes.length });
+  } catch (e) {
+    console.error('[share-notes] failed:', e.message);
     res.status(500).json({ error: e.message });
   }
 });

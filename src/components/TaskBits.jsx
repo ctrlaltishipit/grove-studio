@@ -10,24 +10,55 @@ export const STATUS_LABEL = { todo: 'To do', doing: 'In progress', review: 'In r
 export const NEXT_STATUS = { todo: 'doing', doing: 'review', review: 'done', done: 'todo' };
 export const ALL_STATUSES = ['todo', 'doing', 'review', 'done'];
 
+// Popovers anchor to the viewport (position: fixed) so they never get clipped
+// by a scrolling column or the board's edge: below the trigger when there's
+// room, above otherwise, and clamped inside the window. Scroll closes them.
+function useFixedMenu(open, setOpen, ref, { width, itemCount }) {
+  const [pos, setPos] = useState(null);
+  useEffect(() => {
+    if (!open) { setPos(null); return undefined; }
+    const place = () => {
+      const r = ref.current?.getBoundingClientRect();
+      if (!r) return;
+      const h = itemCount * 34 + 12;
+      const below = r.bottom + 6 + h <= window.innerHeight - 8;
+      const top = below ? r.bottom + 6 : Math.max(8, r.top - 6 - h);
+      const left = Math.max(8, Math.min(r.right - width, window.innerWidth - width - 8));
+      setPos({ top, left, width });
+    };
+    place();
+    const close = () => setOpen(false);
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
+    const onDoc = (e) => { if (!ref.current?.contains(e.target)) setOpen(false); };
+    window.addEventListener('resize', place);
+    document.addEventListener('scroll', close, true);
+    document.addEventListener('mousedown', onDoc);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('resize', place);
+      document.removeEventListener('scroll', close, true);
+      document.removeEventListener('mousedown', onDoc);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [open, setOpen, ref, width, itemCount]);
+  return pos;
+}
+
 // A small popover to move a card to ANY column (not just the next one).
 export function StatusMenu({ status, onPick, label = 'Move' }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
-  useEffect(() => {
-    if (!open) return undefined;
-    const h = (e) => { if (!ref.current?.contains(e.target)) setOpen(false); };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, [open]);
+  const options = ALL_STATUSES.filter((s) => s !== status);
+  const pos = useFixedMenu(open, setOpen, ref, { width: 150, itemCount: options.length + 1 });
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <button className="move-btn" onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}>
         {label} ▾
       </button>
-      {open && (
-        <div className="picker-menu">
-          {ALL_STATUSES.filter((s) => s !== status).map((s) => (
+      {open && pos && (
+        <div className="picker-menu fixed" style={pos} onClick={(e) => e.stopPropagation()}>
+          <div className="menu-head">Move to</div>
+          {options.map((s) => (
             <button key={s} onClick={(e) => { e.stopPropagation(); setOpen(false); onPick(s); }}>
               {STATUS_LABEL[s]}
             </button>
@@ -39,27 +70,30 @@ export function StatusMenu({ status, onPick, label = 'Move' }) {
 }
 
 // A small popover to pick a member (for reassigning a card).
-export function MemberMenu({ members, currentUserId, onPick, children }) {
+export function MemberMenu({ members, currentUserId, assigneeUserId, onPick, children }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
-  useEffect(() => {
-    if (!open) return undefined;
-    const h = (e) => { if (!ref.current?.contains(e.target)) setOpen(false); };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, [open]);
+  const pos = useFixedMenu(open, setOpen, ref, { width: 208, itemCount: members.length + 1 });
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <span onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}>{children}</span>
-      {open && (
-        <div className="picker-menu wide">
-          {members.map((m) => (
-            <button key={m.memberId ?? m.userId} onClick={(e) => { e.stopPropagation(); setOpen(false); onPick(m); }}
-              style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Avatar name={m.name} colourIndex={m.colourIndex} size={20} />
-              <span>{m.name}{m.userId === currentUserId ? ' (you)' : ''}</span>
-            </button>
-          ))}
+      {open && pos && (
+        <div className="picker-menu wide fixed" style={pos} onClick={(e) => e.stopPropagation()}>
+          <div className="menu-head">{assigneeUserId ? 'Reassign to' : 'Assign to'}</div>
+          {members.map((m) => {
+            const current = m.userId === assigneeUserId;
+            return (
+              <button key={m.memberId ?? m.userId} className={current ? 'current' : ''}
+                onClick={(e) => { e.stopPropagation(); setOpen(false); if (!current) onPick(m); }}
+                style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Avatar name={m.name} colourIndex={m.colourIndex} size={20} />
+                <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {m.name}{m.userId === currentUserId ? ' (you)' : ''}
+                </span>
+                {current && <span className="tick">✓</span>}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

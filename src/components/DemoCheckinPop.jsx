@@ -34,15 +34,16 @@ export default function DemoCheckinPop() {
         <b>What’s your progress on “{task.title}”?</b>
       </div>
       <p>
-        You’re at {task.progress ?? 0}%{left ? ` and there’s ${left}` : ''}. A friendly nudge so the deadline
+        {task.status === 'todo' ? 'Not started yet' : `You’re at ${task.progress ?? 0}%`}{left ? ` and there’s ${left}` : ''}. A friendly nudge so the deadline
         doesn’t go quiet — in the sample a day passes every minute.
       </p>
       <div className="acts">
         <button className="btn btn-primary btn-sm" onClick={() => {
+          if (task.status === 'todo') setDemoTaskStatus(task.id, 'doing');
           nudgeDemoProgress(task.id);
           recordDemoCheckin(task.id);
           toast('Logged — on track', 'Next check-in in about a minute (daily in the real app)', 'ok');
-        }}>On track</button>
+        }}>{task.status === 'todo' ? 'Started, on track' : 'On track'}</button>
         <button className="btn btn-sm" onClick={() => {
           recordDemoCheckin(task.id);
           toast('Flagged as blocked', 'The assigner would be notified right away to unblock you', 'warn');

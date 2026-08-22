@@ -7,14 +7,17 @@
 // the backend. Lives in localStorage per browser and updates live across
 // components via a subscriber list.
 //
-// Time is compressed for demoing: starting work arms a ~10 hour deadline,
-// and the app checks in once per sample "day" — which passes every minute.
+// Check-in policy (mirrors the real app's): the moment a task with a
+// deadline is assigned to you, check-ins begin — once a day while there's
+// time, twice a day in the final stretch — and stop when it's done. Time is
+// compressed for demoing: a sample "day" passes every minute, and the
+// sample deadline is ~10 hours out.
 // =============================================================================
 import { useSyncExternalStore } from 'react';
 import { DEMO_TASKS, DEMO_MEMBERS } from './demoData';
 
 const KEY = 'gs:demo-loop';
-const SEED_V = 2;
+const SEED_V = 3;
 export const DEMO_DAY_MS = 60_000;            // one sample "day"
 export const DEMO_DEADLINE_MS = 10 * 3600_000; // armed when work starts
 
@@ -29,8 +32,10 @@ function seed() {
       text: 'Priya S. assigned you “Create your first space”',
       sub: 'Getting started with GroveStudio — it’s in “Assigned to you” below',
     }],
-    checkins: {}, // taskId -> ms timestamp of the last check-in (or start of work)
-    dueAt: {},    // taskId -> ms deadline, armed when the task enters "doing"
+    // Assigned-to-you tasks with a deadline are armed from the start: the
+    // clock runs from assignment, so the first nudge lands a sample day in.
+    checkins: Object.fromEntries(DEMO_TASKS.filter((t) => t.assignee_user === 'demo-you' && t.status !== 'done').map((t) => [t.id, Date.now()])),
+    dueAt: Object.fromEntries(DEMO_TASKS.filter((t) => t.assignee_user === 'demo-you' && t.status !== 'done').map((t) => [t.id, Date.now() + DEMO_DEADLINE_MS])),
   };
 }
 
@@ -62,9 +67,8 @@ const progressFor = (status, current = 0) => (
 export function setDemoTaskStatus(id, status) {
   const checkins = { ...state.checkins };
   const dueAt = { ...state.dueAt };
-  // Starting work arms the deadline and the check-in clock; the first
-  // nudge lands one sample day later.
-  if (status === 'doing' && !checkins[id]) {
+  // A task that somehow has no deadline yet gets one when work starts.
+  if (status !== 'done' && !dueAt[id]) {
     checkins[id] = Date.now();
     dueAt[id] = Date.now() + DEMO_DEADLINE_MS;
   }
@@ -96,9 +100,18 @@ export function reassignDemoTask(id, member) {
         sub: 'From the sample board — it’s in “Assigned to you” below',
       }, ...state.notifs]
     : state.notifs;
+  // Assignment with a deadline starts the check-in clock for the assignee.
+  const checkins = { ...state.checkins };
+  const dueAt = { ...state.dueAt };
+  if (toYou) {
+    checkins[id] = Date.now();
+    dueAt[id] = dueAt[id] ?? Date.now() + DEMO_DEADLINE_MS;
+  }
   commit({
     ...state,
     notifs,
+    checkins,
+    dueAt,
     tasks: state.tasks.map((t) => (t.id === id ? { ...t, assignee_user: member.userId, assigned_by_user: 'demo-you' } : t)),
   });
   return toYou ? 'you' : 'other';
@@ -123,13 +136,20 @@ export function recordDemoCheckin(id) {
   commit({ ...state, checkins: { ...state.checkins, [id]: Date.now() } });
 }
 
-// The task the floating check-in should nag about: yours, in progress, and
-// quiet for over a sample day since the last check-in. Soonest deadline
-// first — the real cadence scales with how close the deadline is.
+// How often to check in, given the time left: daily, and twice a day in
+// the final two days (sample-compressed: a day is a minute).
+export function checkinInterval(timeLeftMs) {
+  return timeLeftMs <= 2 * DEMO_DAY_MS ? DEMO_DAY_MS / 2 : DEMO_DAY_MS;
+}
+
+// The task the floating check-in should nag about: assigned to you with a
+// deadline, not done, and quiet for longer than its interval since the last
+// check-in (or since assignment). Soonest deadline first.
 export function pickDemoCheckin(loop, now = Date.now()) {
   const due = loop.tasks.filter((t) => t.assignee_user === 'demo-you'
-    && t.status === 'doing'
-    && now - (loop.checkins[t.id] ?? 0) > DEMO_DAY_MS);
+    && t.status !== 'done'
+    && loop.dueAt[t.id]
+    && now - (loop.checkins[t.id] ?? 0) > checkinInterval(loop.dueAt[t.id] - now));
   if (!due.length) return null;
   return [...due].sort((a, b) => (loop.dueAt[a.id] ?? Infinity) - (loop.dueAt[b.id] ?? Infinity))[0];
 }

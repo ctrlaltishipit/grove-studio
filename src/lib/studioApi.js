@@ -3,7 +3,7 @@
 // under that token, so RLS decides what the studio can see.
 
 import { getAccessToken } from './auth';
-import { DEMO_SPACE_ID } from './demoData';
+import { DEMO_SPACE_ID, DEMO_NOTES } from './demoData';
 import { DEMO_ARTIFACTS } from './demoArtifacts';
 
 // The sample space is served from baked artifacts — never the live pipeline.
@@ -43,11 +43,12 @@ export const genInfographic = (scope) => (isDemoScope(scope) ? Promise.resolve(c
 
 export const genAsk = (scope, question, history) => {
   if (isDemoScope(scope)) {
-    return Promise.resolve({
-      answer: 'This is the sample space, so Ask is on rails here. In a space of your own, I answer only from your notes — with the exact source note attached — and never invent anything. Create a space, add a note, and ask me about it.',
-      sources: ['Start here — what GroveStudio is'],
-      grounding: DEMO_ARTIFACTS.summary.grounding,
-    });
+    // Real answers in the sample too: the selected sample notes (or all of
+    // them) ride along inline, since they don't live in the database.
+    const picked = Array.isArray(scope?.noteIds) ? scope.noteIds.filter((id) => String(id).startsWith('dn-')) : [];
+    const notes = (picked.length ? DEMO_NOTES.filter((n) => picked.includes(n.id)) : DEMO_NOTES)
+      .map((n) => ({ id: n.id, title: n.title, body: n.body }));
+    return call('ask', { scope: { demo: true, notes }, question, history });
   }
   return call('ask', { scope, question, history });
 };

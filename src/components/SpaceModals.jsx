@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Avatar } from './ui';
-import { useAuth, useData, useToast } from '../state/Store';
-import { updateTask, createTask, notify, shareNoteToSpace, inviteByEmail } from '../lib/api';
+import { useAuth, useData, useToast, useStudio } from '../state/Store';
+import { updateTask, createTask, notify, shareNoteToSpace, inviteByEmail, shareNotesByEmail } from '../lib/api';
 import { fmtDue, isoDateInDays } from '../lib/fmt';
 
 // Compose the toast for an invite result — shared by both share modals.
@@ -73,10 +73,59 @@ export function InviteRow({ spaceId, onInvited }) {
   );
 }
 
+// Email the notes the person picked with the circles — specific notes, not
+// a whole space. Shared by the space share modal and the sample's.
+export function ShareNotesRow({ projectId, picked, demo = false }) {
+  const { toast } = useToast();
+  const [email, setEmail] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const send = async () => {
+    const addr = email.trim();
+    if (!addr || busy || !picked.length) return;
+    setBusy(true);
+    try {
+      const r = await shareNotesByEmail(projectId, addr, demo
+        ? { notes: picked.map((n) => ({ id: n.id, title: n.title, body: n.body })) }
+        : { noteIds: picked.map((n) => n.id) });
+      toast(`Emailed ${r.count} note${r.count === 1 ? '' : 's'} to ${addr}`, 'The full text of each note, in one email', 'ok');
+      setEmail('');
+    } catch (e) {
+      toast('Could not share the notes', e.message, 'error');
+    }
+    setBusy(false);
+  };
+
+  return (
+    <div>
+      <div className="studio-label" style={{ marginBottom: 6 }}>Email selected notes · {picked.length}</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+        {picked.map((n) => (
+          <span key={n.id} className="key-chip" style={{ maxWidth: '100%' }}><span>{n.title}</span></span>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input
+          className="modal-input" style={{ flex: 1, height: 38 }} type="email"
+          placeholder="Their email…"
+          value={email} onChange={(e) => setEmail(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') send(); }}
+        />
+        <button className="btn btn-primary" style={{ height: 38, borderRadius: 10 }} disabled={busy || !email.trim()} onClick={send}>
+          {busy ? 'Sending…' : 'Send notes'}
+        </button>
+      </div>
+      <div className="fine" style={{ marginTop: 6 }}>They get the full text of these notes by email — no account needed.</div>
+    </div>
+  );
+}
+
 // -------------------------------------------------------------- share space
 
-export function ShareSpaceModal({ space, members, note, meUserId, onClose, onChanged }) {
+export function ShareSpaceModal({ space, members, note, meUserId, onClose, onChanged, notes = [] }) {
   const { toast } = useToast();
+  const studio = useStudio();
+  const pickedNotes = notes.filter((n) => studio.selNotes.has(n.id));
   const isNoteShare = !!note;
   const canShareNote = isNoteShare && note.visibility !== 'shared';
 
@@ -113,6 +162,10 @@ export function ShareSpaceModal({ space, members, note, meUserId, onClose, onCha
         )}
 
         <InviteRow spaceId={space.id} onInvited={onChanged} />
+
+        {pickedNotes.length > 0
+          ? <ShareNotesRow projectId={space.id} picked={pickedNotes} />
+          : <div className="fine">To email specific notes, open the Studio and tick the circles on the notes first.</div>}
 
         <div>
           <div className="studio-label" style={{ marginBottom: 6 }}>Join code</div>

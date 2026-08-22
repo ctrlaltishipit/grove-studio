@@ -17,6 +17,7 @@ import { geminiJson, renderDialogue, renderNarration } from './gemini.mjs';
 import { claude } from './claude.mjs';
 import { sanitizeHtml, sanitizeCss } from './sanitize.mjs';
 import { corpus } from './notes.mjs';
+import { askNotes } from './ask.mjs';
 
 const GROUNDING =
   'You are the Studio inside GroveStudio, a collaborative note-taking app. ' +
@@ -69,25 +70,11 @@ Summarise this note in 1-2 plain sentences, max 45 words — the concrete substa
 // ── Ask ─────────────────────────────────────────────────────────────────────
 
 export async function ask(scope, question, history = []) {
-  const past = (Array.isArray(history) ? history : [])
-    .slice(-6)
-    .map((m) => `${m.who === 'you' ? 'User' : 'Studio'}: ${String(m.text).slice(0, 500)}`)
-    .join('\n');
-  const data = await geminiJson(
-    `${noteBlock(scope)}
-
-${past ? `CONVERSATION SO FAR:\n${past}\n\n` : ''}THE USER ASKS: ${String(question).slice(0, 1000)}
-
-Answer from the notes only. Respond with JSON:
-{"answer": "2-6 sentences, direct and specific, quoting the notes where it helps",
- "sources": ["exact titles of the notes the answer draws on"]}
-If the notes don't contain the answer, the answer says so and sources is [].`,
-    { system: GROUNDING },
-  );
-  const titles = new Set(scope.notes.map((n) => n.title));
+  const { answer, sources, model } = await askNotes({ scope, question, history });
   return {
-    answer: String(data.answer ?? ''),
-    sources: (data.sources ?? []).map(String).filter((t) => titles.has(t)).slice(0, 4),
+    answer,
+    sources,
+    model,
     grounding: { label: scope.label, noteCount: scope.notes.length },
   };
 }

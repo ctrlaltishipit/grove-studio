@@ -251,7 +251,6 @@ function SummaryTool() {
           ))}
         </div>
       )}
-      <button className="btn btn-xs" style={{ alignSelf: 'flex-start' }} onClick={gen.run}>Regenerate</button>
       <GroundingNote data={d} />
     </>
   );

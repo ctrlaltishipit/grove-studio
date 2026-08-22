@@ -682,6 +682,13 @@
   animation: fadeUp .12s ease-out both;
 }
 .picker-menu.wide { min-width: 168px; }
+.picker-menu.fixed { position: fixed; right: auto; bottom: auto; box-sizing: border-box; }
+.picker-menu .menu-head {
+  font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--faint); padding: 6px 9px 4px;
+}
+.picker-menu button.current { color: var(--acc-deep); font-weight: 600; }
+.picker-menu button .tick { margin-left: auto; color: var(--acc-deep); font-size: 12px; }
 .picker-menu button {
   border: none; background: transparent; color: var(--ink); text-align: left;
   font-size: 12.5px; padding: 7px 9px; border-radius: 7px; cursor: pointer; font-family: inherit;

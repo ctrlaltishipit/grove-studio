@@ -140,6 +140,22 @@ export async function heartbeat(projectId) {
 // already have an account) AND emails them a join link + code. Routed through
 // the studio sidecar because SMTP credentials live only there.
 // Returns { emailed, emailConfigured, alreadyMember, addedMember, name, code, spaceName }.
+// Email specific notes to a person. Real spaces send note ids (the server
+// reads them under your JWT); the sample sends its notes inline.
+export async function shareNotesByEmail(projectId, email, { noteIds, notes } = {}) {
+  const token = await getAccessToken();
+  if (!token) throw new Error('Sign in to share notes.');
+  const res = await fetch('/api/share-notes', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ projectId, email: email.trim(), noteIds, notes }),
+  });
+  let data;
+  try { data = await res.json(); } catch { data = {}; }
+  if (!res.ok) throw new Error(data.error || `Share failed (${res.status})`);
+  return data;
+}
+
 export async function inviteByEmail(projectId, email) {
   const token = await getAccessToken();
   if (!token) throw new Error('Sign in to invite people.');

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useStudio, useData, useToast } from '../state/Store';
 import { Avatar, AvatarStack, DocIcon, SparkIcon, Modal } from './ui';
-import { InviteRow } from './SpaceModals';
+import { InviteRow, ShareNotesRow } from './SpaceModals';
+import { SelectToggle } from './NotesList';
 import { spaceTile, labelChip } from '../lib/colors';
 import { shortTime, relTime, fmtDue, dueUrgency } from '../lib/fmt';
 import { STATUS_LABEL, StatusMenu, MemberMenu } from './TaskBits';
@@ -75,7 +76,7 @@ function DemoBoard({ tasks, onSetStatus, onReassign, onCreate }) {
                       {note && <span className="key-chip"><DocIcon size={11} /><span>{note.title}</span></span>}
                       <div className="card-right">
                         <StatusMenu status={t.status} onPick={(s) => onSetStatus(t.id, s)} />
-                        <MemberMenu members={DEMO_MEMBERS} currentUserId="demo-you" onPick={(m) => onReassign(t.id, m)}>
+                        <MemberMenu members={DEMO_MEMBERS} currentUserId="demo-you" assigneeUserId={t.assignee_user} onPick={(m) => onReassign(t.id, m)}>
                           <button className="assignee-btn" title={a ? `${a.name} — reassign` : 'Assign'}>
                             {a ? <Avatar name={a.name} colourIndex={a.colourIndex} size={24} />
                                : <span className="avatar unassigned" style={{ width: 24, height: 24 }}>?</span>}
@@ -234,6 +235,7 @@ export default function DemoSpace() {
   const [tab, setTab] = useState('notes');
   const [openId, setOpenId] = useState(null);
   const [shareOpen, setShareOpen] = useState(false);
+  const pickedDemoNotes = DEMO_NOTES.filter((n) => studio.selNotes.has(n.id));
   // Tasks live in the shared demo-loop store, so an assignment made here is
   // felt on the dashboard: notification, "Assigned to you", check-ins.
   const { tasks } = useDemoLoop();
@@ -297,9 +299,13 @@ export default function DemoSpace() {
               </div>
               {DEMO_NOTES.map((n) => {
                 const author = memberByMemberId.get(n.author_id);
+                const picked = studio.selNotes.has(n.id);
                 return (
-                  <div className="note-card" key={n.id} onClick={() => setOpenId(n.id)}>
+                  <div className={'note-card' + (picked ? ' sel-ring' : '')} key={n.id} onClick={() => setOpenId(n.id)}>
                     <div className="row">
+                      {studio.expanded && (
+                        <SelectToggle picked={picked} onToggle={() => studio.toggleNote(n.id)} label={`Studio scope: ${n.title}`} />
+                      )}
                       <DocIcon />
                       <button className="title" onClick={(e) => { e.stopPropagation(); setOpenId(n.id); }}>{n.title}</button>
                     </div>
@@ -339,6 +345,9 @@ export default function DemoSpace() {
               </div>
             </div>
             <InviteRow spaceId={DEMO_SPACE_ID} onInvited={() => setShareOpen(false)} />
+            {pickedDemoNotes.length > 0
+              ? <ShareNotesRow projectId={DEMO_SPACE_ID} picked={pickedDemoNotes} demo />
+              : <div className="fine">To email specific notes, tick the circles on the notes first (with the Studio open).</div>}
           </div>
         </Modal>
       )}

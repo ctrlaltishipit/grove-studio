@@ -237,7 +237,7 @@ function LiveSpace() {
 
       {modal?.name === 'share' && (
         <ShareSpaceModal
-          space={space} members={members} note={modal.note} meUserId={user.id}
+          space={space} members={members} note={modal.note} meUserId={user.id} notes={notes ?? []}
           onClose={() => setModal(null)}
           onChanged={() => { refresh(); liveRef.current?.nudge(); }}
         />
