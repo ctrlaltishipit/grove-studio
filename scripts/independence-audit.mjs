@@ -768,8 +768,15 @@ for (const f of SQL_ALL) {
   for (const m of s.matchAll(/\bdisable\s+row\s+level\s+security\b/gi)) {
     hit(11, f, v.at(m.index), `disables row level security in live SQL (only the commented rollback block in sql/03_rls.sql may say this): ${v.show(m.index)}`);
   }
-  for (const m of s.matchAll(/\b(?:using|with\s+check)\s*\(\s*true\s*\)/gi)) {
-    hit(11, f, v.at(m.index), `(true)-open policy clause: ${v.show(m.index)}`);
+  // Only inside an actual `create policy` statement. The words "using(true)"
+  // also appear in a verifier that exists to *find* them, and a rule that
+  // fires on the phrase rather than the construct trains people to add
+  // exclusions — which is how the real one eventually gets excluded too.
+  for (const stmt of s.matchAll(/\bcreate\s+policy\b[^;]*/gi)) {
+    for (const m of stmt[0].matchAll(/\b(?:using|with\s+check)\s*\(\s*true\s*\)/gi)) {
+      const at = stmt.index + m.index;
+      hit(11, f, v.at(at), `(true)-open policy clause: ${v.show(at)}`);
+    }
   }
   for (const m of s.matchAll(/\bbypassrls\b/gi)) {
     hit(11, f, v.at(m.index), `bypassrls: ${v.show(m.index)}`);

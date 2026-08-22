@@ -6,19 +6,21 @@ import { AppShell } from '../ds/AppShell';
 import { CodeInput } from '../ds/CodeInput';
 import { Empty } from '../ds/Empty';
 import { Mark } from '../ds/Mark';
+import { MyWork } from '../ds/MyWork';
 import { Notice } from '../ds/Notice';
 import { OfflineBanner } from '../ds/OfflineBanner';
 import { useToast } from '../ds/Toast';
 import { awaitUser, identityOf, signOut } from '../lib/auth';
 import { greeting, relative } from '../lib/greeting';
-import type { Space } from '../lib/models';
-import { configured, createSpace, joinSpace, listMySpaces, saveProfile } from '../lib/supabase';
+import type { MyTask, Space } from '../lib/models';
+import { configured, createSpace, joinSpace, listMySpaces, myTasks, saveProfile } from '../lib/supabase';
 
 export default function StudioHome() {
   const navigate = useNavigate();
   const toast = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [spaces, setSpaces] = useState<Space[]>([]);
+  const [tasks, setTasks] = useState<MyTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [newName, setNewName] = useState('');
@@ -27,7 +29,10 @@ export default function StudioHome() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    try { setSpaces(await listMySpaces()); } catch { setFailed(true); } finally { setLoading(false); }
+    try {
+      const [s, mine] = await Promise.all([listMySpaces(), myTasks().catch(() => [] as MyTask[])]);
+      setSpaces(s); setTasks(mine);
+    } catch { setFailed(true); } finally { setLoading(false); }
   }, []);
 
   useEffect(() => {
@@ -46,6 +51,7 @@ export default function StudioHome() {
   }, [navigate, load]);
 
   const me = identityOf(user);
+  const openTasks = tasks.filter((x) => x.status !== 'done').length;
   const firstName = me.displayName.split(' ')[0];
 
   async function create(e: FormEvent) {
@@ -83,14 +89,18 @@ export default function StudioHome() {
         <div className="pagehead__title">
           <h1 className="t-h1">{greeting()}, {firstName}.</h1>
           <p className="t-body muted" style={{ marginTop: 'var(--space-1)' }}>
-            {spaces.length === 0
-              ? 'Create a space to write in, or join one with a code.'
-              : `${spaces.length} ${spaces.length === 1 ? 'space' : 'spaces'}. Pick up where you left off.`}
+            {openTasks > 0
+              ? `${openTasks} ${openTasks === 1 ? 'task is' : 'tasks are'} assigned to you.`
+              : spaces.length === 0
+                ? 'Create a space to write in, or join one with a code.'
+                : `${spaces.length} ${spaces.length === 1 ? 'space' : 'spaces'}. Pick up where you left off.`}
           </p>
         </div>
       </div>
 
       {error && <div style={{ marginTop: 'var(--space-6)' }}><Notice>{error}</Notice></div>}
+
+      <MyWork tasks={tasks} onChange={() => { void load(); }} />
 
       <div className="grid-spaces" style={{ marginTop: 'var(--space-8)' }}>
         <form onSubmit={create} className="tile">

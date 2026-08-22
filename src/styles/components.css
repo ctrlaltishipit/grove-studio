@@ -571,3 +571,70 @@
   .gate { padding: 0; align-items: start; }
   .gate__card { max-width: none; border: 0; border-radius: 0; padding: var(--space-16) var(--space-6) var(--space-12); }
 }
+
+/* ---------- A15 tasks: the board, the card, the dashboard row ---------- */
+
+.board { display: grid; grid-template-columns: repeat(4, minmax(220px, 1fr)); gap: var(--space-3); }
+@media (max-width: 1099px) {
+  /* Four columns stop being readable before they stop fitting. Below this
+     the board scrolls sideways rather than crushing every card to a strip. */
+  .board { grid-auto-flow: column; grid-auto-columns: 260px; grid-template-columns: none;
+           overflow-x: auto; padding-bottom: var(--space-2); }
+}
+.board__col { background: var(--sunken); border-radius: var(--radius-card); padding: var(--space-3); min-width: 0; }
+.board__head { display: flex; align-items: center; gap: var(--space-2); padding: 0 var(--space-1) var(--space-3); }
+.board__label { font-size: 11px; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); }
+.board__count { margin-left: auto; font-size: 12px; font-weight: 500; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+.board__empty { padding: var(--space-3) var(--space-1); font-size: 13px; color: var(--ink-faint); }
+
+.taskcard {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: var(--space-3); margin-bottom: var(--space-2);
+}
+.taskcard:last-child { margin-bottom: 0; }
+.taskcard__title { font-size: 14px; line-height: 1.45; font-weight: 500; color: var(--ink); }
+.taskcard--done .taskcard__title { color: var(--ink-muted); text-decoration: line-through; }
+.taskcard__meta { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-3); flex-wrap: wrap; }
+.taskcard__who  { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-muted); }
+/* Overdue is words, never colour (§8). The weight is the only emphasis. */
+.taskcard__due  { font-size: 12px; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.taskcard__due[data-overdue='true'] { color: var(--ink); font-weight: 650; }
+.taskcard__bar  { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-3); }
+.taskcard__unassigned { font-size: 12px; color: var(--ink-faint); font-style: italic; }
+
+/* The compose row: title, who, when, add. One line on a desktop. */
+.taskadd { display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center;
+           background: var(--surface); border: 1px solid var(--border);
+           border-radius: var(--radius-card); padding: var(--space-3); }
+.taskadd__title { flex: 1 1 220px; min-width: 0; }
+.taskadd select, .taskadd input[type='date'] { flex: 0 0 auto; }
+
+/* select and date, styled to match the rest of the inputs rather than the OS */
+.field {
+  height: 38px; padding: 0 var(--space-3); font: inherit; font-size: 14px;
+  color: var(--ink); background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius-input);
+}
+.field:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+.field--sm { height: 30px; font-size: 13px; padding: 0 var(--space-2); }
+
+/* The dashboard list. A row, not a card: these are read in a column and
+   scanned, and a card grid makes ten tasks look like ten decisions. */
+.taskrow {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border); border-radius: var(--radius-card);
+  background: var(--surface); margin-bottom: var(--space-2); text-decoration: none; color: inherit;
+}
+.taskrow:hover { border-color: var(--border-strong); }
+.taskrow__main { min-width: 0; flex: 1; }
+.taskrow__title { font-size: 15px; font-weight: 500; color: var(--ink); }
+.taskrow--done .taskrow__title { color: var(--ink-muted); text-decoration: line-through; }
+.taskrow__where { margin-top: 2px; font-size: 12px; color: var(--ink-muted); }
+.taskrow__due { font-size: 13px; color: var(--ink-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.taskrow__due[data-overdue='true'] { color: var(--ink); font-weight: 650; }
+
+/* The count beside a space in the sidebar, when work is waiting there. */
+.navitem__task { font-size: 11px; font-weight: 650; color: var(--badge-ink-3);
+                 background: var(--primary); border-radius: 999px;
+                 padding: 1px 7px; font-variant-numeric: tabular-nums; }

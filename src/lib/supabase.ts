@@ -23,6 +23,7 @@
 //   session joins its creator through the same function as everyone else.
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type {
+  NoteTask, MyTask, AppNotification, TaskStatus,
   Finding, FindingObserver, Note, NoteKind, Participant, Profile, RosterRow,
   Session, Space, SpaceMember, SpaceNote,
 } from './models';
@@ -353,5 +354,86 @@ export async function shareSpaceNote(noteId: string): Promise<SpaceNote> {
 
 export async function deleteSpaceNote(noteId: string): Promise<void> {
   const { error } = await db().from('space_notes').delete().eq('id', noteId);
+  if (error) throw error;
+}
+
+
+/* ---------- tasks (A15) ----------
+ *
+ * Every write goes through an RPC, never a table. That is not ceremony: a
+ * task write has to check the note is shared and the assignee is in this
+ * space, and then write a notification row for somebody else — which RLS
+ * forbids a client from ever doing directly. The INSERT/UPDATE/DELETE
+ * privileges on note_tasks and notifications are revoked, so there is no
+ * second path to get this wrong.
+ */
+
+export async function listNoteTasks(noteId: string): Promise<NoteTask[]> {
+  const { data, error } = await db().rpc('list_note_tasks', { p_note_id: noteId });
+  if (error) throw error;
+  return (data as NoteTask[] | null) ?? [];
+}
+
+export async function createTask(input: {
+  noteId: string; title: string; assigneeId?: string | null; dueDate?: string | null; detail?: string;
+}): Promise<void> {
+  const { error } = await db().rpc('create_task', {
+    p_note_id: input.noteId,
+    p_title: input.title,
+    p_assignee_id: input.assigneeId ?? null,
+    p_due_date: input.dueDate ?? null,
+    p_detail: input.detail ?? '',
+  });
+  if (error) throw error;
+}
+
+/** Clearing a field and leaving it alone are different intentions, and one
+ *  null cannot mean both. The two explicit clear flags keep them apart. */
+export async function updateTask(taskId: string, patch: {
+  title?: string; assigneeId?: string | null; dueDate?: string | null;
+  status?: TaskStatus; detail?: string; clearAssignee?: boolean; clearDue?: boolean;
+}): Promise<void> {
+  const { error } = await db().rpc('update_task', {
+    p_task_id: taskId,
+    p_title: patch.title ?? null,
+    p_assignee_id: patch.assigneeId ?? null,
+    p_due_date: patch.dueDate ?? null,
+    p_status: patch.status ?? null,
+    p_detail: patch.detail ?? null,
+    p_clear_assignee: patch.clearAssignee ?? false,
+    p_clear_due: patch.clearDue ?? false,
+  });
+  if (error) throw error;
+}
+
+export async function deleteTask(taskId: string): Promise<void> {
+  const { error } = await db().rpc('delete_task', { p_task_id: taskId });
+  if (error) throw error;
+}
+
+export async function myTasks(): Promise<MyTask[]> {
+  const { data, error } = await db().rpc('my_tasks');
+  if (error) throw error;
+  return (data as MyTask[] | null) ?? [];
+}
+
+export async function myTaskCounts(): Promise<Record<string, { open: number; overdue: number }>> {
+  const { data, error } = await db().rpc('my_task_counts');
+  if (error) throw error;
+  const out: Record<string, { open: number; overdue: number }> = {};
+  for (const r of (data as { project_id: string; open_count: number; overdue_count: number }[] | null) ?? []) {
+    out[r.project_id] = { open: Number(r.open_count), overdue: Number(r.overdue_count) };
+  }
+  return out;
+}
+
+export async function myNotifications(limit = 30): Promise<AppNotification[]> {
+  const { data, error } = await db().rpc('my_notifications', { p_limit: limit });
+  if (error) throw error;
+  return (data as AppNotification[] | null) ?? [];
+}
+
+export async function markNotificationsRead(): Promise<void> {
+  const { error } = await db().rpc('mark_notifications_read');
   if (error) throw error;
 }

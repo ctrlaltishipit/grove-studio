@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from '../ds/AppShell';
+import { TaskBoard } from '../ds/TaskBoard';
 import { Icon } from '../ds/Icon';
 import { Notice } from '../ds/Notice';
 import { OfflineBanner } from '../ds/OfflineBanner';
@@ -14,8 +15,8 @@ import { useToast } from '../ds/Toast';
 import { awaitUser } from '../lib/auth';
 import { createDictation, dictationSupported, type Dictation } from '../lib/dictation';
 import { relative } from '../lib/greeting';
-import type { SpaceNote } from '../lib/models';
-import { configured, deleteSpaceNote, getSpaceNote, saveSpaceNote, shareSpaceNote } from '../lib/supabase';
+import type { SpaceMember, SpaceNote } from '../lib/models';
+import { configured, deleteSpaceNote, getSpaceMembers, getSpaceNote, saveSpaceNote, shareSpaceNote } from '../lib/supabase';
 
 const SAVE_DEBOUNCE_MS = 1200;
 
@@ -25,6 +26,7 @@ export default function StudioNote() {
   const toast = useToast();
 
   const [note, setNote] = useState<SpaceNote | null>(null);
+  const [members, setMembers] = useState<SpaceMember[]>([]);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [loading, setLoading] = useState(true);
@@ -54,7 +56,8 @@ export default function StudioNote() {
         // A private note that isn't yours is indistinguishable from one that
         // doesn't exist — RLS returns nothing, and so do we.
         if (!n) { setFailed(true); return; }
-        setNote(n); setTitle(n.title); setBody(n.body);
+        setNote(n);
+        getSpaceMembers(spaceId).then(setMembers).catch(() => {}); setTitle(n.title); setBody(n.body);
       } catch {
         setFailed(true);
       } finally {
@@ -238,6 +241,20 @@ export default function StudioNote() {
           onBlur={() => dictation.current?.stop()}
           onKeyDown={(e) => { if (e.key === 'Escape') { dictation.current?.stop(); e.currentTarget.blur(); } }}
         />
+
+        <section style={{ marginTop: 'var(--space-12)' }}>
+          <div className="row" style={{ gap: 'var(--space-3)', alignItems: 'baseline' }}>
+            <h2 className="t-h3">Tasks</h2>
+            <span className="t-label muted">
+              {isShared
+                ? 'Assign one and it lands on that person’s home screen.'
+                : 'Available once this note is shared.'}
+            </span>
+          </div>
+          <div style={{ marginTop: 'var(--space-4)' }}>
+            <TaskBoard noteId={noteId} members={members} shared={isShared} />
+          </div>
+        </section>
 
         {micDenied && (
           <p className="t-label muted" style={{ marginTop: 'var(--space-2)' }}>

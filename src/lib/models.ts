@@ -112,3 +112,67 @@ export interface Profile {
   display_name: string;
   avatar_url: string;
 }
+
+/* ---------- tasks (A15) ---------- */
+
+export type TaskStatus = 'todo' | 'doing' | 'blocked' | 'done';
+
+/** The four columns of the board, in the order they are always shown. */
+export const TASK_COLUMNS: { status: TaskStatus; label: string }[] = [
+  { status: 'todo',    label: 'To do' },
+  { status: 'doing',   label: 'In progress' },
+  { status: 'blocked', label: 'Blocked' },
+  { status: 'done',    label: 'Done' },
+];
+
+/** One task as the board sees it — assignee already resolved to a name. */
+export interface NoteTask {
+  id: string;
+  title: string;
+  detail: string;
+  status: TaskStatus;
+  due_date: string | null;
+  position: number;
+  assignee_id: string | null;
+  assignee_name: string | null;
+  assignee_colour: number | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+}
+
+/** One task as the dashboard sees it — carries where it came from, because
+ *  "write the summary" means nothing without "on Clinic booking". */
+export interface MyTask {
+  id: string;
+  title: string;
+  detail: string;
+  status: TaskStatus;
+  due_date: string | null;
+  project_id: string;
+  project_name: string;
+  note_id: string;
+  note_title: string;
+  assigned_by: string;
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+}
+
+export type NotificationKind = 'assigned' | 'reassigned' | 'unassigned' | 'due_soon' | 'completed';
+
+/** Flat, not a jsonb blob: my_notifications() returns named scalars so a
+ *  definer function can never hand back more than these five facts. */
+export interface AppNotification {
+  id: string;
+  kind: NotificationKind;
+  task_id: string | null;
+  task_title: string | null;
+  note_title: string | null;
+  project_id: string | null;
+  note_id: string | null;
+  due_date: string | null;
+  read_at: string | null;
+  created_at: string;
+}
