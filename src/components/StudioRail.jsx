@@ -8,6 +8,7 @@ import { listMembers, createTask, notify } from '../lib/api';
 import { isoDateInDays, fmtDue } from '../lib/fmt';
 import { Avatar, SparkIcon, Spinner, MenuIcon } from './ui';
 import { speechSupported, loadVoices, pickVoices, segmentsFromTurns, createSpeaker } from '../lib/speech';
+import { createDictation, dictationSupported } from '../lib/dictation';
 
 // NotebookLM-style tool cards, Ask first.
 const SUMMARY_TOOL = ['summary', 'Summary', (
@@ -258,12 +259,43 @@ function SummaryTool() {
 
 // ---------------------------------------------------------------------- ask
 
+function MicIcon({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16">
+      <rect x="5.5" y="1.5" width="5" height="8.5" rx="2.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M3 8 a5 5 0 0 0 10 0 M8 13 v2 M5.5 15 h5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function AskTool() {
   const { scope, scopeLabel } = useStudio();
   const [chat, setChat] = useState([]);
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const scrollRef = useRef(null);
+
+  // Dictate a question — the same speech path as the notes: words land in
+  // the input as you talk, nothing is sent until you press Enter or Send.
+  const [listening, setListening] = useState(false);
+  const dictation = useRef(null);
+  const listeningRef = useRef(false);
+  const base = useRef('');
+  const joinText = (a, b) => (!b ? a : !a ? b : (/\s$/.test(a) ? a + b : `${a} ${b}`));
+  useEffect(() => () => dictation.current?.stop(), []);
+  const toggleMic = () => {
+    if (listeningRef.current) { dictation.current?.stop(); return; }
+    base.current = draft;
+    dictation.current = createDictation({
+      onInterim: (t) => setDraft(joinText(base.current, t)),
+      onFinal: (t) => { base.current = joinText(base.current, t); setDraft(base.current); },
+      onEnd: () => { listeningRef.current = false; setListening(false); },
+    });
+    if (!dictation.current) return;
+    dictation.current.start();
+    listeningRef.current = true;
+    setListening(true);
+  };
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
@@ -308,6 +340,17 @@ function AskTool() {
         <input className="chat-input" placeholder="Ask your notes anything…" value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') send(); }} />
+        {dictationSupported && (
+          <button
+            className={'mic-btn' + (listening ? ' on' : '')}
+            aria-pressed={listening}
+            aria-label={listening ? 'Stop dictating' : 'Dictate a question'}
+            title={listening ? 'Stop dictating' : 'Dictate a question'}
+            onClick={toggleMic}
+          >
+            <MicIcon />
+          </button>
+        )}
         <button className="chat-send" onClick={send} aria-label="Send" disabled={busy}>
           <svg width="13" height="13" viewBox="0 0 14 14"><path d="M2 7 H11 M8 3.5 L11.5 7 L8 10.5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </button>

@@ -754,6 +754,7 @@
 .chat-msg { max-width: 88%; border-radius: 13px; padding: 9px 12px; font-size: 13px; line-height: 1.5; border: 1px solid var(--border); }
 .chat-cite { font-size: 10.5px; color: var(--faint); font-family: var(--font-mono); background: var(--sunken); border: 1px solid var(--border); border-radius: 5px; padding: 2px 7px; align-self: flex-start; }
 .chat-input-row { display: flex; gap: 8px; border-top: 1px solid var(--border); padding-top: 12px; }
+.chat-input-row .mic-btn { width: 36px; height: 36px; }
 .chat-input {
   flex: 1; background: var(--bg); border: 1px solid var(--border-strong); border-radius: 99px;
   height: 36px; padding: 0 14px; font-size: 13px; outline: none; min-width: 0;
