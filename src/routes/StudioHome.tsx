@@ -14,7 +14,7 @@ import { Mark } from '../ds/Mark';
 import { Notice } from '../ds/Notice';
 import { OfflineBanner } from '../ds/OfflineBanner';
 import { useToast } from '../ds/Toast';
-import { getCachedUser, identityOf, signOut } from '../lib/auth';
+import { awaitUser, identityOf, signOut } from '../lib/auth';
 import { greeting, relative } from '../lib/greeting';
 import type { Space } from '../lib/models';
 import { configured, createSpace, joinSpace, listMySpaces, saveProfile } from '../lib/supabase';
@@ -45,7 +45,7 @@ export default function StudioHome() {
     let cancelled = false;
     (async () => {
       if (!configured) { setLoading(false); return; }
-      const u = await getCachedUser();
+      const u = await awaitUser();
       if (cancelled) return;
       if (!u) { navigate('/', { replace: true }); return; }
       setUser(u);

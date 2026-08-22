@@ -13,7 +13,7 @@ import { Header } from '../ds/Header';
 import { Icon } from '../ds/Icon';
 import { OfflineBanner } from '../ds/OfflineBanner';
 import { useToast } from '../ds/Toast';
-import { getCachedUser } from '../lib/auth';
+import { awaitUser } from '../lib/auth';
 import { relative } from '../lib/greeting';
 import type { SpaceMember, SpaceNote } from '../lib/models';
 import { POLL_MS } from '../lib/config';
@@ -46,7 +46,7 @@ export default function Space() {
     let cancelled = false;
     (async () => {
       if (!configured) { setLoading(false); return; }
-      const u = await getCachedUser();
+      const u = await awaitUser();
       if (cancelled) return;
       if (!u) { navigate('/', { replace: true }); return; }
       try {

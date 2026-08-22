@@ -80,3 +80,30 @@ export function onAuthChange(cb: () => void): () => void {
   const { data } = authClient().onAuthStateChange(() => cb());
   return () => data.subscription.unsubscribe();
 }
+
+/** The session, but tolerant of an OAuth round trip still in flight.
+ *
+ *  After Google redirects back, supabase-js has to read the tokens out of the
+ *  URL before a session exists. A screen that checks getCachedUser() the
+ *  instant it mounts can therefore see null and bounce the person back to the
+ *  login page — the classic "signing in does nothing" bug. This waits for the
+ *  auth state to settle, but only when the URL actually looks like a callback,
+ *  so a genuinely signed-out visitor is still redirected immediately. */
+export async function awaitUser(timeoutMs = 4000): Promise<User | null> {
+  const now = await getCachedUser();
+  if (now) return now;
+
+  const url = new URL(window.location.href);
+  const looksLikeCallback =
+    url.hash.includes('access_token') ||
+    url.searchParams.has('code') ||
+    url.searchParams.has('error_description');
+  if (!looksLikeCallback) return null;
+
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = (u: User | null) => { if (!done) { done = true; stop(); resolve(u); } };
+    const stop = onAuthChange(() => { void getCachedUser().then((u) => { if (u) finish(u); }); });
+    window.setTimeout(() => finish(null), timeoutMs);
+  });
+}

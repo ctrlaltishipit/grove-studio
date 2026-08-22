@@ -11,7 +11,7 @@ import { Notice } from '../ds/Notice';
 import { OfflineBanner } from '../ds/OfflineBanner';
 import { Recording } from '../ds/Recording';
 import { useToast } from '../ds/Toast';
-import { getCachedUser } from '../lib/auth';
+import { awaitUser } from '../lib/auth';
 import { createDictation, dictationSupported, type Dictation } from '../lib/dictation';
 import { relative } from '../lib/greeting';
 import type { SpaceNote } from '../lib/models';
@@ -45,7 +45,7 @@ export default function StudioNote() {
     let cancelled = false;
     (async () => {
       if (!configured) { setLoading(false); return; }
-      const u = await getCachedUser();
+      const u = await awaitUser();
       if (cancelled) return;
       if (!u) { navigate('/', { replace: true }); return; }
       try {
