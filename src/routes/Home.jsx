@@ -6,8 +6,9 @@ import { greeting, todayLine, relTime } from '../lib/fmt';
 import { firstName, spaceTile } from '../lib/colors';
 import { Spinner, AvatarStack, LockIcon } from '../components/ui';
 import NotificationsBell from '../components/NotificationsBell';
-import { TaskRow, CheckinBanner, pickCheckinTask } from '../components/TaskBits';
+import { TaskRow, CheckinBanner, pickCheckinTask, NEXT_STATUS, nextProgress } from '../components/TaskBits';
 import { SelectToggle } from '../components/NotesList';
+import { DEMO_TASKS, DEMO_MEMBERS, DEMO_NOTES } from '../lib/demoData';
 
 const FILTERS = ['All', 'Open', 'Done'];
 
@@ -67,6 +68,20 @@ export default function Home() {
     filter === 'All' ? true : filter === 'Open' ? t.status !== 'done' : t.status === 'done'),
   [myTasks, filter]);
 
+  // The sample space's tasks assigned to "you" keep this list demo-able
+  // before any real assignments exist. Cycling their status stays local,
+  // like every other change in the sample.
+  const [demoTasks, setDemoTasks] = useState(() =>
+    DEMO_TASKS.filter((t) => t.assignee_user === 'demo-you').map((t) => ({ ...t })));
+  const cycleDemoTask = (task) => setDemoTasks((ts) => ts.map((t) => (t.id === task.id
+    ? { ...t, status: NEXT_STATUS[t.status], progress: nextProgress(NEXT_STATUS[t.status], t.progress) }
+    : t)));
+  const demoMember = (id) => DEMO_MEMBERS.find((m) => m.userId === id);
+  const demoNoteTitle = (id) => DEMO_NOTES.find((n) => n.id === id)?.title;
+  const shownDemo = useMemo(() => demoTasks.filter((t) =>
+    filter === 'All' ? true : filter === 'Open' ? t.status !== 'done' : t.status === 'done'),
+  [demoTasks, filter]);
+
   const openCount = myTasks.filter((t) => t.status !== 'done').length;
   const checkinTask = tasksReady ? pickCheckinTask(myTasks) : null;
 
@@ -104,7 +119,7 @@ export default function Home() {
         <div className="section">
           <div className="section-head">
             <h2>Assigned to you</h2>
-            <span className="n">{shownTasks.length}</span>
+            <span className="n">{shownTasks.length + shownDemo.length}</span>
             <div className="filters">
               {FILTERS.map((f) => (
                 <button key={f} className={'filter-pill' + (filter === f ? ' on' : '')} onClick={() => setFilter(f)}>{f}</button>
@@ -124,7 +139,16 @@ export default function Home() {
                   />
                 );
               })}
-              {!shownTasks.length && (
+              {shownDemo.map((t) => (
+                <TaskRow key={t.id} task={t}
+                  spaceName={spaceName(t.project_id)}
+                  noteTitle={demoNoteTitle(t.note_id)}
+                  byName={demoMember(t.assigned_by_user)?.name}
+                  byColour={demoMember(t.assigned_by_user)?.colourIndex}
+                  onCycle={cycleDemoTask}
+                />
+              ))}
+              {!shownTasks.length && !shownDemo.length && (
                 <div className="empty-note">
                   Nothing here — tasks assigned to you land in this list the moment someone assigns them.
                 </div>

@@ -117,7 +117,9 @@ export function useCycleStatus() {
   };
 }
 
-export function TaskRow({ task, spaceName, byName, byColour, noteTitle }) {
+// onCycle overrides the DB-backed status cycle — the dashboard's sample
+// tasks use it to cycle in local state only.
+export function TaskRow({ task, spaceName, byName, byColour, noteTitle, onCycle }) {
   const nav = useNavigate();
   const cycle = useCycleStatus();
   const ss = statusStyle(task.status);
@@ -129,7 +131,7 @@ export function TaskRow({ task, spaceName, byName, byColour, noteTitle }) {
     <div className="task-row">
       <button className="task-status" title="Click to change status"
         style={{ background: ss.bg, color: ss.ink }}
-        onClick={() => cycle(task, { assignerName: byName })}>
+        onClick={() => (onCycle ? onCycle(task) : cycle(task, { assignerName: byName }))}>
         {STATUS_LABEL[task.status]}
       </button>
       <div className="task-main">
