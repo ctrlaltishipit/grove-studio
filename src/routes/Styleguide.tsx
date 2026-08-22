@@ -28,6 +28,7 @@ import { Recording } from '../ds/Recording';
 import { RosterRail } from '../ds/RosterRail';
 import { RosterStrip } from '../ds/RosterStrip';
 import { ThemeToggle } from '../ds/ThemeToggle';
+import { MindMap } from '../ds/stretch/MindMap';
 import { useToast } from '../ds/Toast';
 import type { Finding, Note, NoteKind } from '../lib/models';
 import { buildSupporters } from '../lib/supporters';
@@ -123,20 +124,40 @@ const EMPTY_STRINGS: { id: string; where: string; copy: string }[] = [
   { id: 'E16', where: 'Capture',         copy: 'Grove can’t reach the microphone. Type the note instead.' },
 ];
 
+// Every <Spec id> on the page appears here, and nothing else does — the nav is
+// derived from this one list so a new section cannot go unreachable.
 const NAV: { id: string; label: string }[] = [
   { id: 'tokens',   label: 'Tokens' },
+  { id: 'space',    label: 'Space' },
+  { id: 'radii',    label: 'Radii' },
   { id: 'type',     label: 'Type' },
+  { id: 'elevation', label: 'Elevation' },
   { id: 's8-1',     label: 'Buttons' },
   { id: 's8-2',     label: 'Inputs' },
+  { id: 's8-3',     label: 'Textarea' },
   { id: 's8-4',     label: 'Composer' },
+  { id: 's8-5',     label: 'Kind' },
+  { id: 's8-20',    label: 'Dictate' },
+  { id: 's8-21',    label: 'Recording' },
   { id: 's8-6',     label: 'Notes' },
+  { id: 's8-7',     label: 'Chip' },
   { id: 's8-8',     label: 'Roster' },
   { id: 's8-9',     label: 'Badge' },
   { id: 's8-10',    label: 'Findings' },
+  { id: 's8-11',    label: 'Disagreement' },
+  { id: 's8-14',    label: 'Receipt' },
   { id: 's8-12',    label: 'Grid' },
+  { id: 's8-23',    label: 'Mind map' },
   { id: 's8-15',    label: 'Code' },
   { id: 's8-16',    label: 'Feedback' },
+  { id: 's8-17',    label: 'Empty' },
+  { id: 'notice',   label: 'Notice' },
+  { id: 'offline',  label: 'Offline' },
+  { id: 'question', label: 'Question' },
+  { id: 's8-18',    label: 'Placeholder' },
+  { id: 's8-19',    label: 'Theme' },
   { id: 'chrome',   label: 'Chrome' },
+  { id: 'icons',    label: 'Icons' },
 ];
 
 const noop = () => {};
@@ -795,6 +816,47 @@ export function Styleguide() {
             />
           </div>
         </Spec>
+
+        <Spec
+          id="s8-20"
+          label="8.20 Dictate control — §8.20"
+          note="A 36x36 ghost icon button in the composer's top row, hit area padded to 44x44. It renders in both states: the accessible name is the state. Active is a held --sunken fill — no colour change, no pulse, no ring, no red dot, because Capture Mode animates nothing. Where SpeechRecognition is absent the control does not render at all, silently."
+        >
+          <div style={row}>
+            <State label='Rest — aria-pressed="false", "Dictate a note"'>
+              <button type="button" className="btn btn--ghost btn--icon mic" aria-pressed="false" aria-label="Dictate a note">
+                <Icon name="mic" />
+              </button>
+            </State>
+            <State label='Active — aria-pressed="true", "Stop dictating"'>
+              <button type="button" className="btn btn--ghost btn--icon mic" aria-pressed="true" aria-label="Stop dictating">
+                <Icon name="mic" />
+              </button>
+            </State>
+            <State label="Unsupported — nothing renders">
+              <span className="t-label muted">(no control)</span>
+            </State>
+          </div>
+        </Spec>
+
+        <Spec
+          id="s8-23"
+          label="8.23 Mind map — §8.23 (stretch, not mounted in v1)"
+          note="Hand-written inline SVG: no charting library, no force simulation, no animation, no tooltips. Node size is constant — scaling a node by count would be a heat scale. Top 8 findings; fewer than two renders nothing."
+        >
+          <div className="stack stack-6">
+            <State label="Eight findings across three observers" block>
+              <MindMap question={session.research_question} findings={findings} roster={roster} supporters={supporters} />
+            </State>
+            <State label="One finding — renders nothing, silently" block>
+              <MindMap question={session.research_question} findings={findings.slice(0, 1)} roster={roster} supporters={supporters} />
+            </State>
+          </div>
+        </Spec>
+
+        <p className="t-label muted" style={{ marginTop: 'var(--space-12)' }}>
+          8.22 Listen — v1.0 stretch, not built. Its CSS (.listen, .transport, .scrub) is present and unused.
+        </p>
 
         <Spec id="icons" label="Icons — §6.6" note="One set, one weight, 16px and 20px, inline SVG. --ink-muted by default; an icon never carries a semantic colour. Chevron and check are fixed at 12px and 16px.">
           <div style={row}>
