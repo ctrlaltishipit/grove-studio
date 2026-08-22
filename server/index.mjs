@@ -17,7 +17,10 @@ import { claudeConfigured } from './claude.mjs';
 import { emailConfigured, sendInviteEmail } from './email.mjs';
 import * as studio from './studio.mjs';
 
-const APP_URL = process.env.APP_URL || 'http://localhost:3000';
+// Invite links point here. APP_URL wins when set; otherwise production
+// (Vercel) uses the real domain and local dev uses the Vite port.
+const APP_URL = process.env.APP_URL
+  || (process.env.VERCEL ? 'https://www.grovestudio.io' : 'http://localhost:3000');
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 const PORT = Number(process.env.STUDIO_PORT || 8787);
