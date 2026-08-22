@@ -5,7 +5,7 @@
 // Nothing on this screen animates while you write.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Header } from '../ds/Header';
+import { AppShell } from '../ds/AppShell';
 import { Icon } from '../ds/Icon';
 import { Notice } from '../ds/Notice';
 import { OfflineBanner } from '../ds/OfflineBanner';
@@ -143,42 +143,45 @@ export default function StudioNote() {
 
   if (failed) {
     return (
-      <>
-        <Header />
-        <main className="page col-read" style={{ paddingTop: 'var(--space-8)' }}>
-          <Notice action={<Link to={`/space/${spaceId}`} className="btn btn--secondary btn--sm" style={{ textDecoration: 'none' }}>Back to the space</Link>}>
-            That note isn&rsquo;t available.
-          </Notice>
-        </main>
-      </>
+      <AppShell>
+        <Notice action={<Link to={`/space/${spaceId}`} className="btn btn--secondary btn--sm" style={{ textDecoration: 'none' }}>Back to the space</Link>}>
+          That note isn&rsquo;t available.
+        </Notice>
+      </AppShell>
     );
   }
 
   const isShared = note?.visibility === 'shared';
 
   return (
-    <>
-      <Header
-        left={<Link to={`/space/${spaceId}`} className="btn btn--ghost btn--sm" style={{ textDecoration: 'none' }}>Back to the space</Link>}
-        right={
-          <span className="row" style={{ gap: 'var(--space-2)' }}>
-            <span className="t-micro muted" aria-live="polite">
-              {saveState === 'saving' ? 'Saving.' : saveState === 'failed' ? 'Not saved.' : note ? `Saved ${relative(note.updated_at)}` : ''}
-            </span>
-          </span>
-        }
-      />
+    <AppShell>
       <OfflineBanner />
-
-      <main className="page col-read" style={{ paddingTop: 'var(--space-6)', paddingBottom: 'var(--space-12)' }}>
-        <div className="row" style={{ gap: 'var(--space-3)' }}>
-          <span className={`badge`} data-corrob={isShared ? '3' : '1'}>
-            {isShared ? 'Shared with the space' : 'Private to you'}
+      <div className="editor">
+        <div className="editor__bar">
+          <Link to={`/space/${spaceId}`} className="btn btn--ghost btn--sm" style={{ textDecoration: 'none' }}>
+            Back to the space
+          </Link>
+          <span className="badge" data-corrob={isShared ? '3' : '1'} style={{ height: 28, fontSize: 13, padding: '0 12px' }}>
+            {isShared ? 'Shared' : 'Private'}
           </span>
           <span className="spacer" />
+          <span className="t-micro muted" aria-live="polite">
+            {saveState === 'saving' ? 'Saving.' : saveState === 'failed' ? 'Not saved.' : note ? `Saved ${relative(note.updated_at)}` : ''}
+          </span>
+          {dictationSupported && (
+            <button
+              type="button"
+              className="btn btn--ghost btn--icon mic"
+              aria-pressed={listening}
+              aria-label={listening ? 'Stop dictating' : 'Dictate this note'}
+              onClick={toggleDictation}
+            >
+              <Icon name="mic" />
+            </button>
+          )}
           {!isShared && !confirmingShare && (
             <button type="button" className="btn btn--secondary btn--sm" onClick={() => setConfirmingShare(true)}>
-              Share with the space
+              Share
             </button>
           )}
           {!confirmingDelete && (
@@ -186,11 +189,15 @@ export default function StudioNote() {
           )}
         </div>
 
+        {listening && (
+          <div className="row" style={{ marginBottom: 'var(--space-4)' }}>
+            <Recording seconds={seconds} onStop={() => dictation.current?.stop()} />
+          </div>
+        )}
+
         {confirmingShare && (
-          <div className="notice" role="status" style={{ marginTop: 'var(--space-4)' }}>
-            <p className="t-body">
-              Everyone in this space will be able to read this note, and sharing cannot be undone.
-            </p>
+          <div className="notice" role="status" style={{ marginBottom: 'var(--space-6)' }}>
+            <p className="t-body">Everyone in this space will be able to read this note, and sharing cannot be undone.</p>
             <div className="row" style={{ marginTop: 'var(--space-3)', gap: 'var(--space-2)' }}>
               <button type="button" className="btn btn--primary btn--sm" onClick={share}>Share it</button>
               <button type="button" className="btn btn--ghost btn--sm" onClick={() => setConfirmingShare(false)}>Keep it private</button>
@@ -199,7 +206,7 @@ export default function StudioNote() {
         )}
 
         {confirmingDelete && (
-          <div className="notice" role="status" style={{ marginTop: 'var(--space-4)' }}>
+          <div className="notice" role="status" style={{ marginBottom: 'var(--space-6)' }}>
             <p className="t-body">Delete this note?</p>
             <div className="row" style={{ marginTop: 'var(--space-3)', gap: 'var(--space-2)' }}>
               <button type="button" className="btn btn--destructive btn--sm" onClick={remove}>Delete</button>
@@ -211,54 +218,34 @@ export default function StudioNote() {
         <label className="vh" htmlFor="note-title">Title</label>
         <input
           id="note-title"
-          className="input"
-          style={{ marginTop: 'var(--space-6)', fontSize: 20, fontWeight: 650, height: 'auto', padding: '12px 14px' }}
+          className="editor__title"
           value={title}
           placeholder="Untitled note"
           disabled={loading}
           onChange={(e) => { setTitle(e.target.value); queueSave({ title: e.target.value.trim() || 'Untitled note' }); }}
         />
 
-        <div className="composer" style={{ marginTop: 'var(--space-4)' }}>
-          <div className="composer__top">
-            {dictationSupported && (
-              <button
-                type="button"
-                className="btn btn--ghost btn--icon mic"
-                aria-pressed={listening}
-                aria-label={listening ? 'Stop dictating' : 'Dictate this note'}
-                onClick={toggleDictation}
-              >
-                <Icon name="mic" />
-              </button>
-            )}
-            {listening
-              ? <Recording seconds={seconds} onStop={() => dictation.current?.stop()} />
-              : <span className="composer__hint">Type, or press the microphone to dictate</span>}
-          </div>
+        <label className="vh" htmlFor="note-body">Note</label>
+        <textarea
+          id="note-body"
+          ref={area}
+          className="editor__body"
+          style={{ marginTop: 'var(--space-4)' }}
+          placeholder="Write what you noticed, or press the microphone to dictate."
+          value={body}
+          disabled={loading}
+          onChange={(e) => { setBody(e.target.value); queueSave({ body: e.target.value }); }}
+          onBlur={() => dictation.current?.stop()}
+          onKeyDown={(e) => { if (e.key === 'Escape') { dictation.current?.stop(); e.currentTarget.blur(); } }}
+        />
 
-          <label className="vh" htmlFor="note-body">Note</label>
-          <textarea
-            id="note-body"
-            ref={area}
-            className="textarea composer__area"
-            rows={16}
-            placeholder="Write what you noticed."
-            value={body}
-            disabled={loading}
-            onChange={(e) => { setBody(e.target.value); queueSave({ body: e.target.value }); }}
-            onBlur={() => dictation.current?.stop()}
-            onKeyDown={(e) => { if (e.key === 'Escape') { dictation.current?.stop(); e.currentTarget.blur(); } }}
-          />
-
-          {micDenied && (
-            <p className="t-label muted" style={{ marginTop: 'var(--space-2)' }}>
-              Grove Studio can&rsquo;t reach the microphone. Type the note instead.
-            </p>
-          )}
-        </div>
-      </main>
+        {micDenied && (
+          <p className="t-label muted" style={{ marginTop: 'var(--space-2)' }}>
+            Grove Studio can&rsquo;t reach the microphone. Type the note instead.
+          </p>
+        )}
+      </div>
       {toast.node}
-    </>
+    </AppShell>
   );
 }

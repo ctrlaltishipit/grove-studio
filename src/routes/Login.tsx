@@ -7,10 +7,10 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CodeInput } from '../ds/CodeInput';
-import { Header } from '../ds/Header';
 import { Mark } from '../ds/Mark';
 import { Notice } from '../ds/Notice';
 import { OfflineBanner } from '../ds/OfflineBanner';
+import { ThemeToggle } from '../ds/ThemeToggle';
 import { signInWithGoogle } from '../lib/auth';
 import { configured } from '../lib/supabase';
 
@@ -33,10 +33,10 @@ export default function Login() {
   }
 
   return (
-    <>
-      <Header linkHome={false} />
+    <div className="gate">
+      <div className="gate__foot"><ThemeToggle /></div>
       <OfflineBanner />
-      <main className="page col-narrow" style={{ paddingTop: 'var(--space-16)', paddingBottom: 'var(--space-12)' }}>
+      <main className="gate__card">
         <div className="center">
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-6)' }}>
             <Mark size={72} label="Grove Studio" />
@@ -87,6 +87,6 @@ export default function Login() {
           </p>
         </div>
       </main>
-    </>
+    </div>
   );
 }

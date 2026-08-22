@@ -158,6 +158,7 @@ const NAV: { id: string; label: string }[] = [
   { id: 's8-19',    label: 'Theme' },
   { id: 'chrome',   label: 'Chrome' },
   { id: 'icons',    label: 'Icons' },
+  { id: 'studio',   label: 'Studio' },
 ];
 
 const noop = () => {};
@@ -869,6 +870,78 @@ export function Styleguide() {
               </State>
             ))}
           </div>
+        </Spec>
+
+        <Spec
+          id="studio"
+          label="Studio shell — A13"
+          note="The persistent surfaces added for Grove Studio: sidebar navigation, page head, note tiles, and the tab pair. Layout only — no new colour enters the system. Private and shared differ by a left border drawn from the corroboration ladder, the same device the finding cards use."
+        >
+          <State label="Navigation items">
+            <div style={{ maxWidth: 260, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', padding: 'var(--space-3)' }}>
+              <span className="navitem" aria-current="page"><span className="navitem__text">Home</span></span>
+              <span className="navitem"><span className="navitem__text">New session</span></span>
+              <span className="navitem">
+                <span className="navitem__dot" style={{ background: 'var(--observer-2)' }} />
+                <span className="navitem__text">Clinic booking</span>
+                <span className="navitem__count tabular">8</span>
+              </span>
+            </div>
+          </State>
+
+          <State label="Page head">
+            <div className="pagehead" style={{ maxWidth: 620 }}>
+              <div className="pagehead__title">
+                <h1 className="t-h1">Clinic booking</h1>
+                <p className="t-label muted" style={{ marginTop: 'var(--space-2)' }}>3 members</p>
+              </div>
+              <span className="codechip">
+                <span className="t-tracked muted">Code</span>
+                <span className="codechip__value">GRVDEM</span>
+              </span>
+            </div>
+          </State>
+
+          <State label="Tabs">
+            <div className="tabs" role="tablist" aria-label="Notes">
+              <button type="button" role="tab" aria-selected className="tabs__item">Shared · 8</button>
+              <button type="button" role="tab" aria-selected={false} className="tabs__item">Private · 2</button>
+            </div>
+          </State>
+
+          <State label="Note tiles — shared and private">
+            <div className="grid-notes" style={{ maxWidth: 620 }}>
+              <span className="tile tile--shared">
+                <span className="tile__title">Insurance step</span>
+                <span className="tile__body">She stopped at the insurance field and read it twice before backing out.</span>
+                <span className="tile__foot">
+                  <Chip name="Priya R." colourIndex={0} small />
+                  <span className="t-micro muted">Priya R.</span>
+                  <span className="spacer" />
+                  <span className="t-micro muted tabular">2 min ago</span>
+                </span>
+              </span>
+              <span className="tile tile--private">
+                <span className="tile__title">Untitled note</span>
+                <span className="tile__body">Empty</span>
+                <span className="tile__foot">
+                  <Chip name="You" colourIndex={1} small self />
+                  <span className="t-micro muted">You</span>
+                  <span className="spacer" />
+                  <span className="t-micro muted tabular">just now</span>
+                </span>
+              </span>
+            </div>
+          </State>
+
+          <State label="Space tile — home">
+            <div className="grid-spaces" style={{ maxWidth: 620 }}>
+              <span className="tile">
+                <span className="tile__title">Clinic booking</span>
+                <span className="tile__meta">8 shared notes · 3 members</span>
+              </span>
+            </div>
+          </State>
         </Spec>
       </main>
       {toast.node}

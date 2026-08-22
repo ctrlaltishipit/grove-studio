@@ -435,3 +435,139 @@
 /* ---------- S1 home cards ---------- */
 .home-cards { display: grid; grid-template-columns: 1fr; gap: var(--space-4); }
 @media (min-width: 1024px) { .home-cards { grid-template-columns: 1fr 1fr; gap: var(--space-6); } }
+
+/* ============================================================
+   GROVE STUDIO — app shell (amendment A14)
+   A persistent sidebar and a wide content area. Depth comes from
+   surface contrast and hairlines, never shadows: §6.4 still holds.
+   ============================================================ */
+
+.shell { display: flex; min-height: 100vh; align-items: stretch; }
+
+.shell__side {
+  width: 248px; flex: 0 0 248px;
+  background: var(--sunken);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  padding: var(--space-4);
+  gap: var(--space-2);
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+.shell__main { flex: 1 1 auto; min-width: 0; background: var(--bg); }
+.shell__inner { max-width: 1080px; margin: 0 auto; padding: var(--space-8) var(--space-8) var(--space-16); }
+
+.shell__brand {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-2) var(--space-4);
+  font-size: 15px; font-weight: 650; letter-spacing: -0.01em; color: var(--ink);
+  text-decoration: none;
+}
+
+.shell__label {
+  font-size: 11px; line-height: 1.2; font-weight: 650; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-faint);
+  padding: var(--space-4) var(--space-2) var(--space-2);
+}
+
+.navitem {
+  display: flex; align-items: center; gap: var(--space-3);
+  min-height: 36px; padding: 0 var(--space-3);
+  border-radius: var(--radius-input);
+  font-size: 14px; font-weight: 500; color: var(--ink-muted);
+  text-decoration: none; width: 100%; text-align: left;
+  transition: background-color var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease);
+}
+.navitem:hover { background: var(--surface); color: var(--ink); }
+.navitem[aria-current="page"] { background: var(--surface); color: var(--ink); font-weight: 650; }
+.navitem__dot { width: 8px; height: 8px; border-radius: 999px; flex: none; background: var(--corrob-2); }
+.navitem__text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.navitem__count { margin-left: auto; font-size: 12px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+
+.shell__foot { margin-top: auto; padding-top: var(--space-4); border-top: 1px solid var(--border); }
+
+/* mobile: the sidebar becomes a top strip */
+@media (max-width: 899px) {
+  .shell { display: block; }
+  .shell__side {
+    width: auto; height: auto; position: static;
+    flex-direction: row; align-items: center; gap: var(--space-2);
+    overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--border);
+    padding: var(--space-2) var(--space-4);
+  }
+  .shell__label, .shell__foot { display: none; }
+  .shell__brand { padding: 0 var(--space-2) 0 0; }
+  .navitem { width: auto; white-space: nowrap; }
+  .shell__inner { padding: var(--space-6) var(--space-4) var(--space-12); }
+}
+
+/* ---------- page header inside the shell ---------- */
+.pagehead { display: flex; align-items: flex-start; gap: var(--space-4); flex-wrap: wrap; }
+.pagehead__title { min-width: 0; flex: 1 1 auto; }
+
+/* ---------- card grids ---------- */
+.grid-spaces { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-4); }
+.grid-notes  { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--space-4); align-items: start; }
+
+.tile {
+  display: block; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius-card);
+  padding: var(--space-4); text-decoration: none; color: inherit;
+  transition: border-color var(--motion-fast) var(--ease), background-color var(--motion-fast) var(--ease);
+}
+.tile:hover { border-color: var(--border-strong); }
+.tile__title { display: block; font-size: 16px; line-height: 1.35; font-weight: 650; color: var(--ink); }
+.tile__meta  { display: block; margin-top: var(--space-2); font-size: 12px; font-weight: 500; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.tile__body  { margin-top: var(--space-3); font-size: 14px; line-height: 1.55; color: var(--ink-muted);
+               display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.tile__foot  { margin-top: var(--space-4); display: flex; align-items: center; gap: var(--space-2); }
+/* a private note carries a hairline in the ladder's first step — identity, not alarm */
+.tile--private { border-left: 3px solid var(--corrob-1); }
+.tile--shared  { border-left: 3px solid var(--corrob-3); }
+
+/* ---------- tabs (Shared / Private) ---------- */
+.tabs { display: inline-flex; gap: 3px; background: var(--sunken); border-radius: var(--radius-badge); padding: 3px; }
+.tabs__item {
+  height: 32px; padding: 0 14px; border-radius: var(--radius-badge);
+  font-size: 13px; font-weight: 500; color: var(--ink-muted);
+  border: 1px solid transparent;
+  transition: background-color var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease);
+}
+.tabs__item:hover { color: var(--ink); }
+.tabs__item[aria-selected="true"] { background: var(--surface); color: var(--ink); border-color: var(--border); }
+
+/* ---------- editor ---------- */
+.editor { max-width: 760px; margin: 0 auto; }
+.editor__title {
+  width: 100%; border: 0; background: transparent; padding: 0;
+  font-size: 28px; line-height: 1.2; font-weight: 650; letter-spacing: -0.02em; color: var(--ink);
+}
+.editor__title::placeholder { color: var(--ink-faint); }
+.editor__title:focus { outline: none; }
+.editor__body {
+  width: 100%; border: 0; background: transparent; padding: 0; resize: none;
+  font-size: var(--note-size); line-height: 1.65; color: var(--ink); min-height: 50vh;
+}
+.editor__body::placeholder { color: var(--ink-faint); }
+.editor__body:focus { outline: none; }
+.editor__bar {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding-bottom: var(--space-4); border-bottom: 1px solid var(--border); margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+}
+
+/* ---------- gate (S0 Login) — one centred card, nothing behind it ---------- */
+.gate {
+  min-height: 100dvh; display: grid; place-items: center;
+  padding: var(--space-8) var(--space-4); background: var(--bg);
+}
+.gate__card {
+  width: 100%; max-width: 380px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 16px;
+  padding: var(--space-12) var(--space-8);
+}
+.gate__foot { position: fixed; top: var(--space-4); right: var(--space-4); }
+@media (max-width: 599px) {
+  /* on a phone the card is the page: no frame, no inset */
+  .gate { padding: 0; align-items: start; }
+  .gate__card { max-width: none; border: 0; border-radius: 0; padding: var(--space-16) var(--space-6) var(--space-12); }
+}
