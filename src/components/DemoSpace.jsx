@@ -6,8 +6,9 @@ import { spaceTile, labelChip } from '../lib/colors';
 import { shortTime, relTime, fmtDue, dueUrgency } from '../lib/fmt';
 import { STATUS_LABEL, StatusMenu, MemberMenu } from './TaskBits';
 import { createDictation, dictationSupported } from '../lib/dictation';
+import { useDemoLoop, setDemoTaskStatus, reassignDemoTask, createDemoTask } from '../lib/demoLoop';
 import {
-  demoSpace, DEMO_SPACE_ID, DEMO_MEMBERS, DEMO_NOTES, DEMO_COMMENTS, DEMO_TASKS,
+  demoSpace, DEMO_SPACE_ID, DEMO_MEMBERS, DEMO_NOTES, DEMO_COMMENTS,
 } from '../lib/demoData';
 
 const memberByMemberId = new Map(DEMO_MEMBERS.map((m) => [m.memberId, m]));
@@ -233,7 +234,9 @@ export default function DemoSpace() {
   const [tab, setTab] = useState('notes');
   const [openId, setOpenId] = useState(null);
   const [shareOpen, setShareOpen] = useState(false);
-  const [tasks, setTasks] = useState(() => DEMO_TASKS.map((t) => ({ ...t })));
+  // Tasks live in the shared demo-loop store, so an assignment made here is
+  // felt on the dashboard: notification, "Assigned to you", check-ins.
+  const { tasks } = useDemoLoop();
   const [comments, setComments] = useState(() => JSON.parse(JSON.stringify(DEMO_COMMENTS)));
 
   const openNote = DEMO_NOTES.find((n) => n.id === openId) ?? null;
@@ -245,21 +248,18 @@ export default function DemoSpace() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const setStatus = (id, status) => setTasks((ts) => ts.map((t) => (t.id === id
-    ? { ...t, status, progress: status === 'done' ? 100 : status === 'todo' ? 0 : status === 'review' ? Math.max(t.progress, 66) : Math.max(t.progress, 40) }
-    : t)));
+  const setStatus = (id, status) => setDemoTaskStatus(id, status);
 
-  const createTask = (status, title) => setTasks((ts) => [...ts, {
-    id: `demo-new-${Date.now()}`, project_id: DEMO_SPACE_ID, note_id: null,
-    title, label: null, status, progress: status === 'done' ? 100 : 0,
-    assignee_user: 'demo-you', assigned_by_user: 'demo-you', due_date: null,
-  }]);
+  const createTask = (status, title) => createDemoTask(status, title);
 
-  const reassignTask = (id, member) => setTasks((ts) => ts.map((t) => {
-    if (t.id !== id || t.assignee_user === member.userId) return t;
-    toast(`Reassigned to ${member.name}`, 'In a real space, they’d be notified with the note link and deadline', 'assign');
-    return { ...t, assignee_user: member.userId };
-  }));
+  const reassignTask = (id, member) => {
+    const who = reassignDemoTask(id, member);
+    if (who === 'you') {
+      toast('Assigned to you', 'Check your dashboard — the notification is there, and check-ins follow while it’s in progress', 'assign');
+    } else if (who === 'other') {
+      toast(`Reassigned to ${member.name}`, 'In a real space, they’d be notified with the note link and deadline', 'assign');
+    }
+  };
 
   const addComment = (noteId, body) => {
     const c = { id: 'dc-local-' + Math.random().toString(36).slice(2), note_id: noteId, author_user: 'demo-you', body, created_at: new Date().toISOString() };

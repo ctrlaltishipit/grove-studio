@@ -8,6 +8,7 @@ import Space from './routes/Space';
 import Sidebar from './components/Sidebar';
 import ModalHost from './components/Modals';
 import StudioRail from './components/StudioRail';
+import DemoCheckinPop from './components/DemoCheckinPop';
 import Toasts from './components/Toasts';
 import { Spinner } from './components/ui';
 import { loadNavMin, saveNavMin } from './lib/local';
@@ -44,6 +45,7 @@ function AppShell() {
           <StudioRail />
         </div>
         <ModalHost />
+        <DemoCheckinPop />
       </StudioProvider>
     </DataProvider>
   );

@@ -881,6 +881,28 @@
   position: fixed; bottom: 20px; right: 20px; z-index: 95;
   display: flex; flex-direction: column; gap: 8px; pointer-events: none;
 }
+
+/* The sample space's floating check-in — small, bottom-left, never blocking. */
+.demo-checkin {
+  position: fixed; left: 20px; bottom: 20px; z-index: 90; width: 304px;
+  background: var(--surface); border: 1px solid var(--border-strong);
+  border-radius: 14px; padding: 14px 16px 14px; box-shadow: var(--shadow-lg);
+  animation: fadeUp .2s ease-out both;
+}
+.demo-checkin .x {
+  position: absolute; top: 8px; right: 10px; border: none; background: transparent;
+  color: var(--faint); font-size: 13px; cursor: pointer; border-radius: 6px; padding: 2px 6px;
+}
+.demo-checkin .x:hover { background: var(--sunken); color: var(--ink); }
+.demo-checkin .head { display: flex; align-items: center; gap: 8px; padding-right: 22px; }
+.demo-checkin .head b { font-size: 13px; line-height: 1.35; }
+.demo-checkin .clock {
+  width: 26px; height: 26px; border-radius: 8px; background: var(--amber-soft);
+  color: var(--amber); display: grid; place-items: center; flex: none;
+}
+.demo-checkin p { margin: 8px 0 10px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+.demo-checkin .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+@media (max-width: 860px) { .demo-checkin { left: 12px; right: 12px; width: auto; bottom: 12px; } }
 .toast {
   background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
   box-shadow: var(--shadow-lg); padding: 11px 14px; max-width: 360px;

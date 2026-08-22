@@ -6,9 +6,10 @@ import { greeting, todayLine, relTime } from '../lib/fmt';
 import { firstName, spaceTile } from '../lib/colors';
 import { Spinner, AvatarStack, LockIcon } from '../components/ui';
 import NotificationsBell from '../components/NotificationsBell';
-import { TaskRow, CheckinBanner, pickCheckinTask, NEXT_STATUS, nextProgress } from '../components/TaskBits';
+import { TaskRow, CheckinBanner, pickCheckinTask, NEXT_STATUS } from '../components/TaskBits';
 import { SelectToggle } from '../components/NotesList';
-import { DEMO_TASKS, DEMO_MEMBERS, DEMO_NOTES } from '../lib/demoData';
+import { DEMO_MEMBERS, DEMO_NOTES } from '../lib/demoData';
+import { useDemoLoop, setDemoTaskStatus, markDemoNotifsRead } from '../lib/demoLoop';
 
 const FILTERS = ['All', 'Open', 'Done'];
 
@@ -68,19 +69,18 @@ export default function Home() {
     filter === 'All' ? true : filter === 'Open' ? t.status !== 'done' : t.status === 'done'),
   [myTasks, filter]);
 
-  // The sample space's tasks assigned to "you" keep this list demo-able
-  // before any real assignments exist. Cycling their status stays local,
-  // like every other change in the sample.
-  const [demoTasks, setDemoTasks] = useState(() =>
-    DEMO_TASKS.filter((t) => t.assignee_user === 'demo-you').map((t) => ({ ...t })));
-  const cycleDemoTask = (task) => setDemoTasks((ts) => ts.map((t) => (t.id === task.id
-    ? { ...t, status: NEXT_STATUS[t.status], progress: nextProgress(NEXT_STATUS[t.status], t.progress) }
-    : t)));
+  // The sample space's tasks assigned to "you" come from the shared demo
+  // loop — the same store the sample board writes — so an assignment made
+  // there lands here live, with its notification and check-ins in tow.
+  const loop = useDemoLoop();
+  const demoTasks = useMemo(() => loop.tasks.filter((t) => t.assignee_user === 'demo-you'), [loop.tasks]);
+  const cycleDemoTask = (task) => setDemoTaskStatus(task.id, NEXT_STATUS[task.status]);
   const demoMember = (id) => DEMO_MEMBERS.find((m) => m.userId === id);
   const demoNoteTitle = (id) => DEMO_NOTES.find((n) => n.id === id)?.title;
   const shownDemo = useMemo(() => demoTasks.filter((t) =>
     filter === 'All' ? true : filter === 'Open' ? t.status !== 'done' : t.status === 'done'),
   [demoTasks, filter]);
+  const demoUnread = loop.notifs.filter((n) => !n.read);
 
   const openCount = myTasks.filter((t) => t.status !== 'done').length;
   const checkinTask = tasksReady ? pickCheckinTask(myTasks) : null;
@@ -114,6 +114,25 @@ export default function Home() {
             spaceName={spaceName(checkinTask.project_id)}
             byName={profiles.get(checkinTask.assigned_by_user)?.display_name}
           />
+        )}
+
+        {demoUnread.length > 0 && (
+          <div className="checkin">
+            <span className="clock">
+              <svg width="15" height="15" viewBox="0 0 16 16">
+                <path d="M8 2 a4.2 4.2 0 0 1 4.2 4.2 c0 3 1.3 3.9 1.3 3.9 H2.5 s1.3 -.9 1.3 -3.9 A4.2 4.2 0 0 1 8 2 Z" fill="none" stroke="var(--acc-ink)" strokeWidth="1.5" strokeLinejoin="round" />
+                <path d="M6.6 12.8 a1.5 1.5 0 0 0 2.8 0" fill="none" stroke="var(--acc-ink)" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </span>
+            <div className="body">
+              {demoUnread.slice(0, 3).map((n) => (
+                <React.Fragment key={n.id}><b>{n.text}</b><span>{n.sub}</span></React.Fragment>
+              ))}
+            </div>
+            <div className="acts">
+              <button className="btn btn-sm" style={{ height: 32 }} onClick={markDemoNotifsRead}>Got it</button>
+            </div>
+          </div>
         )}
 
         <div className="section">
