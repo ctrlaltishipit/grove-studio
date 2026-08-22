@@ -7,9 +7,14 @@
 //
 //   node scripts/independence-audit.mjs            # root = parent of scripts/
 //   node scripts/independence-audit.mjs <root>     # audit another checkout
+//   node scripts/independence-audit.selftest.mjs   # prove each rule catches its bypass
 //
 // A MISSING file is never a hit for a rule about that file. A missing
 // directory never skips a rule: the rule simply has nothing to scan.
+//
+// TEMPORARY FLAG: AUDIT_ALLOW_RAW_CLIENT=1 suppresses the rule 1 hit on the
+// raw client export in src/lib/supabase.ts while the client lane removes that
+// export. The merge agent drops the flag; nothing else may set it.
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
@@ -19,6 +24,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(
   process.argv[2] ?? path.join(path.dirname(fileURLToPath(import.meta.url)), '..'),
 );
+const ALLOW_RAW_CLIENT = process.env.AUDIT_ALLOW_RAW_CLIENT === '1';
 
 // Directories that are never part of the product and would only add noise
 // (and, for .venv / node_modules, minutes) to a tree walk.
@@ -28,6 +34,7 @@ const SKIP_DIRS = new Set([
 ]);
 
 const hits = [];
+const notes = [];
 
 /* ----------------------------------------------------------------- helpers */
 
@@ -146,48 +153,268 @@ function stripComments(src) {
   return out;
 }
 
+/** Index of the matching closer for the bracket at `open`, skipping strings. */
+function matchingClose(code, open) {
+  const closer = { '(': ')', '{': '}', '[': ']' }[code[open]];
+  let depth = 0;
+  let quote = null;
+  for (let i = open; i < code.length; i++) {
+    const c = code[i];
+    if (quote) {
+      if (c === '\\') { i++; continue; }
+      if (c === quote) quote = null;
+      continue;
+    }
+    if (c === "'" || c === '"' || c === '`') { quote = c; continue; }
+    if (c === code[open]) depth++;
+    else if (c === closer && --depth === 0) return i;
+  }
+  return code.length;
+}
+
+/**
+ * Where the JS/TS statement that starts at `from` ends: at a ';' at depth 0,
+ * at a ')' or '}' that closes an ENCLOSING block, or at a newline followed by
+ * a statement keyword — the ASI case, where a chain simply stops and the next
+ * line starts a new statement without any semicolon. Strings are skipped.
+ */
+function statementEnd(code, from) {
+  let depth = 0;
+  let quote = null;
+  let i = from;
+  while (i < code.length) {
+    const c = code[i];
+    if (quote) {
+      if (c === '\\') { i += 2; continue; }
+      if (c === quote) quote = null;
+      i++;
+      continue;
+    }
+    if (c === "'" || c === '"' || c === '`') { quote = c; i++; continue; }
+    if (c === '(' || c === '{' || c === '[') depth++;
+    else if (c === ')' || c === '}' || c === ']') {
+      if (depth === 0) return i;
+      depth--;
+    } else if (c === ';' && depth === 0) return i;
+    else if (c === '\n' && depth === 0) {
+      const rest = code.slice(i + 1, i + 240);
+      if (/^\s*(?:const|let|var|return|await|export|if|for|while|throw|function|class)\b/.test(rest)) return i;
+      if (/^\s*[})]/.test(rest)) return i;
+    }
+    i++;
+  }
+  return code.length;
+}
+
+/** Every JSX opening tag: { name, start, end (index of its '>'), attrs }. */
+function openingTags(code) {
+  const tags = [];
+  for (const m of code.matchAll(/<([A-Za-z][\w.:-]*)/g)) {
+    let depth = 0;
+    let quote = null;
+    let i = m.index + m[0].length;
+    for (; i < code.length; i++) {
+      const c = code[i];
+      if (quote) {
+        if (c === '\\') { i++; continue; }
+        if (c === quote) quote = null;
+        continue;
+      }
+      if (c === "'" || c === '"' || c === '`') { quote = c; continue; }
+      if (c === '{') depth++;
+      else if (c === '}') depth--;
+      else if (c === '>' && depth <= 0) break;
+    }
+    tags.push({ name: m[1], start: m.index, end: i, attrs: code.slice(m.index + m[0].length, i) });
+  }
+  return tags;
+}
+
+/* --------------------------------------------------------- SQL helpers
+ * Rules 5 and 11 must see SQL the way Postgres does: comments are not code,
+ * and a statement does not care which line it wraps onto. So: blank -- and
+ * nested slash-star comments (strings respected), then collapse whitespace
+ * runs to single spaces while keeping a map back to original offsets, and
+ * match patterns against the collapsed text. */
+
+function stripSqlComments(src) {
+  let out = '';
+  let quote = false;
+  let i = 0;
+  while (i < src.length) {
+    const c = src[i];
+    const d = src[i + 1];
+    if (quote) {
+      out += c;
+      if (c === "'") quote = false;
+      i++;
+      continue;
+    }
+    if (c === '-' && d === '-') {
+      while (i < src.length && src[i] !== '\n') { out += ' '; i++; }
+      continue;
+    }
+    if (c === '/' && d === '*') {
+      let depth = 1;
+      out += '  ';
+      i += 2;
+      while (i < src.length && depth > 0) {
+        if (src[i] === '/' && src[i + 1] === '*') { depth++; out += '  '; i += 2; continue; }
+        if (src[i] === '*' && src[i + 1] === '/') { depth--; out += '  '; i += 2; continue; }
+        out += src[i] === '\n' ? '\n' : ' ';
+        i++;
+      }
+      continue;
+    }
+    if (c === "'") quote = true;
+    out += c;
+    i++;
+  }
+  return out;
+}
+
+/** Whitespace runs collapsed to one space; map[i] = original offset of char i. */
+function collapse(text) {
+  let out = '';
+  const map = [];
+  let ws = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === ' ' || c === '\n' || c === '\t' || c === '\r' || c === '\f' || c === '\v') {
+      if (!ws) { out += ' '; map.push(i); ws = true; }
+      continue;
+    }
+    ws = false;
+    out += c;
+    map.push(i);
+  }
+  return { text: out, map };
+}
+
+/** A comment-stripped, collapsed view of one SQL file with line lookups into the original. */
+function sqlView(rel) {
+  const raw = readText(rel);
+  if (raw === null) return null;
+  const sq = collapse(stripSqlComments(raw));
+  const orig = (i) => sq.map[Math.min(Math.max(i, 0), sq.map.length - 1)] ?? 0;
+  return {
+    text: sq.text,
+    at: (i) => lineOf(raw, orig(i)),
+    show: (i) => lineText(raw, orig(i)).trim(),
+  };
+}
+
+/** Every `create function` in collapsed SQL `s`, with its body parsed from a
+ *  $tag$…$tag$ OR a single-quoted '…' body, and the attribute text around it. */
+function sqlFunctions(s) {
+  const out = [];
+  const starts = [...s.matchAll(/\bcreate\s+(?:or\s+replace\s+)?function\s+(?:"?[\w]+"?\.)?("?\w+"?)\s*\(/gi)];
+  starts.forEach((m, k) => {
+    const limit = k + 1 < starts.length ? starts[k + 1].index : s.length;
+    const name = m[1].replace(/"/g, '').toLowerCase();
+    const asRe = /\bas\s+(\$[A-Za-z0-9_]*\$|')/gi;
+    asRe.lastIndex = m.index + m[0].length;
+    const am = asRe.exec(s);
+    if (!am || am.index >= limit) return; // no SQL body to inspect
+    const opener = am[1];
+    const bodyStart = am.index + am[0].length;
+    let bodyEnd;
+    let closeEnd;
+    let body;
+    let quoted = false;
+    if (opener === "'") {
+      quoted = true;
+      let i = bodyStart;
+      while (i < s.length) {
+        if (s[i] === "'") {
+          if (s[i + 1] === "'") { i += 2; continue; }
+          break;
+        }
+        i++;
+      }
+      bodyEnd = i;
+      closeEnd = i + 1;
+      body = s.slice(bodyStart, bodyEnd).replace(/''/g, "'");
+    } else {
+      bodyEnd = s.indexOf(opener, bodyStart);
+      if (bodyEnd === -1) bodyEnd = s.length;
+      closeEnd = bodyEnd + opener.length;
+      body = s.slice(bodyStart, bodyEnd);
+    }
+    const semi = s.indexOf(';', closeEnd);
+    const attrs = `${s.slice(m.index, am.index)} ${s.slice(closeEnd, semi === -1 ? s.length : semi)}`;
+    out.push({ name, start: m.index, bodyStart, attrs, body, quoted });
+  });
+  return out;
+}
+
 const SRC_ALL = walk('src');
-const SRC_TS = SRC_ALL.filter((f) => /\.(ts|tsx)$/.test(f));
+const SRC_TS = SRC_ALL.filter((f) => /\.(ts|tsx|js|jsx|mjs|cjs)$/.test(f));
 const SRC_TSX = SRC_ALL.filter((f) => f.endsWith('.tsx'));
+const SQL_ALL = walk('').filter((f) => f.endsWith('.sql'));
 
 /* ------------------------------------------------------------------ RULE 1
- * `.from(`, `.rpc(`, `createClient(` may appear only in src/lib/supabase.ts.
- * GROVE-MASTER.md §14.1 (2): one module talks to the database.
- * `Array.from(` is the language, not a query, and is exempt. Comments are
- * not calls and are ignored. */
-for (const f of SRC_TS) {
-  if (f === 'src/lib/supabase.ts') continue;
-  for (const [n, l] of eachCodeLine(f)) {
-    const code = l.replace(/\bArray\.from\(/g, '');
-    if (/\.from\(|\.rpc\(|createClient\(/.test(code)) hit(1, f, n, l);
+ * One module talks to the database — GROVE-MASTER.md §14.1 (2). Outside
+ * src/lib/supabase.ts nothing in src/ may query, subscribe or reach a
+ * Supabase host: `.from(`, `.rpc(`, `createClient(`, `/rest/v1/`,
+ * `.channel(`, `postgres_changes`, `supabase.rest/realtime/storage/functions`,
+ * or a fetch( whose call mentions supabase.co. And src/lib/supabase.ts must
+ * not export the raw client: authClient() is the only allowed auth surface.
+ * `Array.from(` is the language, not a query. Comments are not calls. */
+{
+  const RAW_CALL = /\.from\s*\(|\.rpc\s*\(|createClient\s*\(|\/rest\/v1\/|\.channel\s*\(|postgres_changes|\bsupabase\.(?:rest|realtime|storage|functions)\b/;
+  for (const f of SRC_TS) {
+    if (f === 'src/lib/supabase.ts') continue;
+    const text = readText(f);
+    if (text === null) continue;
+    const code = stripComments(text);
+    code.split('\n').forEach((l, i) => {
+      if (RAW_CALL.test(l.replace(/\bArray\.from\s*\(/g, ''))) hit(1, f, i + 1, l);
+    });
+    for (const m of code.matchAll(/\bfetch\s*\(/g)) {
+      const open = m.index + m[0].length - 1;
+      const call = code.slice(open, matchingClose(code, open) + 1);
+      if (/supabase\.co\b/i.test(call)) {
+        hit(1, f, lineOf(code, m.index), `fetch() to a Supabase host: ${lineText(code, m.index)}`);
+      }
+    }
+  }
+
+  if (exists('src/lib/supabase.ts')) {
+    const f = 'src/lib/supabase.ts';
+    const code = stripComments(readText(f) ?? '');
+    const m = /\bexport\s+(?:const|let|var)\s+supabase\b|\bexport\s*\{[^}]*\bsupabase\b|\bexport\s+default\s+supabase\b/.exec(code);
+    if (m) {
+      if (ALLOW_RAW_CLIENT) {
+        notes.push('AUDIT_ALLOW_RAW_CLIENT=1 — the rule 1 raw-client export check is suppressed. Temporary, for the parallel client lane only; the merge drops this flag.');
+      } else {
+        hit(1, f, lineOf(code, m.index), `raw Supabase client is exported — authClient() is the only allowed auth surface: ${lineText(code, m.index).trim()}`);
+      }
+    }
   }
 }
 
 /* ------------------------------------------------------------------ RULE 2
- * In src/lib/supabase.ts every statement containing from('notes') must also
- * contain .eq('participant_id' and a select('…') with an explicit column list.
- * A statement is the text from .from('notes') to the next ';' (comments
- * blanked first, so a ';' in a comment cannot end it early).
- * GROVE-MASTER.md §14.1 (2).
- *
- * Two readings that keep the invariant intact without false alarms:
- *   - select(NOTE_COLS) is accepted when NOTE_COLS is a const string in the
- *     same file; that string is then checked exactly like a literal.
- *   - an .insert(…) whose payload carries participant_id writes into the
- *     current lane by construction (RLS checks the row); PostgREST ignores
- *     filters on POST, so .eq('participant_id' is not demanded of it.
- *   - a write (.insert/.update/.delete/.upsert) with no .select( at all
- *     returns no columns (Prefer: return=minimal) and is accepted; a read
- *     cannot exist without .select(, so reads stay strict. */
+ * Inside src/lib/supabase.ts, the shape of every query is constrained:
+ *   - every .from( argument is a quoted table-name literal (any quote style,
+ *     backticks included) — never a variable, never a template with ${…};
+ *   - every .select( names its columns, from a string literal or a const
+ *     string in this file — never '*', never empty (select() means '*'),
+ *     and never an embedded  notes(…)  resource (PostgREST embedding joins
+ *     straight through the notes FK); *_COLS constants are checked too;
+ *   - every from('notes') statement that is not a pure lane insert carries
+ *     .eq('participant_id', …). A statement ends at ';' OR where the chain
+ *     visibly stops: a newline followed by a statement keyword, or a bracket
+ *     closing the enclosing block — so leaving the semicolon off (ASI) cannot
+ *     smuggle the filter in from the NEXT statement. */
 if (exists('src/lib/supabase.ts')) {
   const f = 'src/lib/supabase.ts';
   const code = stripComments(readText(f) ?? '');
+  const EMBED = /\bnotes\b\s*(?:!\w+)?\s*\(/i;
 
-  /** The first argument of the first .select( in `stmt`, resolved to a string. */
-  const selectColumns = (stmt) => {
-    const at = /\.select\(\s*/.exec(stmt);
-    if (!at) return { missing: true };
-    const rest = stmt.slice(at.index + at[0].length);
+  const selectColumns = (open) => {
+    const rest = code.slice(open + 1).replace(/^\s+/, '');
+    if (rest.startsWith(')')) return { shown: '', cols: '*' }; // select() selects *
     const lit = /^(['"`])([\s\S]*?)\1/.exec(rest);
     if (lit) return { shown: `'${lit[2]}'`, cols: lit[2] };
     const ident = /^([A-Za-z_$][\w$]*)\s*[,)]/.exec(rest);
@@ -197,27 +424,43 @@ if (exists('src/lib/supabase.ts')) {
     }
     return { shown: rest.split(')')[0].trim(), cols: null };
   };
-
-  const re = /\.from\(\s*['"]notes['"]\s*\)/g;
-  let m;
-  while ((m = re.exec(code))) {
-    const semi = code.indexOf(';', m.index);
-    const stmt = code.slice(m.index, semi === -1 ? code.length : semi);
-    const problems = [];
-
-    const filtered = /\.eq\(\s*['"]participant_id['"]/.test(stmt);
-    const laneInsert = /\.insert\(/.test(stmt) && /\bparticipant_id\s*:/.test(stmt);
-    if (!filtered && !laneInsert) problems.push("no .eq('participant_id'");
-
-    const sel = selectColumns(stmt);
-    const isWrite = /\.(insert|update|delete|upsert)\(/.test(stmt);
-    if (sel.missing) {
-      if (!isWrite) problems.push('no select(…)');
-    } else if (sel.cols === null) problems.push(`select(${sel.shown}) is not a string literal or a const string in this file`);
-    else if (sel.cols.trim() === '' || sel.cols.includes('*') || sel.cols.includes('${')) {
-      problems.push(`select(${sel.shown}) is not an explicit column list`);
+  const columnProblem = (sel) => {
+    if (sel.cols === null) return `select(${sel.shown}) is not a string literal or a const string in this file`;
+    if (sel.cols.trim() === '' || sel.cols.includes('*') || sel.cols.includes('${')) {
+      return `select(${sel.shown}) is not an explicit column list`;
     }
+    if (EMBED.test(sel.cols)) return `select(${sel.shown}) embeds notes(…) — resource embedding reads other lanes`;
+    return null;
+  };
 
+  for (const m of code.matchAll(/\.select\s*\(/g)) {
+    const p = columnProblem(selectColumns(m.index + m[0].length - 1));
+    if (p) hit(2, f, lineOf(code, m.index), p);
+  }
+
+  for (const m of code.matchAll(/\b(\w*COLS)\b\s*=\s*(['"`])([\s\S]*?)\2/g)) {
+    if (EMBED.test(m[3])) hit(2, f, lineOf(code, m.index), `${m[1]} embeds notes(…): ${lineText(code, m.index).trim()}`);
+  }
+
+  for (const m of code.matchAll(/(?<!\bArray)\.from\s*\(/g)) {
+    const open = m.index + m[0].length - 1;
+    const rest = code.slice(open + 1).replace(/^\s+/, '');
+    const lit = /^(['"`])([A-Za-z_]\w*)\1\s*[,)]/.exec(rest);
+    if (!lit) {
+      hit(2, f, lineOf(code, m.index), `from(${rest.split(/[,)]/)[0].trim() || '…'}) — the table is not a quoted literal`);
+      continue;
+    }
+    if (lit[2] !== 'notes') continue;
+
+    const stmt = code.slice(m.index, statementEnd(code, m.index));
+    const problems = [];
+    const filtered = /\.eq\(\s*(['"`])participant_id\1/.test(stmt);
+    const isWrite = /\.(insert|update|delete|upsert)\(/.test(stmt);
+    const pureInsert = /\.insert\(/.test(stmt)
+      && !/\.(update|delete|upsert)\(/.test(stmt)
+      && /\bparticipant_id\s*:/.test(stmt);
+    if (!filtered && !pureInsert) problems.push("no .eq('participant_id'");
+    if (!/\.select\s*\(/.test(stmt) && !isWrite) problems.push('no select(…)');
     if (problems.length) hit(2, f, lineOf(code, m.index), `from('notes') statement: ${problems.join('; ')}`);
   }
 }
@@ -252,9 +495,19 @@ if (exists('src/lib/supabase.ts')) {
 }
 
 /* ------------------------------------------------------------------ RULE 4
- * The string /rest/v1/notes may appear in api/**\/*.py only inside
- * api/synthesise.py, and there exactly once. GROVE-MASTER.md §14.1 (2). */
-for (const f of walk('api').filter((p) => p.endsWith('.py'))) {
+ * api/ holds Python functions and nothing else: any file that is not *.py
+ * (or README.md) would be deployed by Vercel as a route in a language the
+ * audit does not scan, so its very presence is the hit. The string
+ * /rest/v1/notes may appear only inside api/synthesise.py, exactly once.
+ * GROVE-MASTER.md §14.1 (2). */
+for (const f of walk('api')) {
+  if (!f.endsWith('.py')) {
+    const base = f.split('/').pop();
+    if (base !== 'README.md' && base !== '.DS_Store') {
+      hit(4, f, 1, 'not a Python function — only *.py (and README.md) may live under api/');
+    }
+    continue;
+  }
   const text = readText(f);
   if (text === null) continue;
   const occ = [...text.matchAll(/\/rest\/v1\/notes/g)];
@@ -270,36 +523,66 @@ for (const f of walk('api').filter((p) => p.endsWith('.py'))) {
 }
 
 /* ------------------------------------------------------------------ RULE 5
- * In sql/**\/*.sql no `security definer` function body may contain the word
- * `body` (the roster is counts only — GROVE-MASTER.md §14.1 (3)), and no line
- * may add notes to a publication (GROVE-MEMORY.md §5). SQL `--` comments are
- * not code and are ignored inside bodies. */
-for (const f of walk('sql').filter((p) => p.endsWith('.sql'))) {
-  const text = readText(f);
-  if (text === null) continue;
-  for (const [n, l] of eachLine(f)) {
-    if (/alter\s+publication\b.*\badd\s+table\b.*notes/i.test(l)) hit(5, f, n, l);
+ * Every *.sql anywhere in the repo, comments stripped, whitespace collapsed,
+ * matched ACROSS lines — a statement folded onto two lines is the same
+ * statement (GROVE-MASTER.md §14.1 (3); GROVE-MEMORY.md §5):
+ *   - notes never enters a publication: no publication … add/set table …
+ *     notes, no FOR ALL TABLES, no replica identity full;
+ *   - a SECURITY DEFINER function ($tag$ or single-quoted body alike) may
+ *     neither return a shape that could carry note text (notes, setof, json,
+ *     jsonb, record, body) nor mention body / select * / x.* / to_json(b) /
+ *     row_to_json / json(b)_agg / string_agg / array_agg in its body.
+ *     rls_status (booleans only) and join_session (participants columns) are
+ *     allowed BY NAME the looser body shapes they need — but even they may
+ *     not touch notes or body. The word body inside a raise exception '…'
+ *     message is a message, not a column, and is allowed everywhere. */
+{
+  const DEFINER_ALLOWED = new Map([
+    ['rls_status', 'returns booleans only'],
+    ['join_session', 'returns participants columns'],
+  ]);
+  const RETURNS_LEAK = /\b(notes|setof|json|jsonb|record|body)\b/i;
+  const BODY_LEAK = /\bbody\b|\bselect\s+\*|\w+\.\*|\bto_jsonb?\b|\brow_to_json\b|\bjsonb?_agg\b|\bstring_agg\b|\barray_agg\b/gi;
+  const blankRaiseStrings = (body) =>
+    body.replace(/(\braise\s+\w+\s+)('(?:[^']|'')*')/gi, (all, head, str) => head + ' '.repeat(str.length));
+
+  for (const f of SQL_ALL) {
+    const v = sqlView(f);
+    if (v === null) continue;
+    const s = v.text;
+
+    for (const m of s.matchAll(/\bpublication\b[^;]*\b(?:add|set)\s+table\b[^;]*\bnotes\b/gi)) {
+      hit(5, f, v.at(m.index), `notes added to a publication: ${v.show(m.index)}`);
+    }
+    for (const m of s.matchAll(/\bfor\s+all\s+tables\b/gi)) {
+      hit(5, f, v.at(m.index), `publication FOR ALL TABLES would include notes: ${v.show(m.index)}`);
+    }
+    for (const m of s.matchAll(/\breplica\s+identity\s+full\b/gi)) {
+      hit(5, f, v.at(m.index), `replica identity full puts old rows (bodies included) into the WAL stream: ${v.show(m.index)}`);
+    }
+
+    for (const fn of sqlFunctions(s)) {
+      if (!/\bsecurity\s+definer\b/i.test(fn.attrs)) continue;
+      const rt = /\breturns\s+([\s\S]*?)(?=\b(?:language|as|security|set|stable|volatile|immutable|strict|called|cost|rows|parallel|leakproof|window|returns|with)\b|$)/i.exec(fn.attrs);
+      const returns = rt ? rt[1].trim() : '';
+      const leak = RETURNS_LEAK.exec(returns);
+      if (leak) {
+        hit(5, f, v.at(fn.start), `security definer ${fn.name}() returns "${returns || 'unknown'}" — "${leak[0]}" can carry note text`);
+      }
+      const bodyAt = (i) => (fn.quoted ? v.at(fn.start) : v.at(fn.bodyStart + i));
+      const body = blankRaiseStrings(fn.body);
+      if (DEFINER_ALLOWED.has(fn.name)) {
+        const noStrings = body.replace(/'(?:[^']|'')*'/g, (m2) => ' '.repeat(m2.length));
+        for (const m of noStrings.matchAll(/\bbody\b|\bnotes\b/gi)) {
+          hit(5, f, bodyAt(m.index), `security definer ${fn.name}() is allowed by name (${DEFINER_ALLOWED.get(fn.name)}) but its body touches "${m[0]}"`);
+        }
+        continue;
+      }
+      for (const m of body.matchAll(BODY_LEAK)) {
+        hit(5, f, bodyAt(m.index), `security definer ${fn.name}() body contains "${m[0]}" — it could assemble note text`);
+      }
+    }
   }
-  const starts = [...text.matchAll(/\bcreate\s+(?:or\s+replace\s+)?function\b/gi)].map((m) => m.index);
-  starts.forEach((start, k) => {
-    const limit = k + 1 < starts.length ? starts[k + 1] : text.length;
-    const asRe = /\bas\s+(\$[A-Za-z0-9_]*\$)/gi;
-    asRe.lastIndex = start;
-    const am = asRe.exec(text);
-    if (!am || am.index >= limit) return; // no dollar-quoted body
-    const tag = am[1];
-    const bodyStart = am.index + am[0].length;
-    const bodyEnd = text.indexOf(tag, bodyStart);
-    if (bodyEnd === -1) return;
-    const semi = text.indexOf(';', bodyEnd + tag.length);
-    const stmtEnd = semi === -1 ? text.length : semi;
-    const attrs = `${text.slice(start, am.index)} ${text.slice(bodyEnd + tag.length, stmtEnd)}`;
-    if (!/\bsecurity\s+definer\b/i.test(attrs)) return;
-    const firstLine = lineOf(text, bodyStart);
-    text.slice(bodyStart, bodyEnd).split('\n').forEach((bl, j) => {
-      if (/\bbody\b/i.test(bl.replace(/--.*$/, ''))) hit(5, f, firstLine + j, bl);
-    });
-  });
 }
 
 /* ------------------------------------------------------------------ RULE 6
@@ -334,57 +617,83 @@ if (exists('dist')) {
 
 /* ------------------------------------------------------------------ RULE 8
  * Interaction architecture, GROVE-MASTER.md §4.4 / §8.7 / §8.8 / §8.13:
- * the roster and the chip are not interactive; no tooltips anywhere. */
+ * the roster and the chip are not interactive; no tooltips anywhere. Any
+ * on[A-Z]… handler counts, however it arrives (attribute or object key);
+ * so do title, aria-describedby, data-tooltip, data-tip, popover, links and
+ * spread props ({...rest} can smuggle any of the above in from a caller). */
 {
+  const HANDLER = /\bon[A-Z][A-Za-z]*\s*[=:]/g;
+  const EXTRAS = [
+    [/\btitle\s*[=:]/, 'title (tooltip)'],
+    [/aria-describedby/, 'aria-describedby'],
+    [/data-tooltip/, 'data-tooltip'],
+    [/data-tip\b/, 'data-tip'],
+    [/popover/i, 'popover'],
+    [/<Link\b/, '<Link>'],
+    [/<a\b/, '<a>'],
+    [/\{\s*\.\.\./, 'spread props'],
+    [/\bhref\s*=/, 'href'],
+  ];
+  const codeOf = (f) => stripComments(readText(f) ?? '');
+  const extras = (f, code) => {
+    code.split('\n').forEach((l, i) => {
+      for (const [re, what] of EXTRAS) if (re.test(l)) hit(8, f, i + 1, `${what}: ${l.trim()}`);
+    });
+  };
+
   const rail = 'src/ds/RosterRail.tsx';
   if (exists(rail)) {
-    for (const [n, l] of eachLine(rail)) {
-      if (/onClick|onMouseEnter|onMouseOver|title=|href=/.test(l)) hit(8, rail, n, l);
+    const code = codeOf(rail);
+    for (const m of code.matchAll(HANDLER)) {
+      hit(8, rail, lineOf(code, m.index), `handler on the roster rail (none allowed): ${lineText(code, m.index).trim()}`);
     }
+    extras(rail, code);
   }
 
   const strip = 'src/ds/RosterStrip.tsx';
   if (exists(strip)) {
-    const text = readText(strip) ?? '';
-    // The strip's ONLY permitted handler is the collapse toggle. It legitimately
-    // appears in both the collapsed and the expanded render, so the rule is
-    // "every onClick is onClick={onToggle}", not "at most one onClick".
-    for (const m of text.matchAll(/onClick\s*=\s*\{?\s*([A-Za-z_$][\w$.]*|\([^)]*\)\s*=>[^}]*)/g)) {
-      if (m[1] !== 'onToggle') {
-        hit(8, strip, lineOf(text, m.index), `onClick other than onToggle: ${lineText(text, m.index)}`);
-      }
+    const code = codeOf(strip);
+    // The ONLY permitted handler is the collapse toggle, written exactly
+    // onClick={onToggle}; the prop's own type declaration (onToggle:) is not
+    // a handler. Everything else — other handlers, inline arrows, renames —
+    // is a hit.
+    for (const m of code.matchAll(HANDLER)) {
+      const here = code.slice(m.index, m.index + 40);
+      if (/^onClick=\{onToggle\}/.test(here)) continue;
+      if (/^onToggle\s*:/.test(here)) continue;
+      hit(8, strip, lineOf(code, m.index), `handler other than onClick={onToggle}: ${lineText(code, m.index).trim()}`);
     }
-    for (const m of text.matchAll(/on(MouseEnter|MouseOver|MouseDown|TouchStart|Focus|DoubleClick|ContextMenu)\s*=/g)) {
-      hit(8, strip, lineOf(text, m.index), `hover/press handler on the roster strip: ${lineText(text, m.index)}`);
-    }
-    for (const [n, l] of eachLine(strip)) {
-      if (l.includes('title=')) hit(8, strip, n, l);
-    }
+    extras(strip, code);
   }
 
   const grid = 'src/ds/ConvergenceGrid.tsx';
   if (exists(grid)) {
-    const text = readText(grid) ?? '';
-    for (const m of text.matchAll(/<td\b/g)) {
-      // Walk to the end of the opening tag, ignoring '>' inside {…} expressions.
-      let depth = 0;
-      let i = m.index + 3;
-      while (i < text.length) {
-        const c = text[i];
-        if (c === '{') depth++;
-        else if (c === '}') depth--;
-        else if (c === '>' && depth === 0) break;
-        i++;
-      }
-      if (text.slice(m.index, i).includes('title=')) hit(8, grid, lineOf(text, m.index), lineText(text, m.index));
+    const code = codeOf(grid);
+    const tags = openingTags(code);
+    let allowed = 0;
+    for (const m of code.matchAll(HANDLER)) {
+      const tag = tags.find((t) => t.start < m.index && m.index < t.end);
+      const prev = tag ? tags.filter((t) => t.end < tag.start).pop() : undefined;
+      const ok = tag !== undefined
+        && tag.name === 'button'
+        && /^onClick\s*=/.test(m[0].replace(/\s*[=:]$/, '=').replace(/^/, ''))
+        && m[0].startsWith('onClick')
+        && prev !== undefined
+        && prev.name === 'th'
+        && /scope="row"/.test(prev.attrs);
+      if (ok && ++allowed === 1) continue;
+      hit(8, grid, lineOf(code, m.index), `handler other than the row-label button's onClick: ${lineText(code, m.index).trim()}`);
     }
+    extras(grid, code);
   }
 
   const chip = 'src/ds/Chip.tsx';
   if (exists(chip)) {
-    for (const [n, l] of eachLine(chip)) {
-      if (/title=|\bon[A-Z][A-Za-z]*\s*[=:]/.test(l)) hit(8, chip, n, l);
+    const code = codeOf(chip);
+    for (const m of code.matchAll(HANDLER)) {
+      hit(8, chip, lineOf(code, m.index), `handler on the chip (none allowed): ${lineText(code, m.index).trim()}`);
     }
+    extras(chip, code);
   }
 }
 
@@ -445,7 +754,48 @@ for (const f of SRC_TSX) {
   }
 }
 
+/* ----------------------------------------------------------------- RULE 11
+ * SQL escape hatches, every *.sql, comments stripped and collapsed like
+ * rule 5. Views run with the OWNER's RLS context unless security_invoker is
+ * set, so a plain view is an RLS bypass; a view over notes is one even with
+ * it. Nothing may disable RLS in live code (the commented ROLLBACK block in
+ * sql/03_rls.sql does not survive comment stripping, which is exactly why it
+ * is allowed). No policy may be (true)-open, no role may bypassrls, policies
+ * on notes live in sql/03_rls.sql alone, and nothing grants select on notes. */
+for (const f of SQL_ALL) {
+  const v = sqlView(f);
+  if (v === null) continue;
+  const s = v.text;
+
+  for (const m of s.matchAll(/\bcreate\s+(?:or\s+replace\s+)?(?:temp(?:orary)?\s+)?(?:materialized\s+)?(?:recursive\s+)?view\b[^;]*/gi)) {
+    if (/\bnotes\b/i.test(m[0])) {
+      hit(11, f, v.at(m.index), `view over notes: ${v.show(m.index)}`);
+    } else if (/\bmaterialized\b/i.test(m[0].slice(0, 60)) || !/\bsecurity_invoker\s*=\s*(?:true|on)\b/i.test(m[0])) {
+      hit(11, f, v.at(m.index), `view without security_invoker = true runs with the owner's RLS context: ${v.show(m.index)}`);
+    }
+  }
+  for (const m of s.matchAll(/\bdisable\s+row\s+level\s+security\b/gi)) {
+    hit(11, f, v.at(m.index), `disables row level security in live SQL (only the commented rollback block in sql/03_rls.sql may say this): ${v.show(m.index)}`);
+  }
+  for (const m of s.matchAll(/\b(?:using|with\s+check)\s*\(\s*true\s*\)/gi)) {
+    hit(11, f, v.at(m.index), `(true)-open policy clause: ${v.show(m.index)}`);
+  }
+  for (const m of s.matchAll(/\bbypassrls\b/gi)) {
+    hit(11, f, v.at(m.index), `bypassrls: ${v.show(m.index)}`);
+  }
+  if (f !== 'sql/03_rls.sql') {
+    for (const m of s.matchAll(/\bcreate\s+policy\b[^;]*\bon\s+(?:public\.)?notes\b/gi)) {
+      hit(11, f, v.at(m.index), `policy on public.notes outside sql/03_rls.sql: ${v.show(m.index)}`);
+    }
+  }
+  for (const m of s.matchAll(/\bgrant\s+(?:select|all)\b[^;]*\bnotes\b/gi)) {
+    hit(11, f, v.at(m.index), `grant on notes: ${v.show(m.index)}`);
+  }
+}
+
 /* ----------------------------------------------------------------- report */
+
+for (const n of notes) console.log(`note: ${n}`);
 
 hits.sort((a, b) => a.rule - b.rule || a.file.localeCompare(b.file) || a.line - b.line);
 for (const h of hits) console.log(`RULE ${h.rule}: ${h.file}:${h.line} — ${h.text}`);
