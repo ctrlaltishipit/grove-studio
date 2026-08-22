@@ -946,4 +946,12 @@
   background: var(--amber-soft); border: 1px solid var(--amber); border-radius: 14px;
   padding: 14px 16px; font-size: 13.5px; color: var(--ink); line-height: 1.55;
 }
+/* The sample space's greeting — one quiet line; the notes carry the page. */
+.demo-hello {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 8px 12px; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--surface); font-size: 12.5px; color: var(--muted); line-height: 1.45;
+}
+.demo-hello span { flex: 1; min-width: 200px; }
+.demo-hello .btn { flex: none; }
 .setup-callout code { font-family: var(--font-mono); font-size: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; }

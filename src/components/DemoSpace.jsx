@@ -252,9 +252,9 @@ export default function DemoSpace() {
         <div className="space-content">
           {tab === 'notes' && !openNote && (
             <div className="notes-list">
-              <div className="setup-callout" style={{ background: 'var(--acc-soft)', borderColor: 'color-mix(in oklab, var(--acc) 26%, var(--border))' }}>
-                Welcome 👋 This is a <b>sample space</b> showing what GroveStudio can do — open a note and comment (type or dictate), move cards on the Board, and try the <b>Studio</b> on the right.
-                <button className="btn btn-primary btn-sm" style={{ marginLeft: 10 }} onClick={() => openModal('new')}>Create your own space</button>
+              <div className="demo-hello">
+                <span>👋 A <b>sample space</b> — open a note, move cards on the <b>Board</b>, try the <b>Studio</b> on the right.</span>
+                <button className="btn btn-sm" onClick={() => openModal('new')}>Create your own space</button>
               </div>
               <div className="list-head">
                 <span className="label">{DEMO_NOTES.length} shared notes — everyone in this space can read them</span>
