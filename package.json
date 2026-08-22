@@ -12,7 +12,8 @@
     "test:py": "python3.11 -m pytest tests/python -q",
     "e2e": "playwright test",
     "audit": "node scripts/independence-audit.mjs",
-    "gen:types": "node scripts/gen-types.mjs"
+    "gen:types": "node scripts/gen-types.mjs",
+    "audit:selftest": "node scripts/independence-audit.selftest.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",

@@ -11,10 +11,6 @@
 //
 // A MISSING file is never a hit for a rule about that file. A missing
 // directory never skips a rule: the rule simply has nothing to scan.
-//
-// TEMPORARY FLAG: AUDIT_ALLOW_RAW_CLIENT=1 suppresses the rule 1 hit on the
-// raw client export in src/lib/supabase.ts while the client lane removes that
-// export. The merge agent drops the flag; nothing else may set it.
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
@@ -24,7 +20,6 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(
   process.argv[2] ?? path.join(path.dirname(fileURLToPath(import.meta.url)), '..'),
 );
-const ALLOW_RAW_CLIENT = process.env.AUDIT_ALLOW_RAW_CLIENT === '1';
 
 // Directories that are never part of the product and would only add noise
 // (and, for .venv / node_modules, minutes) to a tree walk.
@@ -385,11 +380,7 @@ const SQL_ALL = walk('').filter((f) => f.endsWith('.sql'));
     const code = stripComments(readText(f) ?? '');
     const m = /\bexport\s+(?:const|let|var)\s+supabase\b|\bexport\s*\{[^}]*\bsupabase\b|\bexport\s+default\s+supabase\b/.exec(code);
     if (m) {
-      if (ALLOW_RAW_CLIENT) {
-        notes.push('AUDIT_ALLOW_RAW_CLIENT=1 — the rule 1 raw-client export check is suppressed. Temporary, for the parallel client lane only; the merge drops this flag.');
-      } else {
-        hit(1, f, lineOf(code, m.index), `raw Supabase client is exported — authClient() is the only allowed auth surface: ${lineText(code, m.index).trim()}`);
-      }
+      hit(1, f, lineOf(code, m.index), `raw Supabase client is exported — authClient() is the only allowed auth surface: ${lineText(code, m.index).trim()}`);
     }
   }
 }
