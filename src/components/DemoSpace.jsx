@@ -26,12 +26,19 @@ const COLS = [
 
 // -------------------------------------------------------------------- board
 
-function DemoBoard({ tasks, onSetStatus, onReassign }) {
+function DemoBoard({ tasks, onSetStatus, onReassign, onCreate }) {
   const noteById = new Map(DEMO_NOTES.map((n) => [n.id, n]));
+  const [addingCol, setAddingCol] = useState(null);
+  const [draft, setDraft] = useState('');
+  const submitDraft = () => {
+    const title = draft.trim();
+    if (title) onCreate(addingCol, title);
+    setAddingCol(null); setDraft('');
+  };
   return (
     <div className="board">
       <div className="board-head">
-        <span className="hint">Move a card to any column, and click its avatar to reassign — try it, changes stay in this sample.</span>
+        <span className="hint">Move a card, click its avatar to reassign, or create your own — changes stay in this sample.</span>
         <span className="n">{tasks.length} tasks</span>
       </div>
       <div className="board-cols">
@@ -59,7 +66,7 @@ function DemoBoard({ tasks, onSetStatus, onReassign }) {
                   <div className="board-card" key={t.id}>
                     <p className="title" style={{ textDecoration: t.status === 'done' ? 'line-through' : 'none' }}>{t.title}</p>
                     <div className="chips">
-                      <span className="label-chip" style={{ background: labelBg, color: labelInk }}>{t.label}</span>
+                      {t.label && <span className="label-chip" style={{ background: labelBg, color: labelInk }}>{t.label}</span>}
                       {t.status !== 'done' && t.due_date && <span className="due" style={{ color: dueColor }}>{fmtDue(t.due_date)}</span>}
                     </div>
                     <div className="foot">
@@ -77,6 +84,23 @@ function DemoBoard({ tasks, onSetStatus, onReassign }) {
                   </div>
                 );
               })}
+              {addingCol === c.key ? (
+                <div className="add-form">
+                  <input
+                    autoFocus
+                    placeholder="Task title — Enter to add"
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') submitDraft();
+                      if (e.key === 'Escape') { setAddingCol(null); setDraft(''); }
+                    }}
+                    onBlur={submitDraft}
+                  />
+                </div>
+              ) : (
+                <button className="add" onClick={() => { setAddingCol(c.key); setDraft(''); }}>+ Create</button>
+              )}
             </div>
           );
         })}
@@ -220,6 +244,12 @@ export default function DemoSpace() {
     ? { ...t, status, progress: status === 'done' ? 100 : status === 'todo' ? 0 : status === 'review' ? Math.max(t.progress, 66) : Math.max(t.progress, 40) }
     : t)));
 
+  const createTask = (status, title) => setTasks((ts) => [...ts, {
+    id: `demo-new-${Date.now()}`, project_id: DEMO_SPACE_ID, note_id: null,
+    title, label: null, status, progress: status === 'done' ? 100 : 0,
+    assignee_user: 'demo-you', assigned_by_user: 'demo-you', due_date: null,
+  }]);
+
   const reassignTask = (id, member) => setTasks((ts) => ts.map((t) => {
     if (t.id !== id || t.assignee_user === member.userId) return t;
     toast(`Reassigned to ${member.name}`, 'In a real space, they’d be notified with the note link and deadline', 'assign');
@@ -290,7 +320,7 @@ export default function DemoSpace() {
             </>
           )}
 
-          {tab === 'board' && <DemoBoard tasks={tasks} onSetStatus={setStatus} onReassign={reassignTask} />}
+          {tab === 'board' && <DemoBoard tasks={tasks} onSetStatus={setStatus} onReassign={reassignTask} onCreate={createTask} />}
         </div>
       </div>
     </div>
