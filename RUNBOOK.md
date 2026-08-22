@@ -13,7 +13,7 @@ Budget: ~45 minutes the first time. Every command is copy-paste.
 
 ## Phase 0 — accounts (20 min, do these in parallel tabs)
 
-1. **GitHub** — you have one. Create an empty repo named `grove-app`
+1. **GitHub** — you have one. Create an empty repo named `grove-studio`
    (Private is fine; do NOT add a README — the folder already has one).
 2. **Supabase** — supabase.com → New project. Name `grove`, region
    `ap-south-1 (Mumbai)`, generate a strong DB password and save it in your
@@ -43,7 +43,7 @@ In the Supabase dashboard for your project:
 
 ## Phase 2 — push the code (5 min)
 
-In Terminal, from the `grove-app` folder on your Desktop:
+In Terminal, from the project folder on your Desktop:
 
 ```bash
 cd ~/grove-submission
@@ -51,7 +51,7 @@ git init
 git add .gitignore && git commit -m "gitignore first"
 git add -A && git commit -m "Grove MVP"
 git branch -M main
-git remote add origin https://github.com/<YOUR-USERNAME>/grove-app.git
+git remote add origin https://github.com/<YOUR-USERNAME>/grove-studio.git
 git push -u origin main
 ```
 
@@ -60,7 +60,7 @@ ever be committed by accident.)
 
 ## Phase 3 — Vercel deploy (10 min)
 
-1. vercel.com → **Add New → Project** → Import `grove-app`.
+1. vercel.com → **Add New → Project** → Import `grove-studio`.
 2. Framework preset: **Vite** (it usually auto-detects).
 3. **Environment Variables** — add ALL of these before the first deploy:
 
@@ -74,7 +74,7 @@ ever be committed by accident.)
 | `LLM_MODEL` | `gemini-3.5-flash-lite` | set it explicitly. Verified 22 Aug 2026: 24-note synthesis in 5 s. `gemini-2.5-*` ids return 404 for new keys. |
 
    Leave `VITE_USE_REALTIME` **unset**. Polling is the shipping config.
-4. **Deploy.** You now have `https://grove-app-<something>.vercel.app`.
+4. **Deploy.** You now have `https://grove-studio-<something>.vercel.app`.
 
 ## Phase 4 — verify (10 min, do every step)
 
