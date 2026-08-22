@@ -150,7 +150,11 @@ export async function sendNotesEmail({ to, sharerName, spaceName, notes, appUrl 
   return transport().sendMail({
     from: FROM,
     to,
-    subject: `${sharerName || 'Someone'} shared ${notes.length} note${notes.length === 1 ? '' : 's'} from "${spaceName}" on GroveStudio`,
+    // Name the note in the subject: identical subjects make Gmail fold every
+    // share of a space into one thread, hiding the newest email under the old.
+    subject: notes.length === 1
+      ? `${sharerName || 'Someone'} shared "${notes[0].title}" from "${spaceName}" on GroveStudio`
+      : `${sharerName || 'Someone'} shared ${notes.length} notes ("${notes[0].title}" and more) from "${spaceName}" on GroveStudio`,
     text: notesText({ sharerName, spaceName, notes, appUrl }),
     html: notesHtml({ sharerName, spaceName, notes, appUrl }),
   });
