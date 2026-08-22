@@ -7,7 +7,7 @@ const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
 // you will burn twenty minutes on it at 2am. Fail loudly instead.
 export const configError =
   !url || !key
-    ? 'Grove is not configured. VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are missing.'
+    ? 'Grove Studio is not configured. VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are missing.'
     : null;
 
 // The anon key is publishable by design: it is the browser's identity and

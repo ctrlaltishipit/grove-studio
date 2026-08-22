@@ -10,7 +10,7 @@ export default function Landing() {
       <div className="stack">
         <h1>Several people watched the same session. Only one version survives.</h1>
         <p className="t-muted">
-          Grove gives every observer a private lane. You can see that the others are writing.
+          Grove Studio gives every observer a private lane. You can see that the others are writing.
           You cannot see what they wrote. When you are done, one merge ranks every finding by
           how many observers independently noticed it.
         </p>
@@ -34,12 +34,12 @@ export default function Landing() {
 
       <div className="stack-2 t-small t-muted">
         <p>
-          Grove records no audio and joins no calls. It reads only what the people in the room
+          Grove Studio records no audio and joins no calls. It reads only what the people in the room
           chose to write down.
         </p>
         <p>
           Groups that recall together retrieve less than the same people recalling separately
-          and pooling afterwards. Grove is built on that finding rather than around it.
+          and pooling afterwards. Grove Studio is built on that finding rather than around it.
         </p>
       </div>
     </div>

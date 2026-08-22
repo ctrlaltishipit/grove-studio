@@ -13,9 +13,9 @@ export default function App() {
     <BrowserRouter>
       <header className="topbar">
         <div className="topbar__inner">
-          <Link to="/" className="brand" aria-label="Grove home">
+          <Link to="/" className="brand" aria-label="Grove Studio home">
             <span className="brand__mark" aria-hidden="true" />
-            Grove
+            Grove Studio
           </Link>
           <ThemeToggle />
         </div>
