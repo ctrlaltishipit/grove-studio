@@ -27,6 +27,7 @@ import { Receipt } from '../ds/Receipt';
 import { Recording } from '../ds/Recording';
 import { RosterRail } from '../ds/RosterRail';
 import { RosterStrip } from '../ds/RosterStrip';
+import { StudioPanel } from '../ds/StudioPanel';
 import { ThemeToggle } from '../ds/ThemeToggle';
 import { MindMap } from '../ds/stretch/MindMap';
 import { useToast } from '../ds/Toast';
@@ -159,6 +160,7 @@ const NAV: { id: string; label: string }[] = [
   { id: 'chrome',   label: 'Chrome' },
   { id: 'icons',    label: 'Icons' },
   { id: 'studio',   label: 'Studio' },
+  { id: 'wsp',      label: 'Workspace' },
 ];
 
 const noop = () => {};
@@ -940,6 +942,97 @@ export function Styleguide() {
                 <span className="tile__title">Clinic booking</span>
                 <span className="tile__meta">8 shared notes · 3 members</span>
               </span>
+            </div>
+          </State>
+        </Spec>
+
+        <Spec
+          id="wsp"
+          label="Workspace — A16"
+          note="Three panes: who wrote what, the note, and what can be made from the space. Below 1280px the Studio pane drops rather than shrinking, because a 180px reading column is worse than no column. Below 900px the rail stacks above the canvas."
+        >
+          <State label="Notes rail">
+            <div className="pane pane--flush" style={{ maxWidth: 268 }}>
+              <div className="tabs" role="tablist" aria-label="Notes" style={{ display: 'flex', width: '100%' }}>
+                <button type="button" role="tab" aria-selected className="tabs__item" style={{ flex: 1 }}>Shared · 8</button>
+                <button type="button" role="tab" aria-selected={false} className="tabs__item" style={{ flex: 1 }}>Private · 2</button>
+              </div>
+              <div style={{ marginTop: 'var(--space-3)' }}>
+                <span className="noterow" aria-current="true">
+                  <span className="noterow__title">Insurance step</span>
+                  <span className="noterow__meta">
+                    <span className="noterow__dot" style={{ background: 'var(--observer-1)' }} />
+                    Priya R.<span className="spacer" /><span className="tabular">2 min ago</span>
+                  </span>
+                </span>
+                <span className="noterow">
+                  <span className="noterow__title">Wait times came up twice</span>
+                  <span className="noterow__meta">
+                    <span className="noterow__dot" style={{ background: 'var(--observer-3)' }} />
+                    Nikhil S.<span className="spacer" /><span className="tabular">1h ago</span>
+                  </span>
+                </span>
+              </div>
+            </div>
+          </State>
+
+          <State label="Studio pane">
+            <div style={{ maxWidth: 300 }}>
+              <StudioPanel
+                artefacts={[
+                  { id: 'f', name: 'Findings', colour: 0, ready: true, note: 'Group 8 shared notes by what they agree on' },
+                  { id: 'm', name: 'Mind map', colour: 1, ready: false, note: 'Not built yet' },
+                  { id: 's', name: 'Slide deck', colour: 2, ready: false, note: 'Not built yet' },
+                ]}
+              />
+            </div>
+          </State>
+
+          <State label="Task board — A15">
+            <div style={{ maxWidth: 900 }}>
+              <div className="board">
+                {[['To do', 2], ['In progress', 1], ['Blocked', 0], ['Done', 3]].map(([label, n]) => (
+                  <section key={label as string} className="board__col">
+                    <div className="board__head">
+                      <span className="board__label">{label}</span>
+                      <span className="board__count tabular">{n}</span>
+                    </div>
+                    {n === 0
+                      ? <p className="board__empty">Nothing here.</p>
+                      : (
+                        <article className="taskcard">
+                          <div className="taskcard__title">Check the insurance copy with legal</div>
+                          <div className="taskcard__meta">
+                            <span className="taskcard__who">
+                              <Chip name="Priya R." colourIndex={0} small /> Priya R.
+                            </span>
+                            <span className="taskcard__due" data-overdue={label === 'To do'}>
+                              {label === 'To do' ? 'was due Tuesday' : 'due Friday'}
+                            </span>
+                          </div>
+                        </article>
+                      )}
+                  </section>
+                ))}
+              </div>
+            </div>
+          </State>
+
+          <State label="Assigned to you — the dashboard row">
+            <div style={{ maxWidth: 640 }}>
+              <div className="taskrow">
+                <div className="taskrow__main">
+                  <div className="taskrow__title">Check the insurance copy with legal</div>
+                  <div className="taskrow__where">Insurance step · Clinic booking · assigned by Priya R.</div>
+                </div>
+                <span className="taskrow__due" data-overdue="true">was due Tuesday</span>
+              </div>
+              <div className="taskrow taskrow--done">
+                <div className="taskrow__main">
+                  <div className="taskrow__title">Write up the wait-time quotes</div>
+                  <div className="taskrow__where">Wait times · Clinic booking · assigned by Arjun M.</div>
+                </div>
+              </div>
             </div>
           </State>
         </Spec>

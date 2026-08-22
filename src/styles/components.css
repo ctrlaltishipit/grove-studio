@@ -309,9 +309,14 @@
 .receipt__body { margin-top: var(--space-3); padding-left: var(--space-3); border-left: 2px solid var(--border); color: var(--ink); max-width: 68ch; }
 
 /* ---------- 8.15 Code input ---------- */
-.codeinput { display: flex; gap: var(--space-2); }
+/* Six boxes that fit whatever they are put in. The old fixed 48px worked in
+   a full-width column and overflowed the moment the component was dropped
+   into a card — a fixed width is a promise about a container the component
+   cannot see. flex-basis 0 with a max lets them shrink to fit and stops them
+   sprawling when there is room to spare. */
+.codeinput { display: flex; gap: var(--space-2); width: 100%; }
 .codeinput__box {
-  width: 48px; height: 56px;
+  flex: 1 1 0; min-width: 0; max-width: 56px; height: 56px;
   text-align: center;
   text-transform: uppercase;
   font-family: var(--font-mono);
@@ -325,7 +330,7 @@
 }
 .codeinput__box:focus { border-color: var(--primary); }
 .codeinput--error .codeinput__box { border-color: var(--danger); }
-@media (max-width: 400px) { .codeinput__box { width: 100%; min-width: 0; } }
+@media (max-width: 400px) { .codeinput__box { height: 48px; font-size: 17px; } }
 
 .codechip {
   display: inline-flex; align-items: center; gap: var(--space-2);
@@ -442,7 +447,11 @@
    surface contrast and hairlines, never shadows: §6.4 still holds.
    ============================================================ */
 
-.shell { display: flex; min-height: 100vh; align-items: stretch; }
+/* align-items must NOT be stretch: a flex item stretched to its container's
+   full height is already as tall as its containing block, and position:sticky
+   has nothing left to stick within — the sidebar scrolled away with the page.
+   flex-start lets the 100dvh height on .shell__side actually mean something. */
+.shell { display: flex; min-height: 100dvh; align-items: flex-start; }
 
 .shell__side {
   width: 248px; flex: 0 0 248px;
@@ -451,7 +460,7 @@
   display: flex; flex-direction: column;
   padding: var(--space-4);
   gap: var(--space-2);
-  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  position: sticky; top: 0; height: 100dvh; overflow-y: auto;
 }
 .shell__main { flex: 1 1 auto; min-width: 0; background: var(--bg); }
 .shell__inner { max-width: 1080px; margin: 0 auto; padding: var(--space-8) var(--space-8) var(--space-16); }
@@ -555,21 +564,57 @@
   flex-wrap: wrap;
 }
 
-/* ---------- gate (S0 Login) — one centred card, nothing behind it ---------- */
-.gate {
-  min-height: 100dvh; display: grid; place-items: center;
-  padding: var(--space-8) var(--space-4); background: var(--bg);
-}
+/* ---------- gate (S0 Login) ----------
+ *
+ * Two panels on a wide screen: who this is on the left, how to get in on the
+ * right. §7 S1 still holds — the left panel does not sell. It carries the
+ * mark, the name and one sentence, and nothing else: no feature grid, no
+ * testimonial, no screenshot of the product behind the door.
+ *
+ * The wash is the three observer identity colours at low opacity, the same
+ * hues as the mark. It is the only gradient in the product and it appears
+ * only here, where there is no data on screen for a colour to be mistaken
+ * for meaning.
+ */
+.gate { min-height: 100dvh; display: grid; place-items: center; padding: var(--space-8) var(--space-4); background: var(--bg); }
+
 .gate__card {
-  width: 100%; max-width: 380px; background: var(--surface);
-  border: 1px solid var(--border); border-radius: 16px;
-  padding: var(--space-12) var(--space-8);
+  width: 100%; max-width: 860px;
+  display: grid; grid-template-columns: 1fr 1fr;
+  background: var(--surface);
+  border: 1px solid var(--border); border-radius: 20px;
+  overflow: hidden;
 }
-.gate__foot { position: fixed; top: var(--space-4); right: var(--space-4); }
-@media (max-width: 599px) {
-  /* on a phone the card is the page: no frame, no inset */
+
+.gate__side {
+  padding: var(--space-12) var(--space-8);
+  display: flex; flex-direction: column; justify-content: center; gap: var(--space-4);
+  background:
+    radial-gradient(120% 90% at 15% 10%, color-mix(in srgb, var(--observer-1) 22%, transparent), transparent 60%),
+    radial-gradient(110% 90% at 85% 25%, color-mix(in srgb, var(--observer-2) 20%, transparent), transparent 62%),
+    radial-gradient(120% 100% at 50% 100%, color-mix(in srgb, var(--observer-3) 18%, transparent), transparent 60%),
+    var(--sunken);
+  border-right: 1px solid var(--border);
+}
+.gate__name { font-size: 26px; line-height: 1.15; font-weight: 650; letter-spacing: -0.02em; color: var(--ink); }
+.gate__line { font-size: 15px; line-height: 1.6; color: var(--ink-muted); max-width: 26ch; }
+
+.gate__form { padding: var(--space-12) var(--space-8); display: flex; flex-direction: column; justify-content: center; }
+.gate__toggle { position: fixed; top: var(--space-4); right: var(--space-4); }
+
+/* The divider between the two doors: a rule with the word "or" sitting in it. */
+.gate__or { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-8) 0 var(--space-6); }
+.gate__or hr { flex: 1; border: 0; border-top: 1px solid var(--border); margin: 0; }
+
+@media (max-width: 799px) {
+  /* One column. The wash becomes a band above the form rather than beside it,
+     because a half-height gradient next to a form is neither. */
   .gate { padding: 0; align-items: start; }
-  .gate__card { max-width: none; border: 0; border-radius: 0; padding: var(--space-16) var(--space-6) var(--space-12); }
+  .gate__card { max-width: none; grid-template-columns: 1fr; border: 0; border-radius: 0; min-height: 100dvh; }
+  .gate__side { border-right: 0; border-bottom: 1px solid var(--border);
+                padding: var(--space-16) var(--space-6) var(--space-12); text-align: center; align-items: center; }
+  .gate__line { max-width: 34ch; }
+  .gate__form { padding: var(--space-12) var(--space-6) var(--space-16); }
 }
 
 /* ---------- A15 tasks: the board, the card, the dashboard row ---------- */
@@ -638,3 +683,65 @@
 .navitem__task { font-size: 11px; font-weight: 650; color: var(--badge-ink-3);
                  background: var(--primary); border-radius: 999px;
                  padding: 1px 7px; font-variant-numeric: tabular-nums; }
+
+/* ---------- A16: the workspace — notes | canvas | studio ---------- */
+/*
+   Three panes, arranged people → note → artefact. The reference tools put
+   sources on the left and a chat in the middle; Grove's left-hand column is
+   not a pile of documents, it is who wrote what, so it carries identity
+   colours and authors rather than file icons. The right-hand column is a
+   single reading column, not a grid of tiles: these are things you make one
+   at a time and then read, and a grid of six buttons is a menu, not a study.
+*/
+.wsp {
+  display: grid;
+  grid-template-columns: 268px minmax(0, 1fr) 300px;
+  gap: var(--space-4);
+  align-items: start;
+}
+@media (max-width: 1279px) { .wsp { grid-template-columns: 240px minmax(0, 1fr); } .wsp__studio { display: none; } }
+@media (max-width: 899px)  { .wsp { grid-template-columns: minmax(0, 1fr); } }
+
+.pane {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-card); padding: var(--space-4); min-width: 0;
+}
+.pane--flush { padding: var(--space-3); }
+.pane__head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
+.pane__title { font-size: 11px; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); }
+.pane__scroll { max-height: calc(100dvh - 260px); overflow-y: auto; margin: 0 calc(-1 * var(--space-1)); padding: 0 var(--space-1); }
+@media (max-width: 899px) { .pane__scroll { max-height: none; } }
+
+/* one note in the rail: a row, because forty of them have to be scannable */
+.noterow {
+  display: block; width: 100%; text-align: left; padding: var(--space-3);
+  border-radius: 10px; border: 1px solid transparent; background: none;
+  color: inherit; text-decoration: none; cursor: pointer; margin-bottom: 2px;
+}
+.noterow:hover { background: var(--sunken); }
+.noterow[aria-current='true'] { background: var(--sunken); border-color: var(--border-strong); }
+.noterow__title { display: block; font-size: 14px; font-weight: 500; color: var(--ink);
+                  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.noterow__meta { display: flex; align-items: center; gap: 6px; margin-top: 4px;
+                 font-size: 12px; color: var(--ink-muted); }
+.noterow__dot { width: 6px; height: 6px; border-radius: 999px; flex: none; }
+
+/* the studio list: one artefact per row, its state said in words */
+.artefact {
+  display: flex; align-items: center; gap: var(--space-3); width: 100%;
+  padding: var(--space-3); border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface); color: inherit; text-align: left; cursor: pointer;
+  margin-bottom: var(--space-2);
+  transition: border-color var(--motion-fast) var(--ease);
+}
+.artefact:hover:not(:disabled) { border-color: var(--border-strong); }
+.artefact:disabled { cursor: default; opacity: 0.55; }
+.artefact__body { display: block; min-width: 0; flex: 1; }
+.artefact__name { display: block; font-size: 14px; font-weight: 500; color: var(--ink); }
+.artefact__note { display: block; font-size: 12px; color: var(--ink-muted); margin-top: 2px; }
+/* A thin identity stripe, drawn from the observer palette so the studio is
+   recognisably Grove rather than a generic tool. It marks the artefact, it
+   does not rank it — no artefact is more important than another. */
+.artefact__mark { width: 4px; align-self: stretch; border-radius: 999px; flex: none; min-height: 34px; }
+
+.wsp__empty { display: grid; place-items: center; min-height: 320px; text-align: center; padding: var(--space-8); }

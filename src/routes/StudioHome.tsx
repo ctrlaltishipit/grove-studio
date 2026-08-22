@@ -118,7 +118,7 @@ export default function StudioHome() {
 
         <form onSubmit={join} className="tile">
           <div className="tile__title">Join a space</div>
-          <p className="tile__meta">Enter the six-character code.</p>
+          <p className="tile__meta">Paste the six-character code someone shared with you.</p>
           <div style={{ marginTop: 'var(--space-4)' }}>
             <CodeInput value={joinCode} onChange={setJoinCode} disabled={busy !== null} />
           </div>

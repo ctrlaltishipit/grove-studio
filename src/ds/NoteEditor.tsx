@@ -1,17 +1,20 @@
-// Grove Studio — the note editor.
+// Grove Studio — the note editor, as a pane rather than a page.
 //
-// Type it or say it. The dictate button appends to whatever is already there
-// and NEVER submits on your behalf: you read the words before they are yours.
+// Lifted out of the old /space/:id/note/:id route so the same editor can sit
+// in the middle of the workspace with the note list on one side and the
+// Studio on the other. The logic is unchanged and deliberately so: the
+// debounced save, the dictation that appends but NEVER submits on your
+// behalf, and the microphone that stops the moment the tab is hidden are all
+// behaviour people have already relied on.
+//
 // Nothing on this screen animates while you write.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { AppShell } from '../ds/AppShell';
-import { TaskBoard } from '../ds/TaskBoard';
-import { Icon } from '../ds/Icon';
-import { Notice } from '../ds/Notice';
-import { OfflineBanner } from '../ds/OfflineBanner';
-import { Recording } from '../ds/Recording';
-import { useToast } from '../ds/Toast';
+import { Link } from 'react-router-dom';
+import { TaskBoard } from './TaskBoard';
+import { Icon } from './Icon';
+import { Notice } from './Notice';
+import { Recording } from './Recording';
+import { useToast } from './Toast';
 import { awaitUser } from '../lib/auth';
 import { createDictation, dictationSupported, type Dictation } from '../lib/dictation';
 import { relative } from '../lib/greeting';
@@ -20,9 +23,16 @@ import { configured, deleteSpaceNote, getSpaceMembers, getSpaceNote, saveSpaceNo
 
 const SAVE_DEBOUNCE_MS = 1200;
 
-export default function StudioNote() {
-  const { spaceId = '', noteId = '' } = useParams<{ spaceId: string; noteId: string }>();
-  const navigate = useNavigate();
+interface Props {
+  spaceId: string;
+  noteId: string;
+  /** The workspace owns the list, so it needs telling when a note appears,
+   *  changes name, becomes shared or goes away. */
+  onChanged?: (note: SpaceNote | null) => void;
+  onDeleted?: () => void;
+}
+
+export function NoteEditor({ spaceId, noteId, onChanged, onDeleted }: Props) {
   const toast = useToast();
 
   const [note, setNote] = useState<SpaceNote | null>(null);
@@ -42,6 +52,10 @@ export default function StudioNote() {
   const baseText = useRef('');
   const area = useRef<HTMLTextAreaElement>(null);
   const timer = useRef<number | null>(null);
+  // Held in a ref: a parent that re-renders must not be able to reset the
+  // save debounce, which would mean a fast typist never saves at all.
+  const onChangedRef = useRef(onChanged);
+  useEffect(() => { onChangedRef.current = onChanged; }, [onChanged]);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,7 +63,7 @@ export default function StudioNote() {
       if (!configured) { setLoading(false); return; }
       const u = await awaitUser();
       if (cancelled) return;
-      if (!u) { navigate('/', { replace: true }); return; }
+      if (!u) { return; }
       try {
         const n = await getSpaceNote(noteId);
         if (cancelled) return;
@@ -65,7 +79,7 @@ export default function StudioNote() {
       }
     })();
     return () => { cancelled = true; };
-  }, [noteId, navigate]);
+  }, [noteId]);
 
   // Idle-debounced save. A dropped keystroke costs a moment of latency; it
   // never costs the sentence you just wrote.
@@ -75,7 +89,7 @@ export default function StudioNote() {
     timer.current = window.setTimeout(async () => {
       try {
         const saved = await saveSpaceNote(noteId, patch);
-        setNote(saved);
+        setNote(saved); onChangedRef.current?.(saved);
         setSaveState('saved');
       } catch {
         setSaveState('failed');
@@ -127,7 +141,7 @@ export default function StudioNote() {
   async function share() {
     try {
       const saved = await shareSpaceNote(noteId);
-      setNote(saved);
+      setNote(saved); onChangedRef.current?.(saved);
       setConfirmingShare(false);
       toast.show('Shared with the space.');
     } catch {
@@ -138,7 +152,7 @@ export default function StudioNote() {
   async function remove() {
     try {
       await deleteSpaceNote(noteId);
-      navigate(`/space/${spaceId}`);
+      onDeleted?.();
     } catch {
       toast.show('Couldn’t delete that note. Try again.');
     }
@@ -146,24 +160,17 @@ export default function StudioNote() {
 
   if (failed) {
     return (
-      <AppShell>
-        <Notice action={<Link to={`/space/${spaceId}`} className="btn btn--secondary btn--sm" style={{ textDecoration: 'none' }}>Back to the space</Link>}>
-          That note isn&rsquo;t available.
-        </Notice>
-      </AppShell>
+      <Notice action={<Link to={`/space/${spaceId}`} className="btn btn--secondary btn--sm" style={{ textDecoration: 'none' }}>Back to the space</Link>}>
+        That note isn&rsquo;t available.
+      </Notice>
     );
   }
 
   const isShared = note?.visibility === 'shared';
 
   return (
-    <AppShell>
-      <OfflineBanner />
-      <div className="editor">
+    <div className="editor">
         <div className="editor__bar">
-          <Link to={`/space/${spaceId}`} className="btn btn--ghost btn--sm" style={{ textDecoration: 'none' }}>
-            Back to the space
-          </Link>
           <span className="badge" data-corrob={isShared ? '3' : '1'} style={{ height: 28, fontSize: 13, padding: '0 12px' }}>
             {isShared ? 'Shared' : 'Private'}
           </span>
@@ -261,8 +268,7 @@ export default function StudioNote() {
             Grove Studio can&rsquo;t reach the microphone. Type the note instead.
           </p>
         )}
-      </div>
       {toast.node}
-    </AppShell>
+    </div>
   );
 }
