@@ -18,8 +18,8 @@ export function Header({ left, centre, right, linkHome = true, nav }: HeaderProp
     <header className="app-header">
       <div className="page row" style={{ width: '100%' }}>
         {left || (linkHome
-          ? <Link to="/" className="wordmark">Grove</Link>
-          : <span className="wordmark">Grove</span>)}
+          ? <Link to="/" className="wordmark">Grove Studio</Link>
+          : <span className="wordmark">Grove Studio</span>)}
         {nav}
         <span className="spacer" />
         {centre}

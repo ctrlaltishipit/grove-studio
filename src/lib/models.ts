@@ -66,3 +66,49 @@ export interface FindingObserver {
   finding_id: string;
   participant_id: string;
 }
+
+/* ---------------- Grove Studio: spaces and notes ----------------
+ * A space (project) is collaborative. A note inside it is 'private' — its
+ * author and nobody else, ever — or 'shared' with every member. Promotion is
+ * one-way: a shared note cannot be made private again, because people have
+ * already read it. */
+
+export type NoteVisibility = 'private' | 'shared';
+
+export interface Space {
+  id: string;
+  name: string;
+  join_code: string;
+  member_count: number;
+  shared_notes: number;
+  my_private_notes: number;
+  last_activity: string;
+}
+
+export interface SpaceMember {
+  member_id: string;
+  user_id: string;
+  display_name: string;
+  colour_index: number;
+  role: 'owner' | 'member';
+  shared_notes: number;
+  last_seen_at: string;
+}
+
+export interface SpaceNote {
+  id: string;
+  project_id: string;
+  author_id: string;
+  title: string;
+  body: string;
+  visibility: NoteVisibility;
+  shared_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Profile {
+  user_id: string;
+  display_name: string;
+  avatar_url: string;
+}

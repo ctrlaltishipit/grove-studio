@@ -22,7 +22,10 @@
 //   inflate observer_count — the one number Grove exists to produce. Creating a
 //   session joins its creator through the same function as everyone else.
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import type { Finding, FindingObserver, Note, NoteKind, Participant, RosterRow, Session } from './models';
+import type {
+  Finding, FindingObserver, Note, NoteKind, Participant, Profile, RosterRow,
+  Session, Space, SpaceMember, SpaceNote,
+} from './models';
 
 const url = import.meta.env.VITE_SUPABASE_URL;
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -208,4 +211,147 @@ export async function getFindingObservers(sessionId: string): Promise<FindingObs
   const { data, error } = await db().rpc('get_finding_observers', { p_session_id: sessionId });
   if (error) throw error;
   return (data as FindingObserver[] | null) ?? [];
+}
+
+/* ================================================================
+ * Grove Studio — spaces and notes.
+ *
+ * Same rules as above. Membership is written ONLY through join_project() /
+ * create_project(); the client has no INSERT privilege on project_members, so
+ * a leaked space id is not a way in — the join code is. Private notes are
+ * filtered by RLS, not by politeness: the select below asks for everything the
+ * caller is allowed to see, and the database decides what that is.
+ * ================================================================ */
+
+const SPACE_NOTE_COLS = 'id, project_id, author_id, title, body, visibility, shared_at, created_at, updated_at';
+
+/** Upsert the signed-in user's display name and avatar, from their OAuth identity. */
+export async function saveProfile(p: Profile): Promise<void> {
+  const { error } = await db().from('profiles').upsert(
+    { user_id: p.user_id, display_name: p.display_name, avatar_url: p.avatar_url },
+    { onConflict: 'user_id' },
+  );
+  if (error) throw error;
+}
+
+export async function getProfile(userId: string): Promise<Profile | null> {
+  const { data, error } = await db()
+    .from('profiles')
+    .select('user_id, display_name, avatar_url')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as Profile | null) ?? null;
+}
+
+/** Every space this person belongs to, newest activity first, with counts for the home screen. */
+export async function listMySpaces(): Promise<Space[]> {
+  const { data, error } = await db().rpc('my_spaces');
+  if (error) throw error;
+  return (data as Space[] | null) ?? [];
+}
+
+export async function createSpace(name: string, displayName: string): Promise<{ id: string; name: string; join_code: string }> {
+  const { data, error } = await db().rpc('create_project', { p_name: name, p_display_name: displayName });
+  if (error) throw error;
+  const rows = (data as { id: string; name: string; join_code: string }[] | null) ?? [];
+  if (!rows[0]) throw new Error('create returned no row');
+  return rows[0];
+}
+
+/** Join by code. The code is the capability — there is no other way in. */
+export async function joinSpace(code: string, displayName: string): Promise<SpaceMember | null> {
+  const { data, error } = await db().rpc('join_project', {
+    p_code: code.trim().toUpperCase(),
+    p_display_name: displayName,
+  });
+  if (error) throw error;
+  const rows = (data as { id: string; project_id: string }[] | null) ?? [];
+  return rows[0] ? ({ ...rows[0], member_id: rows[0].id } as unknown as SpaceMember) : null;
+}
+
+export async function getSpaceMembers(projectId: string): Promise<SpaceMember[]> {
+  const { data, error } = await db().rpc('get_space_members', { p_project_id: projectId });
+  if (error) throw error;
+  return (data as SpaceMember[] | null) ?? [];
+}
+
+export async function getSpace(projectId: string): Promise<{ id: string; name: string; description: string; join_code: string } | null> {
+  const { data, error } = await db()
+    .from('projects')
+    .select('id, name, description, join_code')
+    .eq('id', projectId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as { id: string; name: string; description: string; join_code: string } | null) ?? null;
+}
+
+/** Shared notes of the space plus the caller's own private ones. RLS decides;
+ *  this query does not try to be clever about it. */
+export async function listSpaceNotes(projectId: string): Promise<SpaceNote[]> {
+  const { data, error } = await db()
+    .from('space_notes')
+    .select(SPACE_NOTE_COLS)
+    .eq('project_id', projectId)
+    .order('updated_at', { ascending: false });
+  if (error) throw error;
+  return (data as SpaceNote[] | null) ?? [];
+}
+
+export async function getSpaceNote(noteId: string): Promise<SpaceNote | null> {
+  const { data, error } = await db()
+    .from('space_notes')
+    .select(SPACE_NOTE_COLS)
+    .eq('id', noteId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as SpaceNote | null) ?? null;
+}
+
+export async function createSpaceNote(args: {
+  projectId: string; authorId: string; title?: string; body?: string; visibility?: SpaceNote['visibility'];
+}): Promise<SpaceNote> {
+  const { data, error } = await db()
+    .from('space_notes')
+    .insert({
+      project_id: args.projectId,
+      author_id: args.authorId,
+      title: args.title?.trim() || 'Untitled note',
+      body: args.body ?? '',
+      visibility: args.visibility ?? 'private',
+      shared_at: args.visibility === 'shared' ? new Date().toISOString() : null,
+    })
+    .select(SPACE_NOTE_COLS)
+    .single();
+  if (error) throw error;
+  return data as SpaceNote;
+}
+
+export async function saveSpaceNote(noteId: string, patch: { title?: string; body?: string }): Promise<SpaceNote> {
+  const { data, error } = await db()
+    .from('space_notes')
+    .update(patch)
+    .eq('id', noteId)
+    .select(SPACE_NOTE_COLS)
+    .single();
+  if (error) throw error;
+  return data as SpaceNote;
+}
+
+/** Promotion is one-way, and the database agrees: there is no demote here
+ *  because un-sharing something people have already read is a lie. */
+export async function shareSpaceNote(noteId: string): Promise<SpaceNote> {
+  const { data, error } = await db()
+    .from('space_notes')
+    .update({ visibility: 'shared', shared_at: new Date().toISOString() })
+    .eq('id', noteId)
+    .select(SPACE_NOTE_COLS)
+    .single();
+  if (error) throw error;
+  return data as SpaceNote;
+}
+
+export async function deleteSpaceNote(noteId: string): Promise<void> {
+  const { error } = await db().from('space_notes').delete().eq('id', noteId);
+  if (error) throw error;
 }

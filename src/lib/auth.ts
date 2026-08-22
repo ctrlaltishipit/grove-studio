@@ -41,3 +41,42 @@ export function isPermanent(user: User | null | undefined): boolean {
   if (!user) return false;
   return (user as User & { is_anonymous?: boolean }).is_anonymous === false;
 }
+
+/* ---------------- Grove Studio: real accounts ----------------
+ * Anonymous sign-in stays for guests joining a session by code. Google is for
+ * people who want their spaces to follow them. Both land on the same
+ * auth.uid(), so a guest who later signs in keeps what they wrote. */
+
+export async function signInWithGoogle(redirectTo?: string): Promise<void> {
+  if (!configured) throw new Error('not configured');
+  const { error } = await authClient().signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: redirectTo ?? `${window.location.origin}/home`,
+      queryParams: { prompt: 'select_account' },
+    },
+  });
+  if (error) throw error;
+}
+
+export async function signOut(): Promise<void> {
+  if (!configured) return;
+  await authClient().signOut();
+}
+
+/** Name and avatar from the OAuth identity, with sane fallbacks. */
+export function identityOf(user: { email?: string; user_metadata?: Record<string, unknown> } | null): {
+  displayName: string; avatarUrl: string; email: string;
+} {
+  const m = (user?.user_metadata ?? {}) as Record<string, string>;
+  const email = user?.email ?? '';
+  const displayName = m.full_name || m.name || (email ? email.split('@')[0] : '') || 'there';
+  return { displayName, avatarUrl: m.avatar_url || m.picture || '', email };
+}
+
+/** Fires whenever the session changes — used to save the profile after an OAuth round trip. */
+export function onAuthChange(cb: () => void): () => void {
+  if (!configured) return () => {};
+  const { data } = authClient().onAuthStateChange(() => cb());
+  return () => data.subscription.unsubscribe();
+}
