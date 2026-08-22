@@ -10,6 +10,7 @@
 // =============================================================================
 
 import express from 'express';
+import { pathToFileURL } from 'node:url';
 import { verifyUser, fetchScope, supabaseConfigured, spaceBrief, callerName, inviteMember } from './notes.mjs';
 import { geminiConfigured } from './gemini.mjs';
 import { claudeConfigured } from './claude.mjs';
@@ -141,6 +142,14 @@ app.post('/api/invite', withUser, async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`[studio] serving on http://localhost:${PORT} · supabase:${supabaseConfigured()} gemini:${geminiConfigured()} claude:${claudeConfigured()}`);
-});
+// Listen only when run directly (`npm run studio` / `npm run dev`). On Vercel
+// this module is imported by api/index.mjs, which serves the app per-request —
+// binding a port there would be meaningless.
+const runDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (runDirectly) {
+  app.listen(PORT, () => {
+    console.log(`[studio] serving on http://localhost:${PORT} · supabase:${supabaseConfigured()} gemini:${geminiConfigured()} claude:${claudeConfigured()}`);
+  });
+}
+
+export default app;

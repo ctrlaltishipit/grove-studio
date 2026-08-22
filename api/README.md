@@ -1,8 +1,13 @@
 # api/
 
-`synthesise.py` goes here — the one serverless function, and the only place
-`SUPABASE_SERVICE_ROLE_KEY` and `LLM_API_KEY` exist.
+`index.mjs` is the one Vercel serverless function. It imports the Express
+sidecar from `server/index.mjs` and serves ALL `/api/*` routes in production —
+the studio tools, `/api/invite` (SMTP email), and `/api/studio/health`.
+`vercel.json` rewrites every `/api/*` request to it.
 
-If this folder contains only this README, copy the file in from the docs pack:
-`grove app/02 Technical/code/api/synthesise.py` → `api/synthesise.py`
-(The assembly step in RUNBOOK.md does this for you.)
+Locally this file is unused: `npm run dev` starts the same Express app as a
+listening sidecar on :8787 and Vite proxies `/api` to it.
+
+The old `synthesise.py` (and root `requirements.txt`) belonged to the
+pre-redesign app and were removed — no code calls `/api/synthesise` any more,
+and with it gone no `SUPABASE_SERVICE_ROLE_KEY` exists anywhere in the deploy.

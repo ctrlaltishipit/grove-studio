@@ -1,7 +1,0 @@
-# Grove — Python dependencies for the Vercel serverless function.
-#
-# There are none. On purpose. api/synthesise.py uses the standard library only.
-#
-# DO NOT add a Python web framework here (fastapi, flask, django). Vercel's
-# Python framework presets take precedence over file-based /api functions —
-# adding one stops api/synthesise.py from being routed at all.
