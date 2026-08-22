@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth, useData } from '../state/Store';
 import { markNotificationsRead } from '../lib/api';
 import { shortTime } from '../lib/fmt';
@@ -10,6 +11,8 @@ const KIND_STYLE = {
   share:   { icon: '+', bg: 'var(--sunken)',     ink: 'var(--muted)' },
   done:    { icon: '✓', bg: 'var(--acc-soft)',   ink: 'var(--acc-deep)' },
   studio:  { icon: '♪', bg: 'var(--vio-soft)',   ink: 'var(--vio-deep)' },
+  mention: { icon: '@', bg: 'var(--acc-soft)',   ink: 'var(--acc-deep)' },
+  comment: { icon: '…', bg: 'var(--sunken)',     ink: 'var(--muted)' },
 };
 
 export default function NotificationsBell() {
@@ -17,6 +20,16 @@ export default function NotificationsBell() {
   const { notifications, unread, refreshTasks, tasksReady } = useData();
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
+  const nav = useNavigate();
+
+  // A notification about a note or task opens it.
+  const goTo = (n) => {
+    if (!n.project_id) return;
+    setOpen(false);
+    if (n.note_id) nav(`/app/s/${n.project_id}?note=${n.note_id}`);
+    else if (n.task_id) nav(`/app/s/${n.project_id}?tab=board`);
+    else nav(`/app/s/${n.project_id}`);
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -48,7 +61,7 @@ export default function NotificationsBell() {
         <div className="notif-pop">
           <header>
             <b>Notifications</b>
-            <span>assignments · check-ins · shares</span>
+            <span>assignments · mentions · check-ins</span>
           </header>
           {notifications.length === 0 && (
             <div className="empty-note">
@@ -60,7 +73,8 @@ export default function NotificationsBell() {
           {notifications.map((n) => {
             const s = KIND_STYLE[n.kind] ?? KIND_STYLE.share;
             return (
-              <div className="notif-row" key={n.id}>
+              <div className={'notif-row' + (n.project_id ? ' link' : '')} key={n.id} role={n.project_id ? 'button' : undefined} tabIndex={n.project_id ? 0 : undefined}
+                onClick={() => goTo(n)} onKeyDown={(e) => { if (e.key === 'Enter') goTo(n); }}>
                 <span className="icon" style={{ background: s.bg, color: s.ink }}>{s.icon}</span>
                 <div style={{ minWidth: 0 }}>
                   <div className="text">{n.text}</div>

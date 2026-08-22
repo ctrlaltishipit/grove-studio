@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Modal, Avatar } from './ui';
 import { useAuth, useData, useToast, useStudio } from '../state/Store';
-import { updateTask, createTask, notify, shareNoteToSpace, inviteByEmail, shareNotesByEmail } from '../lib/api';
+import { updateTask, createTask, notify, shareNoteToSpace, inviteByEmail, shareNotesByEmail, setMemberRole, features } from '../lib/api';
+import { ROLE_LABEL } from '../lib/collab';
 import { fmtDue, isoDateInDays } from '../lib/fmt';
 
 // Compose the toast for an invite result — shared by both share modals.
@@ -126,6 +127,16 @@ export function ShareSpaceModal({ space, members, note, meUserId, onClose, onCha
   const { toast } = useToast();
   const studio = useStudio();
   const pickedNotes = notes.filter((n) => studio.selNotes.has(n.id));
+  const iAmOwner = members.some((m) => m.userId === meUserId && m.role === 'owner');
+  const changeRole = async (m, role) => {
+    try {
+      await setMemberRole(space.id, m.userId, role);
+      onChanged?.();
+      toast(`${m.name} can now ${role === 'viewer' ? 'only view' : 'edit'}`, role === 'viewer' ? 'They read notes and comment, but cannot change notes' : 'They can write and co-edit shared notes', 'ok');
+    } catch (e) {
+      toast('Could not change the role', features.collab === false ? 'Roles switch on once sql/07_collab.sql is applied.' : e.message, 'warn');
+    }
+  };
   const isNoteShare = !!note;
   const canShareNote = isNoteShare && note.visibility !== 'shared';
 
@@ -181,9 +192,18 @@ export function ShareSpaceModal({ space, members, note, meUserId, onClose, onCha
                 <Avatar name={m.name} colourIndex={m.colourIndex} size={28} />
                 <div className="who">
                   <b>{m.name}{m.userId === meUserId ? ' (you)' : ''}</b>
-                  <span>{m.role === 'owner' ? 'Created this space' : 'Member'}</span>
+                  <span>{m.role === 'owner' ? 'Created this space' : (ROLE_LABEL[m.role] ?? 'Member')}</span>
                 </div>
-                {m.role === 'owner' && <span className="role-chip">Admin</span>}
+                {m.role === 'owner'
+                  ? <span className="role-chip">Admin</span>
+                  : (iAmOwner && features.collab !== false
+                    ? (
+                      <select className="role-select" value={m.role === 'viewer' ? 'viewer' : 'editor'} onChange={(e) => changeRole(m, e.target.value)} aria-label={`Role for ${m.name}`}>
+                        <option value="editor">Can edit</option>
+                        <option value="viewer">View only</option>
+                      </select>
+                    )
+                    : <span className="role-chip soft">{ROLE_LABEL[m.role] ?? 'Member'}</span>)}
               </div>
             ))}
           </div>

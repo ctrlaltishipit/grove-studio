@@ -1,8 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { updateNote, shareNoteToSpace, listComments, addComment, fetchProfiles, features } from '../lib/api';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { updateNote, shareNoteToSpace, listComments, addComment, fetchProfiles, features, notify, listVersions, addVersion, setNoteEditMode } from '../lib/api';
+import {
+  caretAfterRemote, measureCaret, lineOfOffset, lineText, offsetOfLine, mentionQuery, insertMention, findMentions,
+  changeSummary, rangesLabel, blame, roleCanEdit,
+} from '../lib/collab';
 import { SAVE_DEBOUNCE_MS, POLL_MS } from '../config';
 import { relTime, shortTime } from '../lib/fmt';
-import { Avatar, SparkIcon } from './ui';
+import { Avatar, SparkIcon, Modal } from './ui';
 import { useToast } from '../state/Store';
 import { createDictation, dictationSupported } from '../lib/dictation';
 import { genNoteBrief } from '../lib/studioApi';
@@ -109,9 +113,78 @@ function useDictation(apply) {
   return { listening, seconds, micError, toggle, stop };
 }
 
+// --------------------------------------------------------------- mentions
+
+// Highlight @Name tokens for the space's members inside plain text.
+function renderWithMentions(text, members) {
+  const names = [...members].map((m) => m.name).filter(Boolean).sort((a, b) => b.length - a.length);
+  if (!names.length || !text.includes('@')) return text;
+  const re = new RegExp('(@(?:' + names.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + '))', 'gi');
+  return text.split(re).map((part, i) => (
+    i % 2 === 1 ? <span className="mention-tag" key={i}>{part}</span> : part
+  ));
+}
+
+// "@par" typed in a textarea → a member picker under the caret. The parent
+// owns the text; this returns what to render and the keys to intercept.
+function useMentionPicker(areaRef, text, setText, members) {
+  const [state, setState] = useState(null); // { query, start, idx }
+  const update = useCallback(() => {
+    const el = areaRef.current;
+    if (!el) return;
+    const q = mentionQuery(el.value, el.selectionStart ?? el.value.length);
+    setState(q ? { ...q, idx: 0 } : null);
+  }, [areaRef]);
+  const items = useMemo(() => {
+    if (!state) return [];
+    const q = state.query.toLowerCase();
+    return members.filter((m) => m.name && m.name.toLowerCase().includes(q)).slice(0, 6);
+  }, [state, members]);
+  const pick = useCallback((m) => {
+    const el = areaRef.current;
+    if (!el || !state) return;
+    const r = insertMention(el.value, el.selectionStart ?? el.value.length, state.start, m.name);
+    setText(r.text);
+    setState(null);
+    requestAnimationFrame(() => { try { el.focus(); el.setSelectionRange(r.caret, r.caret); } catch { /* fine */ } });
+  }, [areaRef, state, setText]);
+  const onKeyDown = (e) => {
+    if (!state || !items.length) return false;
+    if (e.key === 'ArrowDown') { e.preventDefault(); setState((st) => ({ ...st, idx: (st.idx + 1) % items.length })); return true; }
+    if (e.key === 'ArrowUp') { e.preventDefault(); setState((st) => ({ ...st, idx: (st.idx - 1 + items.length) % items.length })); return true; }
+    if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); pick(items[state.idx] ?? items[0]); return true; }
+    if (e.key === 'Escape') { setState(null); return true; }
+    return false;
+  };
+  const style = useMemo(() => {
+    const el = areaRef.current;
+    if (!el || !state) return null;
+    const pos = measureCaret(el, state.start);
+    return pos ? { top: el.offsetTop + pos.top + pos.height + 4, left: el.offsetLeft + Math.min(pos.left, Math.max(0, el.clientWidth - 220)) } : null;
+  }, [areaRef, state]);
+  const open = !!state && items.length > 0;
+  return { open, items, idx: state?.idx ?? 0, update, pick, onKeyDown, style };
+}
+
+function MentionPop({ picker }) {
+  if (!picker.open || !picker.style) return null;
+  return (
+    <div className="mention-pop" style={picker.style}>
+      <div className="hint">Mention a teammate</div>
+      {picker.items.map((m, i) => (
+        <button key={m.memberId ?? m.userId} className={i === picker.idx ? 'on' : ''}
+          onMouseDown={(e) => { e.preventDefault(); picker.pick(m); }}>
+          <Avatar name={m.name} colourIndex={m.colourIndex} size={20} />
+          <span>{m.name}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------- comments
 
-function Thread({ note, space, meUserId, meName, meAvatar, live, remoteComment, membersByUser }) {
+function Thread({ note, space, meUserId, meName, meAvatar, live, remoteComment, membersByUser, members = [], anchor = null, onClearAnchor, onComments, onJumpToLine }) {
   const { toast } = useToast();
   const [comments, setComments] = useState(null);
   const [profiles, setProfiles] = useState(new Map());
@@ -148,6 +221,12 @@ function Thread({ note, space, meUserId, meName, meAvatar, live, remoteComment, 
   }, [comments]);
 
   const dict = useDictation((text) => setDraft(text));
+  const picker = useMentionPicker(areaRef, draft, setDraft, members);
+
+  // The editor's margin markers need to know which lines carry comments.
+  useEffect(() => { onComments?.(comments ?? []); }, [comments, onComments]);
+  // A fresh line anchor means "comment on this": bring the composer up.
+  useEffect(() => { if (anchor) areaRef.current?.focus(); }, [anchor]);
 
   const send = async () => {
     const body = draft.trim();
@@ -155,11 +234,22 @@ function Thread({ note, space, meUserId, meName, meAvatar, live, remoteComment, 
     dict.stop();
     setBusy(true);
     try {
-      const row = await addComment(note.id, space.id, meUserId, body);
+      const row = await addComment(note.id, space.id, meUserId, body, anchor);
       setDraft('');
+      onClearAnchor?.();
       setComments((c) => [...(c ?? []), row]);
       live?.sendComment(row);
       areaRef.current?.focus();
+      // Tell the people this comment is about: anyone @mentioned, and the
+      // note's author (once) when someone else comments on their note.
+      const mentioned = findMentions(body, members).map((m) => m.userId).filter((id) => id !== meUserId);
+      if (mentioned.length) {
+        notify(mentioned, { kind: 'mention', text: `${meName} mentioned you in a comment on “${note.title}”`, sub: body.slice(0, 140), projectId: space.id, noteId: note.id });
+      }
+      const authorUser = members.find((m) => m.memberId === note.author_id)?.userId;
+      if (authorUser && authorUser !== meUserId && !mentioned.includes(authorUser)) {
+        notify([authorUser], { kind: 'comment', text: `${meName} commented on “${note.title}”`, sub: body.slice(0, 140), projectId: space.id, noteId: note.id });
+      }
     } catch (e) {
       toast('Comment not sent', features.tasks === false
         ? 'Comments switch on once sql/06_grovestudio.sql is applied.'
@@ -179,7 +269,7 @@ function Thread({ note, space, meUserId, meName, meAvatar, live, remoteComment, 
   const avatarOf = (uid) => uid === meUserId ? meAvatar : (profiles.get(uid)?.avatar_url ?? '');
 
   return (
-    <div className="thread">
+    <div className="thread" id="note-thread">
       <div className="thread-head">
         <b>Conversation</b>
         <span className="n">{comments?.length ?? 0}</span>
@@ -196,7 +286,12 @@ function Thread({ note, space, meUserId, meName, meAvatar, live, remoteComment, 
                   <span className="c-name">{c.author_user === meUserId ? 'You' : nameOf(c.author_user)}</span>
                   <span className="c-time">{shortTime(c.created_at)}</span>
                 </div>
-                <p className="c-body">{c.body}</p>
+                {c.anchor_line && (
+                  <span className="c-anchor" title="Jump to this line" onClick={() => onJumpToLine?.(c.anchor_line)}>
+                    Line {c.anchor_line}{c.anchor_text ? `: “${c.anchor_text}”` : ''}
+                  </span>
+                )}
+                <p className="c-body">{renderWithMentions(c.body, members)}</p>
               </div>
             </div>
           ))}
@@ -212,20 +307,31 @@ function Thread({ note, space, meUserId, meName, meAvatar, live, remoteComment, 
 
       <div className="composer-row">
         <Avatar name={meName} avatarUrl={meAvatar} size={30} />
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
+          {anchor && (
+            <div className="anchor-chip">
+              <b>Line {anchor.line}</b>
+              <span>{anchor.text || '(empty line)'}</span>
+              <button type="button" aria-label="Remove the line anchor" onClick={onClearAnchor}>✕</button>
+            </div>
+          )}
           <div className="composer">
             <textarea
               ref={areaRef}
               rows={1}
-              placeholder="Add to the conversation — type or dictate…"
+              placeholder={anchor ? `Comment on line ${anchor.line}…` : 'Add to the conversation — type, dictate, or @mention…'}
               value={draft}
-              onChange={(e) => { setDraft(e.target.value); grow(e.target); }}
+              onChange={(e) => { setDraft(e.target.value); grow(e.target); picker.update(); }}
               onInput={(e) => grow(e.target)}
+              onKeyUp={picker.update}
+              onClick={picker.update}
               onKeyDown={(e) => {
+                if (picker.onKeyDown(e)) return;
                 if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
                 if (e.key === 'Escape') dict.stop();
               }}
             />
+            <MentionPop picker={picker} />
             {dictationSupported && (
               <button
                 className={'mic-btn' + (dict.listening ? ' on' : '')}
@@ -248,7 +354,7 @@ function Thread({ note, space, meUserId, meName, meAvatar, live, remoteComment, 
               ? `Recording · ${String(Math.floor(dict.seconds / 60)).padStart(2, '0')}:${String(dict.seconds % 60).padStart(2, '0')} — dictation lands in the box, you press send`
               : dict.micError
                 ? 'The microphone was refused — allow it in the browser and try again.'
-                : 'Enter sends · Shift+Enter for a new line'}
+                : 'Enter sends · Shift+Enter for a new line · @ mentions a teammate'}
           </div>
         </div>
       </div>
@@ -285,6 +391,25 @@ export default function NoteEditor({
   const author = memberByMemberId.get(note.author_id);
   const mine = author?.userId === meUserId;
 
+  // ---- permissions: space role + the note's own lock ----
+  const myRole = membersByUser.get(meUserId)?.role;
+  const viewerOnly = isShared && myRole && !roleCanEdit(myRole);
+  const lockedByAuthor = isSharedNote && note.edit_mode === 'author' && !mine;
+  const blocked = readOnly || viewerOnly || lockedByAuthor;
+
+  // ---- collaboration state ----
+  const [caret, setCaret] = useState(0);
+  const [cursorFlags, setCursorFlags] = useState([]);
+  const [anchor, setAnchor] = useState(null);            // { line, text } for an inline comment
+  const [anchoredLines, setAnchoredLines] = useState([]); // [{ line, count, top }]
+  const [commentRows, setCommentRows] = useState([]);
+  const [history, setHistory] = useState(null);          // null | { versions, picked }
+  const lastSnapshot = useRef({ title: note.title, body: note.body ?? '', at: 0 });
+  const notifiedMentions = useRef(new Set());
+  const caretLine = lineOfOffset(body, caret);
+  const collabOn = features.collab !== false;
+  const colourVar = (i) => `var(--o${((i ?? 0) % 5) + 1})`;
+
   // Presence: who has this note open right now (besides me).
   const here = isSharedNote ? presence.filter((p) => p.noteId === note.id && p.userId !== meUserId) : [];
   const typers = here.filter((p) => p.typing);
@@ -301,8 +426,113 @@ export default function NoteEditor({
     if (!remoteEdit || remoteEdit.noteId !== note.id || remoteEdit.userId === meUserId) return;
     if (Date.now() - lastTypedAt.current < 1500) return;
     if (typeof remoteEdit.title === 'string') { setTitle(remoteEdit.title); latest.current.title = remoteEdit.title; }
-    if (typeof remoteEdit.body === 'string') { setBody(remoteEdit.body); latest.current.body = remoteEdit.body; }
+    if (typeof remoteEdit.body === 'string') {
+      // Keep my caret on the same characters while their edit lands.
+      const el = bodyRef.current;
+      const focused = el && document.activeElement === el;
+      const next = caretAfterRemote(latest.current.body, remoteEdit.body, el?.selectionStart ?? 0);
+      setBody(remoteEdit.body); latest.current.body = remoteEdit.body;
+      if (focused) requestAnimationFrame(() => { try { el.setSelectionRange(next, next); setCaret(next); } catch { /* fine */ } });
+    }
   }, [remoteEdit, note.id, meUserId]);
+
+  // ---- live cursors: where teammates are in this note ----
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!el || !isSharedNote) { setCursorFlags([]); return; }
+    const flags = presence
+      .filter((p) => p.noteId === note.id && p.userId !== meUserId && typeof p.caret === 'number')
+      .map((p) => {
+        const pos = measureCaret(el, Math.min(p.caret, body.length));
+        return pos ? { userId: p.userId, name: p.name, colourIndex: p.colourIndex, typing: p.typing, ...pos } : null;
+      })
+      .filter(Boolean);
+    setCursorFlags(flags);
+  }, [presence, body, note.id, meUserId, isSharedNote]);
+
+  // ---- margin markers for inline comments ----
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!el) { setAnchoredLines([]); return; }
+    const counts = new Map();
+    for (const c of commentRows) if (c.anchor_line) counts.set(c.anchor_line, (counts.get(c.anchor_line) ?? 0) + 1);
+    setAnchoredLines([...counts.entries()].map(([line, count]) => {
+      const pos = measureCaret(el, offsetOfLine(body, line));
+      return pos ? { line, count, top: pos.top } : null;
+    }).filter(Boolean));
+  }, [commentRows, body]);
+
+  const trackCaret = useCallback(() => {
+    const el = bodyRef.current;
+    if (!el) return;
+    const c = el.selectionStart ?? 0;
+    setCaret(c);
+    if (isSharedNote) live?.setCursor(note.id, c);
+  }, [isSharedNote, live, note.id]);
+
+  const jumpToLine = (line) => {
+    const el = bodyRef.current;
+    if (!el) return;
+    const off = offsetOfLine(latest.current.body, line);
+    el.focus();
+    try { el.setSelectionRange(off, off + lineText(latest.current.body, line).length); } catch { /* fine */ }
+    setCaret(off);
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  };
+
+  // ---- version history: snapshot my edits, at most every 30s ----
+  const snapshot = useCallback(async (summary = null, force = false) => {
+    if (!collabOn) return;
+    const { title: t, body: b } = latest.current;
+    const prev = lastSnapshot.current;
+    if (!force && t === prev.title && b === prev.body) return;
+    if (!force && Date.now() - prev.at < 30_000) return;
+    try {
+      await addVersion(note.id, space.id, meUserId, { title: t, body: b, summary });
+      lastSnapshot.current = { title: t, body: b, at: Date.now() };
+    } catch { /* history is best effort */ }
+  }, [collabOn, note.id, space.id, meUserId]);
+  useEffect(() => {
+    lastSnapshot.current = { title: note.title, body: note.body ?? '', at: 0 };
+    notifiedMentions.current = new Set();
+    return () => { snapshot(null, false); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [note.id]);
+
+  // ---- @mentions typed into the note body ----
+  const bodyPicker = useMentionPicker(bodyRef, body, (t) => onTypeRef.current({ body: t }), members);
+  const onTypeRef = useRef(() => {});
+
+  const notifyBodyMentions = useCallback(() => {
+    const fresh = findMentions(latest.current.body, members)
+      .map((m) => m.userId)
+      .filter((id) => id !== meUserId && !notifiedMentions.current.has(id));
+    if (!fresh.length) return;
+    fresh.forEach((id) => notifiedMentions.current.add(id));
+    const line = latest.current.body.split('\n').find((l) => fresh.some((id) => l.toLowerCase().includes('@' + (membersByUser.get(id)?.name ?? '').toLowerCase()))) ?? '';
+    notify(fresh, { kind: 'mention', text: `${meName} mentioned you in “${latest.current.title || 'Untitled note'}”`, sub: line.slice(0, 140), projectId: space.id, noteId: note.id });
+  }, [members, meUserId, meName, membersByUser, space.id, note.id]);
+
+  const openHistory = async () => {
+    try {
+      const versions = await listVersions(note.id);
+      setHistory({ versions, picked: versions.length ? versions[versions.length - 1].id : null });
+    } catch (e) {
+      toast('Could not load history', e.message, 'warn');
+    }
+  };
+
+  const restoreVersion = async (v) => {
+    const when = shortTime(v.created_at);
+    latest.current = { title: v.title, body: v.body };
+    setTitle(v.title); setBody(v.body);
+    lastTypedAt.current = Date.now();
+    if (isSharedNote) live?.sendEdit(note.id, { title: v.title, body: v.body });
+    scheduleSave();
+    await snapshot(`Restored the version from ${when}`, true);
+    setHistory(null);
+    toast('Version restored', `Back to how it was at ${when}. The restore itself is in the history too.`, 'ok');
+  };
 
   // Fresh server rows (poll/nudge) win only when I'm idle AND nothing of mine
   // is still on its way to the server — a stale poll must not revert a save.
@@ -327,6 +557,8 @@ export default function NoteEditor({
         pendingSave.current = false;
         setSaveState('saved');
         onChanged?.();
+        snapshot();
+        notifyBodyMentions();
       }
     } catch {
       // Typed text must never be lost silently: keep the pending flag, show
@@ -335,7 +567,7 @@ export default function NoteEditor({
       clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(fireSave, SAVE_RETRY_MS);
     }
-  }, [note.id, onChanged]);
+  }, [note.id, onChanged, snapshot, notifyBodyMentions]);
 
   const scheduleSave = useCallback(() => {
     clearTimeout(saveTimer.current);
@@ -347,7 +579,9 @@ export default function NoteEditor({
   useEffect(() => () => clearTimeout(saveTimer.current), []);
 
   const onType = (patch) => {
+    if (blocked) return;
     lastTypedAt.current = Date.now();
+    requestAnimationFrame(trackCaret);
     if (typeof patch.title === 'string') { setTitle(patch.title); latest.current.title = patch.title; }
     if (typeof patch.body === 'string') { setBody(patch.body); latest.current.body = patch.body; }
     if (isSharedNote) {
@@ -358,6 +592,7 @@ export default function NoteEditor({
     }
     scheduleSave();
   };
+  onTypeRef.current = onType;
 
   // Dictation straight into the note body (the conversation box has its own mic).
   const bodyDict = useDictation((text) => onType({ body: text }));
@@ -394,8 +629,24 @@ export default function NoteEditor({
               </span>
             </>
           )}
-          <span className="save-state">{saveLabel}</span>
-          {dictationSupported && !readOnly && (
+          <span className="save-state">{blocked ? 'view only' : saveLabel}</span>
+          {collabOn && (
+            <button className="btn btn-sm" onClick={openHistory} title="Who changed what, and restore any version">History</button>
+          )}
+          {mine && isSharedNote && collabOn && (
+            <select className="edit-mode-select" value={note.edit_mode ?? 'everyone'} aria-label="Who can edit this note"
+              onChange={async (e) => {
+                try {
+                  await setNoteEditMode(note.id, e.target.value);
+                  onChanged?.(); live?.nudge();
+                  toast(e.target.value === 'author' ? 'Only you can edit this note now' : 'Everyone in the space can edit again', null, 'ok');
+                } catch (err) { toast('Could not change that', err.message, 'warn'); }
+              }}>
+              <option value="everyone">Everyone can edit</option>
+              <option value="author">Only I can edit</option>
+            </select>
+          )}
+          {dictationSupported && !blocked && (
             bodyDict.listening ? (
               <span className="recording-pill">
                 <span className="mono">Recording · {String(Math.floor(bodyDict.seconds / 60)).padStart(2, '0')}:{String(bodyDict.seconds % 60).padStart(2, '0')}</span>
@@ -436,27 +687,62 @@ export default function NoteEditor({
 
       <input
         className="editor-title" value={title} placeholder="Untitled note"
-        readOnly={readOnly}
+        readOnly={blocked}
         onChange={(e) => onType({ title: e.target.value })}
       />
       <div className="editor-meta">{meta}</div>
       <NoteBrief note={note} />
-      <textarea
-        ref={bodyRef}
-        className="editor-body"
-        value={body}
-        placeholder="Start typing…"
-        readOnly={readOnly}
-        onChange={(e) => onType({ body: e.target.value })}
-        onKeyDown={(e) => { if (e.key === 'Escape') bodyDict.stop(); }}
-        rows={Math.max(10, (body.match(/\n/g)?.length ?? 0) + 4)}
-      />
-      <div className="editor-hint">
-        {bodyDict.micError
-          ? 'The microphone was refused — allow it in the browser and try again. Typing works as ever.'
-          : readOnly
-            ? 'View only — co-editing switches on once sql/06_grovestudio.sql is applied to the backend.'
-            : `Every keystroke saves — typed or dictated — and ${audienceLine}.`}
+      <div className="editor-body-wrap">
+        <textarea
+          ref={bodyRef}
+          className="editor-body"
+          value={body}
+          placeholder="Start typing…"
+          readOnly={blocked}
+          onChange={(e) => { onType({ body: e.target.value }); bodyPicker.update(); }}
+          onSelect={trackCaret}
+          onClick={() => { trackCaret(); bodyPicker.update(); }}
+          onKeyUp={() => { trackCaret(); bodyPicker.update(); }}
+          onFocus={trackCaret}
+          onKeyDown={(e) => { if (bodyPicker.onKeyDown(e)) return; if (e.key === 'Escape') bodyDict.stop(); }}
+          rows={Math.max(10, (body.match(/\n/g)?.length ?? 0) + 4)}
+        />
+        <div className="cursor-layer" aria-hidden="true">
+          {cursorFlags.map((f) => (
+            <div key={f.userId} className={'peer-caret' + (f.typing ? ' typing' : '')}
+              style={{ top: f.top, left: f.left, height: f.height, '--c': colourVar(f.colourIndex) }}>
+              <span className="flag">{f.name}</span>
+            </div>
+          ))}
+          {anchoredLines.map((a) => (
+            <button key={a.line} type="button" className="line-marker" style={{ top: a.top + 3 }}
+              title={`${a.count} comment${a.count === 1 ? '' : 's'} on line ${a.line}`}
+              onClick={() => document.getElementById('note-thread')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+              <svg width="10" height="10" viewBox="0 0 16 16"><path d="M8 2 C4.7 2 2 4.2 2 7 c0 1.6 .9 3 2.2 3.9 L3.6 13.5 L6.4 11.8 C6.9 11.9 7.4 12 8 12 c3.3 0 6 -2.2 6 -5 s-2.7 -5 -6 -5 Z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" /></svg>
+              {a.count}
+            </button>
+          ))}
+        </div>
+        <MentionPop picker={bodyPicker} />
+      </div>
+      <div className="editor-hint" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <span style={{ flex: 1, minWidth: 200 }}>
+          {bodyDict.micError
+            ? 'The microphone was refused — allow it in the browser and try again. Typing works as ever.'
+            : viewerOnly
+              ? 'View only — you have view-only access in this space. An admin can change that from Share.'
+              : lockedByAuthor
+                ? `View only — ${author?.name ?? 'the author'} set this note to author-only editing.`
+                : readOnly
+                  ? 'View only — co-editing switches on once sql/06_grovestudio.sql is applied to the backend.'
+                  : `Every keystroke saves — typed or dictated — and ${audienceLine}.${isSharedNote ? ' Type @ to mention a teammate.' : ''}`}
+        </span>
+        {isSharedNote && collabOn && (
+          <button className="btn btn-xs" onClick={() => setAnchor({ line: caretLine, text: lineText(body, caretLine).trim().slice(0, 120) })}
+            title="Start a comment tied to the line your cursor is on">
+            Comment on line {caretLine}
+          </button>
+        )}
       </div>
 
       {canAssign && (
@@ -493,11 +779,91 @@ export default function NoteEditor({
       )}
 
       {isSharedNote && (
-        <Thread
+        <Thread members={members} anchor={anchor} onClearAnchor={() => setAnchor(null)} onComments={setCommentRows} onJumpToLine={jumpToLine}
           note={note} space={space} meUserId={meUserId} meName={meName} meAvatar={meAvatar}
           live={live} remoteComment={remoteComment} membersByUser={membersByUser}
         />
       )}
+
+      {history && (
+        <HistoryModal
+          history={history} setHistory={setHistory} body={body}
+          nameOf={(uid) => (uid === meUserId ? 'You' : (membersByUser.get(uid)?.name ?? 'a teammate'))}
+          onRestore={restoreVersion}
+        />
+      )}
     </div>
+  );
+}
+
+// ------------------------------------------------------------------ history
+
+// Who changed what, version by version, with a one-click restore.
+function HistoryModal({ history, setHistory, body, nameOf, onRestore }) {
+  const { versions, picked } = history;
+  const sorted = [...versions].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+  const pickedV = sorted.find((v) => v.id === picked) ?? sorted[0] ?? null;
+  const prevOf = (v) => {
+    const i = versions.findIndex((x) => x.id === v.id);
+    return i > 0 ? versions[i - 1] : null;
+  };
+  const legend = useMemo(() => {
+    const attr = blame(versions, body);
+    const groups = [];
+    attr.forEach((a, i) => {
+      const who = a?.author_user ?? null;
+      const last = groups[groups.length - 1];
+      if (last && last.who === who) last.to = i + 1; else groups.push({ who, from: i + 1, to: i + 1 });
+    });
+    return groups;
+  }, [versions, body]);
+
+  return (
+    <Modal onClose={() => setHistory(null)} width={560}>
+      <div className="modal-stack">
+        <div>
+          <h3>History</h3>
+          <div className="sub">Every edit is kept. Pick a version to see it, and restore it if you need to.</div>
+        </div>
+        {versions.length === 0 ? (
+          <div className="fine">No versions yet — they start being recorded as people edit this note.</div>
+        ) : (
+          <>
+            <div className="history-list">
+              {sorted.map((v) => {
+                const prev = prevOf(v);
+                const d = changeSummary(prev?.body ?? '', v.body);
+                return (
+                  <button key={v.id} className={'version-row' + (pickedV?.id === v.id ? ' on' : '')} onClick={() => setHistory({ versions, picked: v.id })}>
+                    <div className="who">
+                      <b>{nameOf(v.author_user)} · {shortTime(v.created_at)}</b>
+                      <span>{v.summary ?? (prev ? (d.ranges.length ? `changed ${rangesLabel(d.ranges)}` : 'no text changes') : 'first recorded version')}</span>
+                    </div>
+                    <span className="delta"><span className="plus">+{d.added}</span> <span className="minus">−{d.removed}</span></span>
+                  </button>
+                );
+              })}
+            </div>
+            {pickedV && (
+              <>
+                <div className="version-preview">{pickedV.body || '(empty)'}</div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <button className="btn btn-primary btn-sm" onClick={() => onRestore(pickedV)}>Restore this version</button>
+                  <span className="fine">Restoring records a new version — nothing is ever lost.</span>
+                </div>
+              </>
+            )}
+            <div>
+              <div className="studio-label" style={{ marginBottom: 6 }}>Who wrote what (current text)</div>
+              <div className="blame-legend">
+                {legend.map((g, i) => (
+                  <span key={i}><b>{g.who ? nameOf(g.who) : 'Unsaved edits'}</b> · {g.from === g.to ? `line ${g.from}` : `lines ${g.from}–${g.to}`}</span>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </Modal>
   );
 }

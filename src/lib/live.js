@@ -48,6 +48,7 @@ export function startSpaceLive({ projectId, me, onNotes, onTasks, onMembers, onP
       colourIndex: p.colourIndex,
       noteId: p.noteId ?? null,
       typing: !!p.typing,
+      caret: typeof p.caret === 'number' ? p.caret : null,
     }));
     emitPresence(people);
   });
@@ -67,7 +68,7 @@ export function startSpaceLive({ projectId, me, onNotes, onTasks, onMembers, onP
   let joined = false;
   let myState = {
     userId: me.userId, name: me.name, colourIndex: me.colourIndex,
-    noteId: null, typing: false,
+    noteId: null, typing: false, caret: null,
   };
   channel.subscribe((status) => {
     if (status === 'SUBSCRIBED') {
@@ -91,8 +92,24 @@ export function startSpaceLive({ projectId, me, onNotes, onTasks, onMembers, onP
   }
 
   function setEditing(noteId, typing = false) {
-    myState = { ...myState, noteId, typing };
+    myState = { ...myState, noteId, typing, caret: noteId ? myState.caret : null };
     if (joined) channel.track(myState).catch(() => {});
+  }
+
+  // Where my caret is in the open note, for teammates' live cursor flags.
+  // Throttled: presence tracks are cheap but not free.
+  let caretTimer = null;
+  let caretPending = null;
+  function setCursor(noteId, caret) {
+    caretPending = { noteId, caret };
+    if (caretTimer) return;
+    caretTimer = setTimeout(() => {
+      caretTimer = null;
+      const c = caretPending; caretPending = null;
+      if (!c || myState.noteId !== c.noteId) return;
+      myState = { ...myState, caret: c.caret };
+      if (joined) channel.track(myState).catch(() => {});
+    }, 180);
   }
 
   function nudge() {
@@ -120,6 +137,7 @@ export function startSpaceLive({ projectId, me, onNotes, onTasks, onMembers, onP
   return {
     sendEdit,
     setEditing,
+    setCursor,
     nudge,
     sendComment,
     refresh: tick,
@@ -130,6 +148,7 @@ export function startSpaceLive({ projectId, me, onNotes, onTasks, onMembers, onP
       clearInterval(slowTimer);
       clearInterval(beatTimer);
       clearTimeout(editTimer);
+      clearTimeout(caretTimer);
       document.removeEventListener('visibilitychange', onVisible);
       supabase.removeChannel(channel);
     },

@@ -27,7 +27,21 @@ import { demoSpace, DEMO_SPACE_ID, DEMO_MEMBERS } from './demoData';
 // ------------------------------------------------------------- feature flags
 
 // null = unknown, then true/false after first contact with the backend.
-export const features = { tasks: null, kind: null };
+export const features = { tasks: null, kind: null, collab: null };
+
+// 07_collab.sql applied? (note_versions exists). Probed once, cached.
+let collabProbe = null;
+export async function probeCollab() {
+  if (features.collab !== null) return features.collab;
+  if (!collabProbe) {
+    collabProbe = (async () => {
+      const { error } = await supabase.from('note_versions').select('id').limit(1);
+      features.collab = !(error && (missingRelation(error) || error.code === 'PGRST204'));
+      return features.collab;
+    })();
+  }
+  return collabProbe;
+}
 
 function missingRelation(error) {
   // PGRST205: table not in schema cache. 42703: column does not exist.
@@ -183,13 +197,16 @@ export async function inviteByEmail(projectId, email) {
 
 // -------------------------------------------------------------------- notes
 
-const NOTE_COLS = 'id, project_id, author_id, title, body, visibility, shared_at, created_at, updated_at';
+const NOTE_COLS_BASE = 'id, project_id, author_id, title, body, visibility, shared_at, created_at, updated_at';
+// edit_mode arrives with 07_collab.sql; selecting it earlier would 42703.
+const noteCols = () => NOTE_COLS_BASE + (features.collab ? ', edit_mode' : '');
 
 export async function listNotes(projectId) {
+  await probeCollab();
   // RLS returns shared notes + the caller's own private notes.
   const { data, error } = await supabase
     .from('space_notes')
-    .select(NOTE_COLS)
+    .select(noteCols())
     .eq('project_id', projectId)
     .order('updated_at', { ascending: false });
   if (error) throw error;
@@ -197,9 +214,10 @@ export async function listNotes(projectId) {
 }
 
 export async function getNote(noteId) {
+  await probeCollab();
   const { data, error } = await supabase
     .from('space_notes')
-    .select(NOTE_COLS)
+    .select(noteCols())
     .eq('id', noteId)
     .maybeSingle();
   if (error) throw error;
@@ -207,6 +225,7 @@ export async function getNote(noteId) {
 }
 
 export async function createNote(projectId, authorMemberId, { title, visibility }) {
+  await probeCollab();
   const { data, error } = await supabase
     .from('space_notes')
     .insert({
@@ -217,7 +236,7 @@ export async function createNote(projectId, authorMemberId, { title, visibility 
       visibility,
       shared_at: visibility === 'shared' ? new Date().toISOString() : null,
     })
-    .select(NOTE_COLS)
+    .select(noteCols())
     .single();
   if (error) throw error;
   return data;
@@ -226,11 +245,12 @@ export async function createNote(projectId, authorMemberId, { title, visibility 
 // Returns the updated row, or null when RLS filtered the write (someone
 // else's note before co-editing is enabled) — callers render read-only then.
 export async function updateNote(noteId, patch) {
+  await probeCollab();
   const { data, error } = await supabase
     .from('space_notes')
     .update(patch)
     .eq('id', noteId)
-    .select(NOTE_COLS);
+    .select(noteCols());
   if (error) throw error;
   return data?.[0] ?? null;
 }
@@ -394,12 +414,51 @@ export async function listComments(noteId) {
       .order('created_at', { ascending: true }));
 }
 
-export async function addComment(noteId, projectId, userId, body) {
+export async function addComment(noteId, projectId, userId, body, anchor = null) {
+  await probeCollab();
+  const row = { note_id: noteId, project_id: projectId, author_user: userId, body: body.trim() };
+  if (anchor && features.collab) { row.anchor_line = anchor.line; row.anchor_text = String(anchor.text ?? '').slice(0, 200); }
   const { data, error } = await supabase
     .from('note_comments')
-    .insert({ note_id: noteId, project_id: projectId, author_user: userId, body: body.trim() })
+    .insert(row)
     .select()
     .single();
   if (error) throw error;
   return data;
+}
+
+// ----------------------------------------------------- versions (07_collab)
+
+export async function listVersions(noteId) {
+  if (!(await probeCollab())) return [];
+  const { data, error } = await supabase
+    .from('note_versions')
+    .select('id, note_id, project_id, author_user, title, body, summary, created_at')
+    .eq('note_id', noteId)
+    .order('created_at', { ascending: true })
+    .limit(200);
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function addVersion(noteId, projectId, userId, { title, body, summary }) {
+  if (!(await probeCollab())) return null;
+  const { data, error } = await supabase
+    .from('note_versions')
+    .insert({ note_id: noteId, project_id: projectId, author_user: userId, title: title ?? '', body: body ?? '', summary: summary ?? null })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// ------------------------------------------------ roles + locks (07_collab)
+
+export async function setMemberRole(projectId, userId, role) {
+  const { error } = await supabase.rpc('set_member_role', { p_project_id: projectId, p_user_id: userId, p_role: role });
+  if (error) throw error;
+}
+
+export async function setNoteEditMode(noteId, mode) {
+  return updateNote(noteId, { edit_mode: mode });
 }
