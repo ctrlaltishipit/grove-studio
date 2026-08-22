@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../state/Store';
 import { cycleTheme, currentTheme } from '../lib/theme';
 import { Wordmark } from '../components/ui';
+import { savePendingJoin } from '../lib/local';
 
 function themeLabel() {
   const t = currentTheme();
@@ -14,6 +15,18 @@ export default function Landing() {
   const { user } = useAuth();
   const [, force] = useState(0);
   const enter = (via) => nav(user ? (via === 'join' ? '/app?join=1' : '/app') : '/signin' + (via === 'join' ? '?join=1' : ''));
+
+  // "Join with a code" asks for the code right here. It rides along through
+  // sign-in (query for the guest path, localStorage for the Google round-trip)
+  // and Home opens the join for it on arrival — straight into the space.
+  const [joining, setJoining] = useState(false);
+  const [code, setCode] = useState('');
+  const validCode = /^[A-Z0-9]{6}$/.test(code);
+  const joinWithCode = () => {
+    if (!validCode) return;
+    savePendingJoin(code);
+    nav(user ? `/app?join=${code}` : `/signin?join=${code}`);
+  };
 
   return (
     <div className="landing">
@@ -44,11 +57,34 @@ export default function Landing() {
             Then let the studio summarise every meeting, surface next steps, assign them to the right
             people with deadlines, and check in until they're done.
           </p>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <button className="btn btn-primary btn-lg" onClick={() => enter('open')}>Start a space</button>
-            <button className="btn btn-lg" onClick={() => enter('join')}>Join with a code</button>
+          {!joining ? (
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button className="btn btn-primary btn-lg" onClick={() => enter('open')}>Start a space</button>
+              <button className="btn btn-lg" onClick={() => setJoining(true)}>Join with a code</button>
+            </div>
+          ) : (
+            <form className="landing-join" onSubmit={(e) => { e.preventDefault(); joinWithCode(); }}>
+              <input
+                autoFocus
+                className="code-input"
+                placeholder="6-character code"
+                aria-label="Join code"
+                value={code}
+                maxLength={6}
+                autoCapitalize="characters"
+                autoComplete="off"
+                spellCheck={false}
+                onChange={(e) => setCode(e.target.value.replace(/[^a-z0-9]/gi, '').toUpperCase())}
+              />
+              <button type="submit" className="btn btn-primary btn-lg" disabled={!validCode}>Continue</button>
+              <button type="button" className="btn btn-lg" onClick={() => { setJoining(false); setCode(''); }}>Back</button>
+            </form>
+          )}
+          <div className="landing-fine">
+            {joining
+              ? 'The code is in your invite email — or try SAMPLE to look around the sample space.'
+              : 'Six-character codes · nothing to install · private stays private'}
           </div>
-          <div className="landing-fine">Six-character codes · nothing to install · private stays private</div>
         </div>
 
         <div className="landing-visual">

@@ -28,3 +28,9 @@ export function loadStudioMin() { return read('gs:studio-min') === '1'; }
 export function saveStudioMin(min) { write('gs:studio-min', min ? '1' : null); }
 export function loadNavMin() { return read('gs:nav-min') === '1'; }
 export function saveNavMin(min) { write('gs:nav-min', min ? '1' : null); }
+
+// A join code captured before sign-in (landing page / invite link). It has
+// to survive the Google OAuth round-trip, which returns without a query.
+export function loadPendingJoin() { return read('gs:pending-join'); }
+export function savePendingJoin(code) { write('gs:pending-join', code); }
+export function clearPendingJoin() { write('gs:pending-join', null); }

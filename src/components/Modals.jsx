@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Modal } from './ui';
 import { useAuth, useData, useToast } from '../state/Store';
@@ -13,6 +13,16 @@ export function JoinModal({ onClose, initialCode = '' }) {
   const { toast } = useToast();
   const [code, setCode] = useState((initialCode || '').toUpperCase().slice(0, 6));
   const [busy, setBusy] = useState(false);
+
+  // A prefilled, valid code (invite link or the landing page) joins on its
+  // own — one less click for the invitee.
+  const autoRan = useRef(false);
+  useEffect(() => {
+    if (autoRan.current || !/^[A-Z0-9]{6}$/.test((initialCode || '').toUpperCase())) return;
+    autoRan.current = true;
+    go();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const go = async () => {
     if (busy) return;

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth, useToast } from '../state/Store';
 import { configError } from '../lib/supabase';
 import { signInWithGoogle, signInAsGuest } from '../lib/auth';
-import { loadGuestName, saveGuestName } from '../lib/local';
+import { loadGuestName, saveGuestName, savePendingJoin } from '../lib/local';
 import { Logo, Spinner } from '../components/ui';
 
 function GoogleG() {
@@ -24,10 +24,16 @@ export default function SignIn() {
   const [name, setName] = useState(loadGuestName());
   const [busy, setBusy] = useState(false);
 
+  // A code from the landing page or an invite link. Stash it so the Google
+  // OAuth round-trip (which returns to /app without the query) still joins.
+  const joinParam = (new URLSearchParams(location.search).get('join') || '').toUpperCase();
+  const joinCode = /^[A-Z0-9]{6}$/.test(joinParam) ? joinParam : null;
+  useEffect(() => { if (joinCode) savePendingJoin(joinCode); }, [joinCode]);
+
   if (loading) return <div className="signin-wrap"><Spinner /></div>;
   if (user) {
     const wantsJoin = new URLSearchParams(location.search).get('join');
-    return <Navigate to={wantsJoin ? '/app?join=1' : '/app'} replace />;
+    return <Navigate to={wantsJoin ? `/app?join=${encodeURIComponent(wantsJoin)}` : '/app'} replace />;
   }
 
   const google = async () => {
@@ -64,7 +70,9 @@ export default function SignIn() {
         </div>
         <div>
           <h1>Welcome in.</h1>
-          <p className="signin-sub">Your spaces, notes and tasks follow your account across devices.</p>
+          <p className="signin-sub">{joinCode
+              ? <>Sign in to join with code <b style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.12em' }}>{joinCode}</b> — the space opens right after.</>
+              : 'Your spaces, notes and tasks follow your account across devices.'}</p>
         </div>
 
         {configError ? (

@@ -10,6 +10,7 @@ import { TaskRow, CheckinBanner, pickCheckinTask, NEXT_STATUS } from '../compone
 import { SelectToggle } from '../components/NotesList';
 import { DEMO_MEMBERS, DEMO_NOTES } from '../lib/demoData';
 import { useDemoLoop, setDemoTaskStatus, markDemoNotifsRead } from '../lib/demoLoop';
+import { loadPendingJoin, clearPendingJoin } from '../lib/local';
 
 const FILTERS = ['All', 'Open', 'Done'];
 
@@ -30,12 +31,17 @@ export default function Home() {
   // Landing's "Join with a code" lands here with ?join=1; an emailed invite
   // link lands with ?join=CODE (six chars) and prefills the modal.
   useEffect(() => {
-    const j = params.get('join');
+    // The landing page and sign-in stash the code too, so it survives the
+    // Google OAuth round-trip (which returns to /app without the query).
+    const j = params.get('join') || loadPendingJoin();
     if (j) {
+      clearPendingJoin();
       const code = /^[A-Za-z0-9]{6}$/.test(j) ? j.toUpperCase() : undefined;
       openModal('join', code ? { code } : {});
-      params.delete('join');
-      setParams(params, { replace: true });
+      if (params.get('join')) {
+        params.delete('join');
+        setParams(params, { replace: true });
+      }
     }
   }, [params, setParams, openModal]);
 

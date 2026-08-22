@@ -122,6 +122,18 @@
 .landing-h1 em { color: var(--acc-deep); }
 .landing-sub { margin: 0; font-size: 16.5px; color: var(--muted); max-width: 46ch; }
 .landing-fine { font-size: 13px; color: var(--faint); }
+.landing-join { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.landing-join .code-input {
+  height: 48px; width: 210px; padding: 0 16px; border-radius: 12px;
+  border: 1px solid var(--border-strong); background: var(--surface); color: var(--ink);
+  font-family: var(--font-mono); font-size: 18px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase;
+}
+.landing-join .code-input::placeholder { letter-spacing: 0; font-weight: 500; font-size: 14px; text-transform: none; font-family: var(--font-sans); }
+.landing-join .code-input:focus { outline: none; border-color: var(--acc); }
+@media (max-width: 640px) {
+  .landing-join .code-input { width: 100%; }
+  .landing-join .btn { flex: 1; }
+}
 
 .landing-visual { position: relative; }
 .float-card {
