@@ -119,3 +119,29 @@ teams and consultancies; hackathon demo is milestone one, not the product.
 - Pricing hypothesis for consultancies: per-seat or per-session?
 - Which 3 design-partner teams do we pilot with post-hackathon?
 - Team details for the deck (group number, leader, WhatsApp) — still blank.
+
+## 2026-08-22 — Studio UI redesign (A14)
+
+Replaced the per-route headers with a persistent shell. `src/ds/AppShell.tsx` is
+the frame; `StudioHome`, `Space` and `StudioNote` render inside it, and `Login`
+became a centred card. Space now splits Shared and Private into tabs over a card
+grid rather than two stacked lists.
+
+Written down because it is a decision, not a detail: **the tabs are not a
+filter.** It would be easy for a future change to fetch all notes and hide the
+private ones client-side — that would look identical and be wrong. The two sets
+are separated in the database. `listSpaceNotes` returns only what the caller may
+read; the tab chooses between two sets it was already given.
+
+Also: the styleguide gained a Studio section, so every one of these surfaces is
+reviewable in both themes without an account, at `/styleguide#studio`.
+
+Still outstanding for the operator (both are one-time, both in a browser):
+
+1. `sql/09_studio_rls.sql` has not been run. **Until it is, private notes are
+   readable by other members of the same space.** The UI already treats them as
+   private, which is exactly the gap that makes this urgent.
+2. Supabase → Authentication → URL Configuration: Site URL must be
+   `https://www.grovestudio.io` and `https://www.grovestudio.io/**` must be in
+   the redirect allowlist. `grovestudio.io` 308-redirects to the `www` host, so
+   without this Google sign-in returns to the login screen.
