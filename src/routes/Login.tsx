@@ -8,6 +8,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CodeInput } from '../ds/CodeInput';
 import { Header } from '../ds/Header';
+import { Mark } from '../ds/Mark';
 import { Notice } from '../ds/Notice';
 import { OfflineBanner } from '../ds/OfflineBanner';
 import { signInWithGoogle } from '../lib/auth';
@@ -37,6 +38,9 @@ export default function Login() {
       <OfflineBanner />
       <main className="page col-narrow" style={{ paddingTop: 'var(--space-16)', paddingBottom: 'var(--space-12)' }}>
         <div className="center">
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-6)' }}>
+            <Mark size={72} label="Grove Studio" />
+          </div>
           <h1 className="t-h1">Grove Studio</h1>
           <p className="t-body muted" style={{ margin: 'var(--space-3) auto 0', maxWidth: '46ch' }}>
             Write together, or write apart and see what you all noticed.

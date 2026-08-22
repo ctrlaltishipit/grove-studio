@@ -10,6 +10,7 @@ import type { User } from '@supabase/supabase-js';
 import { CodeInput } from '../ds/CodeInput';
 import { Empty } from '../ds/Empty';
 import { Header } from '../ds/Header';
+import { Mark } from '../ds/Mark';
 import { Notice } from '../ds/Notice';
 import { OfflineBanner } from '../ds/OfflineBanner';
 import { useToast } from '../ds/Toast';
@@ -110,9 +111,7 @@ export default function StudioHome() {
         <div className="row" style={{ gap: 'var(--space-4)' }}>
           {me.avatarUrl
             ? <img src={me.avatarUrl} alt="" width={44} height={44} style={{ borderRadius: '999px' }} />
-            : <span className="chip" data-colour={0} style={{ width: 44, height: 44, fontSize: 16 }} aria-hidden="true">
-                {firstName.slice(0, 2).toUpperCase()}
-              </span>}
+            : <Mark size={44} />}
           <h1 className="t-h1">{greeting()}, {firstName}.</h1>
         </div>
 
