@@ -8,7 +8,7 @@ import { Spinner, AvatarStack, LockIcon } from '../components/ui';
 import NotificationsBell from '../components/NotificationsBell';
 import { TaskRow, CheckinBanner, pickCheckinTask, NEXT_STATUS } from '../components/TaskBits';
 import { SelectToggle } from '../components/NotesList';
-import { DEMO_MEMBERS, DEMO_NOTES } from '../lib/demoData';
+import { DEMO_MEMBERS, DEMO_NOTES, DEMO_SPACE_ID } from '../lib/demoData';
 import { useDemoLoop, setDemoTaskStatus, markDemoNotifsRead } from '../lib/demoLoop';
 import { loadPendingJoin, clearPendingJoin } from '../lib/local';
 
@@ -194,7 +194,7 @@ export default function Home() {
             {spaces.map((s) => {
               const isPrivate = s.kind === 'private';
               const members = membersBySpace.get(s.id) ?? [];
-              const tag = isPrivate ? 'PRIVATE' : 'SHARED';
+              const tag = s.sample || s.id === DEMO_SPACE_ID ? '★ SAMPLE' : isPrivate ? 'PRIVATE' : 'SHARED';
               const picked = studio.selSpaces.has(s.id);
               return (
                 <div key={s.id} role="button" tabIndex={0}
@@ -215,7 +215,7 @@ export default function Home() {
                         {!isPrivate && ` · ${s.memberCount} member${s.memberCount === 1 ? '' : 's'}`}
                       </div>
                     </div>
-                    <span className="tag" style={{ background: 'var(--sunken)', color: 'var(--muted)' }}>{tag}</span>
+                    <span className="tag" style={tag === '★ SAMPLE' ? { background: 'var(--acc-soft)', color: 'var(--acc-deep)' } : { background: 'var(--sunken)', color: 'var(--muted)' }}>{tag}</span>
                   </div>
                   {s.description && <p className="desc">{s.description}</p>}
                   <div className="foot">

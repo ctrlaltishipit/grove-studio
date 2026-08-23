@@ -4,7 +4,8 @@ import {
   studioHealth, genSummary, genAsk, genMindmap, genAudio, genVideo, genInfographic,
   wavUrl, artboardDoc, artboardFullPage, deckDownloadDoc, downloadHtml, downloadWav, safeName,
 } from '../lib/studioApi';
-import { listMembers, createTask, notify } from '../lib/api';
+import { listMembers, createTask, notify, getSavedArtifact, saveArtifact } from '../lib/api';
+import { roleCanEdit } from '../lib/collab';
 import { isoDateInDays, fmtDue } from '../lib/fmt';
 import { Avatar, SparkIcon, Spinner, MenuIcon } from './ui';
 import { speechSupported, loadVoices, pickVoices, segmentsFromTurns, createSpeaker } from '../lib/speech';
@@ -55,6 +56,14 @@ const TOOLS = [
 
 // ---------------------------------------------------------------- utilities
 
+const relTimeSafe = (iso) => {
+  const d = new Date(iso); const mins = Math.max(0, Math.round((Date.now() - d.getTime()) / 60000));
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const h = Math.round(mins / 60); if (h < 24) return `${h}h ago`;
+  return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+};
+
 // One generation slot per tool view: idle -> busy -> ready | error, with the
 // result remembered per scope in the studio cache.
 function useGeneration(tool, generate) {
@@ -90,7 +99,13 @@ function useGeneration(tool, generate) {
     }
   }, [generate, key, cache]);
 
-  return { ...state, run };
+  // Show something already produced (a saved artifact) as this tool's result.
+  const adopt = useCallback((data) => {
+    cache.current.set(key, data);
+    setState({ status: 'ready', data });
+  }, [key, cache]);
+
+  return { ...state, run, adopt };
 }
 
 function BusyCard({ label }) {
@@ -642,16 +657,49 @@ function SpeechAudioPlayer({ data }) {
 }
 
 function AudioTool() {
-  const { scope, scopeLabel } = useStudio();
-  const gen = useGeneration('audio', () => genAudio(scope));
+  const { scope, scopeLabel, context, hasSelection } = useStudio();
+  const { user } = useAuth();
+  // Whole-space scope in a real space: the episode is saved to the space so
+  // every member hears the same one, instead of each person regenerating.
+  const spaceId = !hasSelection && context?.spaceId && !context.demo ? context.spaceId : null;
+  const [saved, setSaved] = useState(null);     // { created_at } when the shown episode is the saved one
+  const [canEdit, setCanEdit] = useState(true);
+  const gen = useGeneration('audio', async () => {
+    const d = await genAudio(scope);
+    if (spaceId) {
+      saveArtifact(spaceId, 'audio', d)
+        .then(() => setSaved({ created_at: new Date().toISOString() }))
+        .catch(() => { /* viewers can't save; that's fine */ });
+    }
+    return d;
+  });
   const [showScript, setShowScript] = useState(false);
+
+  useEffect(() => {
+    setSaved(null);
+    if (!spaceId) return undefined;
+    let alive = true;
+    if (gen.status === 'idle') {
+      getSavedArtifact(spaceId, 'audio')
+        .then((row) => { if (alive && row?.payload) { gen.adopt(row.payload); setSaved(row); } })
+        .catch(() => {});
+    }
+    listMembers(spaceId)
+      .then((ms) => { if (alive) setCanEdit(roleCanEdit(ms.find((m) => m.userId === user?.id)?.role ?? 'editor')); })
+      .catch(() => {});
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spaceId]);
+
   if (gen.status === 'idle') {
     return (
       <>
         <p style={{ margin: 0, fontSize: 13, color: 'var(--muted)' }}>
           A two-host audio deep-dive over {scopeLabel}.
         </p>
-        <button className="btn btn-vio" style={{ height: 34, fontSize: 13 }} onClick={gen.run}>Generate episode</button>
+        {spaceId && !canEdit
+          ? <div className="fine">No saved episode for this space yet. An editor of the space can generate one, and it will play here for everyone.</div>
+          : <button className="btn btn-vio" style={{ height: 34, fontSize: 13 }} onClick={gen.run}>Generate episode</button>}
       </>
     );
   }
@@ -686,8 +734,13 @@ function AudioTool() {
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
         {hasFile && <button className="btn btn-xs" onClick={downloadAudio}>↓ Download</button>}
         {hasFile && <button className="btn btn-xs" onClick={() => setShowScript((v) => !v)}>{showScript ? 'Hide transcript' : 'Transcript'}</button>}
-        <button className="btn btn-xs" onClick={gen.run}>New episode</button>
+        {(!spaceId || canEdit) && <button className="btn btn-xs" onClick={gen.run}>New episode</button>}
       </div>
+      {spaceId && saved && (
+        <div style={{ fontSize: 11.5, color: 'var(--faint)' }}>
+          Saved to this space{saved.created_at ? ` · ${relTimeSafe(saved.created_at)}` : ''}. Everyone here hears the same episode.
+        </div>
+      )}
       {useSpeech && (
         <div style={{ fontSize: 11, color: 'var(--faint)' }}>
           Browser-voiced audio plays live and can't be saved as a file — it downloads as a file once Gemini voices it (quota permitting).

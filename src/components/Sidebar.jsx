@@ -127,6 +127,7 @@ export default function Sidebar({ open = false, onNavigate, collapsed = false, o
           <button key={s.id} className={'nav-item' + (spaceId === s.id ? ' active' : '')} onClick={() => openSpace(s.id)}>
             <span className="space-dot" style={{ background: spaceTile(s.id) }} />
             <span className="label">{s.name}</span>
+            {s.sample && <span className="sample-star" title="Sample space">★</span>}
           </button>
         ))}
         {!shared.length && (

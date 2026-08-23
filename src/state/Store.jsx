@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { configError } from '../lib/supabase';
 import { getUser, onAuth, ensureProfile } from '../lib/auth';
-import { listSpaces, listMyTasks, listNotifications, features } from '../lib/api';
+import { listSpaces, listMyTasks, listNotifications, features, joinSampleSpaces } from '../lib/api';
 import { startGlobalLive } from '../lib/live';
 import { loadStudioMin, saveStudioMin } from '../lib/local';
 
@@ -104,7 +104,8 @@ export function DataProvider({ children }) {
 
   useEffect(() => {
     if (!user) { setSpaces(null); setMyTasks([]); setNotifications([]); return; }
-    refreshAll();
+    // Sample spaces first, so a first-time visitor's list already has them.
+    joinSampleSpaces().finally(refreshAll);
     return startGlobalLive({ onTick: refreshAll });
   }, [user, refreshAll]);
 

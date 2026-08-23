@@ -158,6 +158,7 @@ function LiveSpace() {
             {space.kind === 'private' ? <LockIcon color="var(--o-ink)" size={11} /> : space.name.trim()[0]?.toUpperCase()}
           </span>
           <div className="name">{space.name}</div>
+          {space.sample && <span className="private-chip sample-chip">★ SAMPLE</span>}
           {isShared ? (
             <button className="code-chip" title="Click to copy the join code" onClick={async () => {
               try { await navigator.clipboard.writeText(space.joinCode); toast('Code copied', null, 'ok'); }

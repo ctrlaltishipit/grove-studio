@@ -1105,3 +1105,7 @@
 }
 .notif-row.link { cursor: pointer; }
 .notif-row.link:hover { background: var(--sunken); }
+
+/* Sample spaces (08): real spaces everyone joins */
+.sample-chip { color: var(--acc-deep); background: var(--acc-soft); border: 1px solid color-mix(in oklab, var(--acc) 30%, var(--border)); }
+.nav-item .sample-star { margin-left: auto; font-size: 11px; color: var(--acc-deep); flex: none; }

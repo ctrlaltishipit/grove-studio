@@ -27,7 +27,7 @@ import { demoSpace, DEMO_SPACE_ID, DEMO_MEMBERS } from './demoData';
 // ------------------------------------------------------------- feature flags
 
 // null = unknown, then true/false after first contact with the backend.
-export const features = { tasks: null, kind: null, collab: null };
+export const features = { tasks: null, kind: null, collab: null, sample: null };
 
 // 07_collab.sql applied? (note_versions exists). Probed once, cached.
 let collabProbe = null;
@@ -90,6 +90,18 @@ export async function listSpaces() {
       }
     }
   }
+  // Sample spaces (08_sample.sql): flagged real spaces everyone joins.
+  if (features.sample !== false) {
+    const { data: flags, error: fErr } = await supabase.from('projects').select('id, sample').in('id', ids);
+    if (fErr && missingRelation(fErr)) features.sample = false;
+    else if (!fErr && flags) {
+      features.sample = true;
+      const sampleIds = new Set(flags.filter((f) => f.sample).map((f) => f.id));
+      spaces.forEach((sp) => { sp.sample = sampleIds.has(sp.id); });
+      spaces.sort((a, b) => (b.sample ? 1 : 0) - (a.sample ? 1 : 0));
+    }
+  }
+
   // The built-in sample space leads the list for everyone.
   return [{ ...demoSpace }, ...spaces];
 }
@@ -461,4 +473,33 @@ export async function setMemberRole(projectId, userId, role) {
 
 export async function setNoteEditMode(noteId, mode) {
   return updateNote(noteId, { edit_mode: mode });
+}
+
+// ------------------------------------------------ sample spaces (08_sample)
+
+// Every sign-in joins the flagged sample spaces as a viewer. Silent until
+// 08_sample.sql is applied.
+export async function joinSampleSpaces() {
+  try { await supabase.rpc('join_sample_spaces'); } catch { /* not applied yet */ }
+}
+
+// ---------------------------------------------- saved studio output (08)
+
+export async function getSavedArtifact(projectId, kind) {
+  const { data, error } = await supabase
+    .from('studio_artifacts')
+    .select('payload, created_by, created_at')
+    .eq('project_id', projectId)
+    .eq('kind', kind)
+    .maybeSingle();
+  if (error) { if (missingRelation(error)) return null; throw error; }
+  return data;
+}
+
+export async function saveArtifact(projectId, kind, payload) {
+  const { data: { user } } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from('studio_artifacts')
+    .upsert({ project_id: projectId, kind, payload, created_by: user?.id, updated_at: new Date().toISOString() }, { onConflict: 'project_id,kind' });
+  if (error) throw error;
 }
