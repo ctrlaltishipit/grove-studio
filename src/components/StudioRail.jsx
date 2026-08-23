@@ -108,6 +108,51 @@ function useGeneration(tool, generate) {
   return { ...state, run, adopt };
 }
 
+// Whole-space scope in a real space: the tool's result is saved to the
+// space (studio_artifacts) so every member sees the same one instead of each
+// person regenerating. Viewers see the saved result; editors can regenerate.
+function useSpaceScope() {
+  const { context, hasSelection } = useStudio();
+  return !hasSelection && context?.spaceId && !context.demo ? context.spaceId : null;
+}
+
+function useSavedArtifact(kind, spaceId, gen) {
+  const { user } = useAuth();
+  const [saved, setSaved] = useState(null);   // { created_at } when the shown result is the saved one
+  const [canEdit, setCanEdit] = useState(true);
+  useEffect(() => {
+    setSaved(null);
+    if (!spaceId) return undefined;
+    let alive = true;
+    if (gen.status === 'idle') {
+      getSavedArtifact(spaceId, kind)
+        .then((row) => { if (alive && row?.payload) { gen.adopt(row.payload); setSaved(row); } })
+        .catch(() => {});
+    }
+    listMembers(spaceId)
+      .then((ms) => { if (alive) setCanEdit(roleCanEdit(ms.find((m) => m.userId === user?.id)?.role ?? 'editor')); })
+      .catch(() => {});
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spaceId, kind]);
+  const persist = useCallback((d) => {
+    if (!spaceId) return;
+    saveArtifact(spaceId, kind, d)
+      .then(() => setSaved({ created_at: new Date().toISOString() }))
+      .catch(() => { /* viewers can't save; that's fine */ });
+  }, [spaceId, kind]);
+  return { saved, canEdit, persist };
+}
+
+function SavedNote({ spaceId, saved }) {
+  if (!spaceId || !saved) return null;
+  return (
+    <div style={{ fontSize: 11.5, color: 'var(--faint)' }}>
+      Saved to this space{saved.created_at ? ` · ${relTimeSafe(saved.created_at)}` : ''}. Everyone here sees the same one.
+    </div>
+  );
+}
+
 function BusyCard({ label }) {
   return (
     <div style={{ border: '1px solid var(--border)', borderRadius: 14, padding: 24, display: 'grid', placeItems: 'center', background: 'var(--bg)' }}>
@@ -455,7 +500,15 @@ function downloadSvg(host, filename) {
 
 function MindmapTool() {
   const { scope, scopeLabel } = useStudio();
-  const gen = useGeneration('map', () => genMindmap(scope));
+  const spaceId = useSpaceScope();
+  const persistRef = useRef(() => {});
+  const gen = useGeneration('map', async () => {
+    const d = await genMindmap(scope);
+    persistRef.current(d);
+    return d;
+  });
+  const { saved, canEdit, persist } = useSavedArtifact('mindmap', spaceId, gen);
+  persistRef.current = persist;
   const [fs, setFs] = useState(false);
   const boxRef = useRef(null);
   const fsRef = useRef(null);
@@ -463,7 +516,9 @@ function MindmapTool() {
     return (
       <>
         <p style={{ margin: 0, fontSize: 13, color: 'var(--muted)' }}>The themes across {scopeLabel}, drawn as a map.</p>
-        <button className="btn btn-vio" style={{ height: 34, fontSize: 13 }} onClick={gen.run}>Generate mind map</button>
+        {spaceId && !canEdit
+          ? <div className="fine">No saved mind map for this space yet. An editor of the space can generate one, and it will show here for everyone.</div>
+          : <button className="btn btn-vio" style={{ height: 34, fontSize: 13 }} onClick={gen.run}>Generate mind map</button>}
       </>
     );
   }
@@ -475,8 +530,9 @@ function MindmapTool() {
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
         <button className="btn btn-xs" onClick={() => setFs(true)}>⤢ Full screen</button>
         <button className="btn btn-xs" onClick={() => downloadSvg(boxRef.current, `${safeName(gen.data.center)}-mindmap.svg`)}>↓ Download</button>
-        <button className="btn btn-xs" onClick={gen.run}>Regenerate</button>
+        {(!spaceId || canEdit) && <button className="btn btn-xs" onClick={gen.run}>Regenerate</button>}
       </div>
+      <SavedNote spaceId={spaceId} saved={saved} />
       <GroundingNote data={gen.data} />
       {fs && (
         <FullscreenOverlay title={gen.data.center} onClose={() => setFs(false)}>
@@ -657,39 +713,17 @@ function SpeechAudioPlayer({ data }) {
 }
 
 function AudioTool() {
-  const { scope, scopeLabel, context, hasSelection } = useStudio();
-  const { user } = useAuth();
-  // Whole-space scope in a real space: the episode is saved to the space so
-  // every member hears the same one, instead of each person regenerating.
-  const spaceId = !hasSelection && context?.spaceId && !context.demo ? context.spaceId : null;
-  const [saved, setSaved] = useState(null);     // { created_at } when the shown episode is the saved one
-  const [canEdit, setCanEdit] = useState(true);
+  const { scope, scopeLabel } = useStudio();
+  const spaceId = useSpaceScope();
+  const persistRef = useRef(() => {});
   const gen = useGeneration('audio', async () => {
     const d = await genAudio(scope);
-    if (spaceId) {
-      saveArtifact(spaceId, 'audio', d)
-        .then(() => setSaved({ created_at: new Date().toISOString() }))
-        .catch(() => { /* viewers can't save; that's fine */ });
-    }
+    persistRef.current(d);
     return d;
   });
+  const { saved, canEdit, persist } = useSavedArtifact('audio', spaceId, gen);
+  persistRef.current = persist;
   const [showScript, setShowScript] = useState(false);
-
-  useEffect(() => {
-    setSaved(null);
-    if (!spaceId) return undefined;
-    let alive = true;
-    if (gen.status === 'idle') {
-      getSavedArtifact(spaceId, 'audio')
-        .then((row) => { if (alive && row?.payload) { gen.adopt(row.payload); setSaved(row); } })
-        .catch(() => {});
-    }
-    listMembers(spaceId)
-      .then((ms) => { if (alive) setCanEdit(roleCanEdit(ms.find((m) => m.userId === user?.id)?.role ?? 'editor')); })
-      .catch(() => {});
-    return () => { alive = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spaceId]);
 
   if (gen.status === 'idle') {
     return (
@@ -736,11 +770,7 @@ function AudioTool() {
         {hasFile && <button className="btn btn-xs" onClick={() => setShowScript((v) => !v)}>{showScript ? 'Hide transcript' : 'Transcript'}</button>}
         {(!spaceId || canEdit) && <button className="btn btn-xs" onClick={gen.run}>New episode</button>}
       </div>
-      {spaceId && saved && (
-        <div style={{ fontSize: 11.5, color: 'var(--faint)' }}>
-          Saved to this space{saved.created_at ? ` · ${relTimeSafe(saved.created_at)}` : ''}. Everyone here hears the same episode.
-        </div>
-      )}
+      <SavedNote spaceId={spaceId} saved={saved} />
       {useSpeech && (
         <div style={{ fontSize: 11, color: 'var(--faint)' }}>
           Browser-voiced audio plays live and can't be saved as a file — it downloads as a file once Gemini voices it (quota permitting).
