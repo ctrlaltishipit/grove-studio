@@ -18,7 +18,7 @@ export default function Landing() {
 
   // "Join with a code" asks for the code right here. It rides along through
   // sign-in (query for the guest path, localStorage for the Google round-trip)
-  // and Home opens the join for it on arrival — straight into the space.
+  // and Home opens the join for it on arrival, straight into the space.
   const [joining, setJoining] = useState(false);
   const [code, setCode] = useState('');
   const validCode = /^[A-Z0-9]{6}$/.test(code);
@@ -53,7 +53,7 @@ export default function Landing() {
             Notes that don't stop<br />at <em style={{ fontStyle: 'italic' }}>being notes.</em>
           </h1>
           <p className="landing-sub">
-            Write together in shared spaces — live, like a doc. Keep private spaces only you can see.
+            Write together in shared spaces, live, like a doc. Keep private spaces only you can see.
             Then let the studio summarise every meeting, surface next steps, assign them to the right
             people with deadlines, and check in until they're done.
           </p>
@@ -82,7 +82,7 @@ export default function Landing() {
           )}
           <div className="landing-fine">
             {joining
-              ? 'The code is in your invite email — or try SAMPLE to look around the sample space.'
+              ? 'The code is in your invite email, or try SAMPLE to look around the sample space.'
               : 'Six-character codes · nothing to install · private stays private'}
           </div>
         </div>
@@ -119,21 +119,21 @@ export default function Landing() {
             <span style={{ width: 12, height: 12, borderRadius: 4, background: 'var(--acc)' }} />
           </div>
           <h3>Private &amp; shared spaces</h3>
-          <p>Projects hold your notes. Private spaces are yours alone; shared spaces update live as teammates type — you can watch the words land.</p>
+          <p>Projects hold your notes. Private spaces are yours alone; shared spaces update live as teammates type: you can watch the words land.</p>
         </div>
         <div className="feature-card">
           <div className="icon" style={{ background: 'var(--sunken)' }}>
             <span style={{ width: 12, height: 12, transform: 'rotate(45deg)', background: 'var(--o3)', borderRadius: 3 }} />
           </div>
           <h3>A board that assigns</h3>
-          <p>Every shared space has a board. Assign or reassign a task and the owner is notified instantly — with the note link, the reason, and the deadline.</p>
+          <p>Every shared space has a board. Assign or reassign a task and the owner is notified instantly, with the note link, the reason, and the deadline.</p>
         </div>
         <div className="feature-card">
           <div className="icon" style={{ background: 'var(--acc-soft)' }}>
             <span style={{ width: 12, height: 12, borderRadius: 99, background: 'var(--acc-deep)' }} />
           </div>
           <h3>A studio that follows up</h3>
-          <p>Summaries, audio &amp; video overviews, mind maps, infographics — plus gentle check-ins that keep every assigned task moving until the deadline.</p>
+          <p>Summaries, audio &amp; video overviews, mind maps, infographics, plus gentle check-ins that keep every assigned task moving until the deadline.</p>
         </div>
       </section>
     </div>
