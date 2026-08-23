@@ -25,6 +25,8 @@ const TTS_MODELS = [
   'gemini-2.5-flash-preview-tts',
 ];
 
+import lamejs from '@breezystack/lamejs';
+
 export const SAMPLE_RATE = 24000;
 
 export function geminiConfigured() {
@@ -106,6 +108,10 @@ export async function geminiJson(prompt, { system } = {}) {
 
 const SOFT_LIMIT = 3000;
 const HARD_LIMIT = 3900;
+// Paid-tier voicing: several multi-speaker calls in flight, each a few turns,
+// so a 15-turn episode renders in a fraction of the serial time.
+const TTS_CONCURRENCY = Number(process.env.TTS_CONCURRENCY || 3);
+const MAX_BATCH_TURNS = Number(process.env.TTS_BATCH_TURNS || 4);
 const INTER_TURN_SILENCE_SEC = 0.25;
 const CONCURRENCY = 2;
 
@@ -203,6 +209,22 @@ export function pcmToWav(pcm, sampleRate = SAMPLE_RATE, channels = 1) {
   return Buffer.concat([header, pcm]);
 }
 
+/** 16-bit mono PCM → MP3 (64 kbps, plenty for speech): about 7× smaller
+ *  than WAV, so an episode travels and stores in a fraction of the bytes. */
+export function pcmToMp3(pcm, sampleRate = SAMPLE_RATE) {
+  const samples = new Int16Array(pcm.buffer, pcm.byteOffset, Math.floor(pcm.length / 2));
+  const enc = new lamejs.Mp3Encoder(1, sampleRate, 64);
+  const out = [];
+  const block = 1152;
+  for (let i = 0; i < samples.length; i += block) {
+    const chunk = enc.encodeBuffer(samples.subarray(i, i + block));
+    if (chunk.length) out.push(Buffer.from(chunk));
+  }
+  const tail = enc.flush();
+  if (tail.length) out.push(Buffer.from(tail));
+  return Buffer.concat(out);
+}
+
 /** One multi-speaker request for a whole batch of turns. On the API-key path
  *  the free-tier per-minute quota is tight, so ONE call per episode is the
  *  primary mode here (the inverse of MT_V2's OAuth'd Cloud TTS ordering). */
@@ -246,7 +268,7 @@ function batchTurns(turns) {
   let size = 0;
   for (const t of split) {
     const ts = Buffer.byteLength(t.text, 'utf8') + 12;
-    if (cur.length && size + ts > HARD_LIMIT) { batches.push(cur); cur = []; size = 0; }
+    if (cur.length && (size + ts > HARD_LIMIT || cur.length >= MAX_BATCH_TURNS)) { batches.push(cur); cur = []; size = 0; }
     cur.push(t);
     size += ts;
   }
@@ -271,7 +293,7 @@ export async function renderDialogue(dialogue, voices, onProgress) {
     const batches = batchTurns(turns);
     let done = 0;
     const parts = await withModelFallback(TTS_MODELS, (model) =>
-      mapPool(batches, 1, async (batch) => {
+      mapPool(batches, TTS_CONCURRENCY, async (batch) => {
         const buf = await ttsMultiSpeaker(model, batch, voices);
         done += 1;
         onProgress?.(done / batches.length);
@@ -297,7 +319,7 @@ export async function renderDialogue(dialogue, voices, onProgress) {
     });
     pcm = Buffer.concat(parts);
   }
-  return { wav: pcmToWav(pcm), durationSec: pcm.length / (SAMPLE_RATE * 2) };
+  return { wav: pcmToWav(pcm), mp3: pcmToMp3(pcm, SAMPLE_RATE), durationSec: pcm.length / (SAMPLE_RATE * 2) };
 }
 
 /** Single-voice narration → WAV. */
@@ -309,7 +331,7 @@ export async function renderNarration(text, voiceName = 'Kore', stylePrompt = nu
     const clips = await withModelFallback(TTS_MODELS, (model) =>
       mapPool(runs, CONCURRENCY, (run) => ttsCall(model, run.text, voiceName, stylePrompt)));
     const pcm = Buffer.concat(clips);
-    return { wav: pcmToWav(pcm), durationSec: pcm.length / (SAMPLE_RATE * 2) };
+    return { wav: pcmToWav(pcm), mp3: pcmToMp3(pcm, SAMPLE_RATE), durationSec: pcm.length / (SAMPLE_RATE * 2) };
   } catch (err) {
     if (/429|RESOURCE_EXHAUSTED/.test(String(err.message))) {
       throw new Error('The Gemini TTS free-tier quota is used up for now — wait a minute or two and generate again.');

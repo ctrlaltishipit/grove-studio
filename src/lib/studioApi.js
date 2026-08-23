@@ -53,6 +53,22 @@ export const genAsk = (scope, question, history) => {
   return call('ask', { scope, question, history });
 };
 
+// base64 audio (MP3 today, WAV for older saved episodes) -> object URL.
+export function audioUrlFromBase64(b64, mime = 'audio/mpeg') {
+  const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  return URL.createObjectURL(new Blob([bytes], { type: mime }));
+}
+export function downloadAudioBase64(b64, mime, filename) {
+  const url = audioUrlFromBase64(b64, mime);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
 // base64 WAV -> object URL for <audio src>. Callers revoke when done.
 export function wavUrl(wavBase64) {
   const bytes = Uint8Array.from(atob(wavBase64), (c) => c.charCodeAt(0));

@@ -131,12 +131,12 @@ Respond with JSON: {"title": "episode title, max 8 words", "turns": [{"speaker":
 
   // Gemini TTS is the primary voice; on quota exhaustion fall back to the
   // browser's free speech synthesis (ttsFailed lets the client switch).
-  let wavBase64 = null;
+  let audioBase64 = null;
   let durationSec = null;
   let ttsFailed = false;
   try {
     const rendered = await renderDialogue(turns, HOST_VOICES, onProgress);
-    wavBase64 = rendered.wav.toString('base64');
+    audioBase64 = rendered.mp3.toString('base64');
     durationSec = Math.round(rendered.durationSec);
   } catch (e) {
     if (/quota|429|RESOURCE_EXHAUSTED/i.test(e.message)) ttsFailed = true;
@@ -145,7 +145,9 @@ Respond with JSON: {"title": "episode title, max 8 words", "turns": [{"speaker":
 
   return {
     title: String(script.title ?? 'Audio overview'),
-    wavBase64,
+    audioBase64,
+    audioMime: 'audio/mpeg',
+    wavBase64: null,
     durationSec,
     ttsFailed,
     transcript,
@@ -231,10 +233,10 @@ SIZE BUDGET (hard): the WHOLE response must stay under about 9000 words — keep
   for (const s of slides) {
     if (quotaHit) { audios.push(null); continue; }
     try {
-      const { wav, durationSec } = await renderNarration(
+      const { mp3, durationSec } = await renderNarration(
         s.narration, 'Charon',
         'Read this as a clear, warm documentary narrator — steady pace, no rush.');
-      audios.push({ wavBase64: wav.toString('base64'), durationSec });
+      audios.push({ audioBase64: mp3.toString('base64'), audioMime: 'audio/mpeg', durationSec });
     } catch (e) {
       if (/quota|429|RESOURCE_EXHAUSTED/i.test(e.message)) quotaHit = true;
       audios.push(null);

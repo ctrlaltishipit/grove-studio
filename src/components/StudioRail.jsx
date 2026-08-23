@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth, useData, useStudio, useToast } from '../state/Store';
 import {
   studioHealth, genSummary, genAsk, genMindmap, genAudio, genVideo, genInfographic,
-  wavUrl, artboardDoc, artboardFullPage, deckDownloadDoc, downloadHtml, downloadWav, safeName,
+  wavUrl, audioUrlFromBase64, downloadAudioBase64, artboardDoc, artboardFullPage, deckDownloadDoc, downloadHtml, downloadWav, safeName,
 } from '../lib/studioApi';
 import { listMembers, createTask, notify, getSavedArtifact, saveArtifact } from '../lib/api';
 import { roleCanEdit } from '../lib/collab';
@@ -555,7 +555,7 @@ function AudioPlayer({ data }) {
   useEffect(() => {
     // A baked static file (audioUrl) plays directly; base64 becomes a blob URL.
     const isBlob = !data.audioUrl;
-    urlRef.current = data.audioUrl ?? wavUrl(data.wavBase64);
+    urlRef.current = data.audioUrl ?? (data.audioBase64 ? audioUrlFromBase64(data.audioBase64, data.audioMime) : wavUrl(data.wavBase64));
     const a = new Audio(urlRef.current);
     audioRef.current = a;
     a.addEventListener('timeupdate', () => setT(a.currentTime));
@@ -742,13 +742,15 @@ function AudioTool() {
   const d = gen.data;
   // A real audio file (baked static, or Gemini WAV) → the file player.
   // Otherwise the browser voices the transcript for free.
-  const hasFile = !!d.audioUrl || !!d.wavBase64;
+  const hasFile = !!d.audioUrl || !!d.audioBase64 || !!d.wavBase64;
   const useSpeech = !hasFile;
   const downloadAudio = () => {
     if (d.audioUrl) {
       const a = document.createElement('a');
       a.href = d.audioUrl; a.download = `${safeName(d.title)}${d.audioUrl.endsWith('.mp3') ? '.mp3' : '.wav'}`;
       document.body.appendChild(a); a.click(); a.remove();
+    } else if (d.audioBase64) {
+      downloadAudioBase64(d.audioBase64, d.audioMime ?? 'audio/mpeg', `${safeName(d.title)}.mp3`);
     } else if (d.wavBase64) {
       downloadWav(d.wavBase64, `${safeName(d.title)}.wav`);
     }
@@ -759,7 +761,7 @@ function AudioTool() {
         ? (speechSupported()
           ? <SpeechAudioPlayer key={d.title} data={d} />
           : <div className="setup-callout" style={{ fontSize: 12 }}>Gemini TTS quota is used up and this browser can't voice text — the transcript is below.</div>)
-        : <AudioPlayer key={d.audioUrl ?? d.wavBase64.slice(0, 32)} data={d} />}
+        : <AudioPlayer key={(d.audioUrl ?? d.audioBase64 ?? d.wavBase64).slice(0, 32)} data={d} />}
       {useSpeech && d.ttsFailed && (
         <div style={{ fontSize: 11.5, color: 'var(--faint)' }}>
           Voiced free by your browser (Gemini's TTS quota is used up). It'll use the higher-quality Gemini voice again once quota resets.
@@ -802,7 +804,7 @@ function useDeckPlayback(data) {
 
   useEffect(() => {
     // Baked static files (audioUrl) play directly; base64 becomes a blob URL.
-    urlsRef.current = data.slides.map((s) => (s.audioUrl ? s.audioUrl : (s.wavBase64 ? wavUrl(s.wavBase64) : null)));
+    urlsRef.current = data.slides.map((s) => (s.audioUrl ? s.audioUrl : s.audioBase64 ? audioUrlFromBase64(s.audioBase64, s.audioMime) : (s.wavBase64 ? wavUrl(s.wavBase64) : null)));
     if (speechSupported()) {
       speakerRef.current = createSpeaker();
       loadVoices().then((vs) => { voiceRef.current = pickVoices(vs, 1)[0] ?? null; });
