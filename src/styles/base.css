@@ -16,6 +16,8 @@ body {
   transition: background .25s ease-out, color .25s ease-out;
 }
 
+::selection { background: color-mix(in oklab, var(--acc) 22%, transparent); }
+
 a { color: var(--link); text-underline-offset: 2px; }
 a:hover { color: var(--acc-deep); }
 

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../state/Store';
 import { cycleTheme, currentTheme } from '../lib/theme';
 import { Wordmark } from '../components/ui';
+import PublicNav from '../components/PublicNav';
 import { savePendingJoin } from '../lib/local';
 
 function themeLabel() {
@@ -30,18 +31,7 @@ export default function Landing() {
 
   return (
     <div className="landing">
-      <header className="landing-header">
-        <Wordmark />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button className="btn btn-sm" style={{ height: 34, color: 'var(--muted)', fontWeight: 500, borderColor: 'var(--border)' }}
-            onClick={() => { cycleTheme(); force((x) => x + 1); }}>
-            {themeLabel()}
-          </button>
-          <button className="btn btn-primary btn-sm" style={{ height: 34 }} onClick={() => enter('open')}>
-            Open GroveStudio
-          </button>
-        </div>
-      </header>
+      <PublicNav />
 
       <section className="landing-hero">
         <div className="landing-copy">

@@ -1,32 +1,30 @@
 import { loadTheme, saveTheme } from './local';
 
-// Three states: 'light', 'dark', or absent (follow the system).
-// data-theme is stamped on <html>; tokens.css handles all three cases.
+// Three states: 'light', 'dark', or 'system' (explicitly chosen).
+// A first-time visitor gets LIGHT: with no stored choice the app stamps
+// light rather than following the OS — dark stays one click away.
 export function initTheme() {
   const t = loadTheme();
-  if (t === 'light' || t === 'dark') {
-    document.documentElement.setAttribute('data-theme', t);
-  } else {
-    document.documentElement.removeAttribute('data-theme');
-  }
+  if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+  else if (t === 'system') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', 'light');
 }
 
 export function currentTheme() {
   return document.documentElement.getAttribute('data-theme'); // null = system
 }
 
-// Cycles light -> dark -> system.
+// Cycles light -> dark.
 export function cycleTheme() {
-  const t = currentTheme();
-  const next = t === 'light' ? 'dark' : t === 'dark' ? null : 'light';
+  const next = currentTheme() === 'dark' ? 'light' : 'dark';
   saveTheme(next);
   initTheme();
   return next;
 }
 
-// Set an explicit theme, or null to follow the system.
+// Set an explicit theme; 'system' (or null) follows the OS.
 export function setTheme(next) {
-  saveTheme(next === 'light' || next === 'dark' ? next : null);
+  saveTheme(next === 'light' || next === 'dark' ? next : 'system');
   initTheme();
   return currentTheme();
 }

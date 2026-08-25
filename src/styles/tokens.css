@@ -1,86 +1,90 @@
 /* ============================================================
-   GroveStudio design tokens — from the GroveStudio redesign.
+   GroveStudio design tokens — "Indigo Studio" reskin.
+   White-first surfaces, one indigo-violet accent, a five-hue
+   member palette matched in oklch, Manrope throughout.
    Three theme states: explicit light, explicit dark (data-theme
-   on <html>), or absent = follow the system preference.
+   on <html>), or absent = follow the system preference — but the
+   app stamps light by default (src/lib/theme.js), so "absent"
+   only happens when someone explicitly picks System.
    ============================================================ */
 
 :root {
-  --accent: #3F7A4F;
+  --accent: #5D5DDD;
 
-  --bg: #F7F6F2;
+  --bg: #FAFAFD;
   --surface: #FFFFFF;
-  --sunken: #F1EFE9;
-  --border: #E8E4DB;
-  --border-strong: #D6D0C3;
-  --ink: #1B1A17;
-  --muted: #6E6A5F;
-  --faint: #9C968A;
+  --sunken: #F2F3F8;
+  --border: #E8E9F0;
+  --border-strong: #D6D8E4;
+  --ink: #1C1D26;
+  --muted: #5C5F70;
+  --faint: #989BAD;
 
   --acc: var(--accent);
   --acc-ink: #FFFFFF;
   --acc-hover: color-mix(in oklab, var(--accent) 86%, #000);
-  --acc-soft: color-mix(in oklab, var(--accent) 11%, #FFFFFF);
-  --acc-deep: color-mix(in oklab, var(--accent) 76%, #1B1A17);
+  --acc-soft: color-mix(in oklab, var(--accent) 10%, #FFFFFF);
+  --acc-deep: color-mix(in oklab, var(--accent) 78%, #1C1D26);
 
-  /* Single-accent brand: the studio hue is the green accent, not violet. */
+  /* Single-accent brand: the studio hue is the same indigo. */
   --vio: var(--acc);
   --vio-soft: var(--acc-soft);
   --vio-deep: var(--acc-deep);
 
-  --amber: #B07D2E;
-  --amber-soft: #F7EED9;
-  --danger: #A34A3C;
-  --link: #2E5C3A;
+  --amber: #B77610;
+  --amber-soft: #FBF3E4;
+  --danger: #CB4644;
+  --link: #5152C1;
 
-  /* Member palette: tonal greens — distinct, but one family. */
-  --o1: #567F63;
-  --o2: #7C8F5D;
-  --o3: #3E6B54;
-  --o4: #6B8A50;
-  --o5: #4E8578;
+  /* Member palette: five hues at matched lightness and chroma. */
+  --o1: #4687D8;
+  --o2: #9470CD;
+  --o3: #CD5F62;
+  --o4: #B67700;
+  --o5: #00A089;
 
   /* Ink used on top of the member palette and accent tiles. */
   --o-ink: #FFFFFF;
 
-  --shadow: 0 1px 2px rgba(27, 26, 23, .05), 0 6px 20px rgba(27, 26, 23, .07);
-  --shadow-lg: 0 6px 16px rgba(27, 26, 23, .09), 0 24px 56px rgba(27, 26, 23, .16);
+  --shadow: 0 1px 2px rgba(28, 29, 38, .05), 0 8px 24px rgba(93, 93, 221, .07);
+  --shadow-lg: 0 6px 16px rgba(28, 29, 38, .08), 0 24px 56px rgba(93, 93, 221, .14);
 
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-serif: 'Source Serif 4', Georgia, serif;
+  --font-sans: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-serif: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
-/* Dark palette, applied twice: once for the system preference (when no
-   explicit choice is stamped) and once for the explicit choice. */
+/* Dark palette, applied twice: once for the system preference (when someone
+   explicitly chose System) and once for the explicit dark choice. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #171613;
-    --surface: #201F1B;
-    --sunken: #121110;
-    --border: #33312A;
-    --border-strong: #484436;
-    --ink: #EDEAE1;
-    --muted: #A49D8E;
-    --faint: #78725F;
+    --bg: #14151F;
+    --surface: #1C1D2B;
+    --sunken: #101019;
+    --border: #2B2D40;
+    --border-strong: #3D4056;
+    --ink: #EDEEF6;
+    --muted: #A2A5B8;
+    --faint: #6E7186;
 
-    --acc: color-mix(in oklab, var(--accent) 60%, #DDE8DA);
-    --acc-ink: #12190F;
-    --acc-hover: color-mix(in oklab, var(--acc) 82%, #FFF);
-    --acc-soft: color-mix(in oklab, var(--accent) 24%, #201F1B);
-    --acc-deep: color-mix(in oklab, var(--acc) 80%, #EDEAE1);
+    --acc: #97A1FF;
+    --acc-ink: #14152A;
+    --acc-hover: color-mix(in oklab, #97A1FF 82%, #FFF);
+    --acc-soft: #262848;
+    --acc-deep: #B9BEFF;
 
-    --amber: #D9A458;
-    --amber-soft: #322917;
-    --danger: #D97A6B;
-    --link: #9CCB9F;
+    --amber: #E1AD63;
+    --amber-soft: #322A18;
+    --danger: #EB827B;
+    --link: #AEB8FE;
 
-    --o1: #7FA98D;
-    --o2: #A3B584;
-    --o3: #6E997F;
-    --o4: #93AE79;
-    --o5: #78A99C;
+    --o1: #81B4F6;
+    --o2: #BCA1ED;
+    --o3: #EF9494;
+    --o4: #DAA75D;
+    --o5: #52C8B4;
 
-    --o-ink: #12190F;
+    --o-ink: #14152A;
 
     --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 8px 24px rgba(0, 0, 0, .35);
     --shadow-lg: 0 8px 20px rgba(0, 0, 0, .45), 0 28px 64px rgba(0, 0, 0, .55);
@@ -88,33 +92,33 @@
 }
 
 :root[data-theme="dark"] {
-  --bg: #171613;
-  --surface: #201F1B;
-  --sunken: #121110;
-  --border: #33312A;
-  --border-strong: #484436;
-  --ink: #EDEAE1;
-  --muted: #A49D8E;
-  --faint: #78725F;
+  --bg: #14151F;
+  --surface: #1C1D2B;
+  --sunken: #101019;
+  --border: #2B2D40;
+  --border-strong: #3D4056;
+  --ink: #EDEEF6;
+  --muted: #A2A5B8;
+  --faint: #6E7186;
 
-  --acc: color-mix(in oklab, var(--accent) 60%, #DDE8DA);
-  --acc-ink: #12190F;
-  --acc-hover: color-mix(in oklab, var(--acc) 82%, #FFF);
-  --acc-soft: color-mix(in oklab, var(--accent) 24%, #201F1B);
-  --acc-deep: color-mix(in oklab, var(--acc) 80%, #EDEAE1);
+  --acc: #97A1FF;
+  --acc-ink: #14152A;
+  --acc-hover: color-mix(in oklab, #97A1FF 82%, #FFF);
+  --acc-soft: #262848;
+  --acc-deep: #B9BEFF;
 
-  --amber: #D9A458;
-  --amber-soft: #322917;
-  --danger: #D97A6B;
-  --link: #9CCB9F;
+  --amber: #E1AD63;
+  --amber-soft: #322A18;
+  --danger: #EB827B;
+  --link: #AEB8FE;
 
-  --o1: #7FA98D;
-  --o2: #A3B584;
-  --o3: #6E997F;
-  --o4: #93AE79;
-  --o5: #78A99C;
+  --o1: #81B4F6;
+  --o2: #BCA1ED;
+  --o3: #EF9494;
+  --o4: #DAA75D;
+  --o5: #52C8B4;
 
-  --o-ink: #12190F;
+  --o-ink: #14152A;
 
   --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 8px 24px rgba(0, 0, 0, .35);
   --shadow-lg: 0 8px 20px rgba(0, 0, 0, .45), 0 28px 64px rgba(0, 0, 0, .55);

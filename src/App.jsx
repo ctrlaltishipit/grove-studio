@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { ToastProvider, AuthProvider, DataProvider, StudioProvider, useAuth } from './state/Store';
 import Landing from './routes/Landing';
+import Why from './routes/Why';
+import Features from './routes/Features';
 import SignIn from './routes/SignIn';
 import Home from './routes/Home';
 import Space from './routes/Space';
@@ -58,6 +60,8 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/why" element={<Why />} />
+            <Route path="/features" element={<Features />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/app" element={<AppShell />}>
               <Route index element={<Home />} />

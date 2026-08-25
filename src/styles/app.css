@@ -31,7 +31,9 @@
   color: var(--acc-ink);
   font-weight: 600;
 }
-.btn-primary:hover { background: var(--acc-hover); border-color: var(--acc-hover); }
+.btn-primary { box-shadow: 0 6px 16px color-mix(in oklab, var(--acc) 25%, transparent); }
+.btn-primary:hover { background: var(--acc-hover); border-color: var(--acc-hover); transform: translateY(-1px); }
+.btn, .btn-primary { transition: background .12s ease-out, border-color .12s ease-out, transform .12s ease-out, box-shadow .12s ease-out; }
 
 .btn-vio { border-color: var(--vio); background: var(--vio); color: var(--acc-ink); font-weight: 600; }
 .btn-vio:hover { opacity: .9; background: var(--vio); }
@@ -1109,3 +1111,81 @@
 /* Sample spaces (08): real spaces everyone joins */
 .sample-chip { color: var(--acc-deep); background: var(--acc-soft); border: 1px solid color-mix(in oklab, var(--acc) 30%, var(--border)); }
 .nav-item .sample-star { margin-left: auto; font-size: 11px; color: var(--acc-deep); flex: none; }
+
+
+/* ------------------------------------------- Indigo Studio polish -- */
+
+/* Soft accent glow behind the dashboard and landing, gone in the dark. */
+.dash { position: relative; }
+.landing, .dash-glow-host { background: radial-gradient(720px 340px at 82% -6%, var(--acc-soft) 0%, transparent 70%), var(--bg); }
+.landing { background: radial-gradient(720px 380px at 74% 4%, var(--acc-soft) 0%, transparent 70%), radial-gradient(520px 320px at 6% 96%, color-mix(in oklab, var(--o5) 10%, transparent) 0%, transparent 70%), var(--bg); }
+.page-scroll { background: radial-gradient(680px 320px at 86% -8%, var(--acc-soft) 0%, transparent 72%), var(--bg); }
+
+/* Cards lift gently under the pointer. */
+.space-card, .note-card, .feature-card {
+  transition: transform .14s ease-out, box-shadow .14s ease-out, border-color .14s ease-out;
+}
+.space-card:hover, .feature-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.note-card:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+
+/* Space tiles get a hint of gradient depth. */
+.space-card .tile, .space-titlebar .tile, .sidebar .space-dot {
+  background-image: linear-gradient(135deg, rgba(255,255,255,.18), rgba(0,0,0,.06));
+}
+
+/* Staggered entrance for the dashboard sections. */
+.dash > .section { animation: fadeUp .3s ease-out both; }
+.dash > .section:nth-of-type(2) { animation-delay: .05s; }
+.dash > .section:nth-of-type(3) { animation-delay: .1s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .space-card:hover, .note-card:hover, .feature-card:hover, .btn-primary:hover { transform: none; }
+}
+
+
+/* ------------------------------------------------ public pages -- */
+
+.public-nav { display: flex; align-items: center; gap: 4px; margin-left: 18px; }
+.public-link {
+  display: inline-flex; align-items: center; height: 34px; padding: 0 12px; border-radius: 99px;
+  font-size: 13.5px; font-weight: 600; color: var(--muted); text-decoration: none;
+  transition: background .12s ease-out, color .12s ease-out;
+}
+.public-link:hover { background: var(--sunken); color: var(--ink); }
+.public-link.on { background: var(--acc-soft); color: var(--acc-deep); }
+@media (max-width: 640px) { .public-nav { display: none; } }
+
+.mkt { max-width: 880px; margin: 0 auto; padding: 28px 28px 90px; display: flex; flex-direction: column; gap: 44px; }
+.mkt-hero { padding-top: 26px; display: flex; flex-direction: column; gap: 18px; animation: fadeUp .3s ease-out both; }
+.mkt-hero h1 { margin: 0; font-size: 44px; font-weight: 800; line-height: 1.12; letter-spacing: -0.025em; }
+.mkt-hero .grad {
+  background: linear-gradient(100deg, var(--acc), var(--o2) 60%, var(--o3));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.mkt-hero .lede { margin: 0; font-size: 17px; line-height: 1.65; color: var(--muted); max-width: 62ch; }
+.mkt-section { display: flex; flex-direction: column; gap: 12px; animation: fadeUp .3s ease-out both; }
+.mkt-section h2 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.015em; }
+.mkt-section p { margin: 0; font-size: 15px; line-height: 1.7; color: var(--muted); max-width: 68ch; }
+.mkt-list { margin: 4px 0 0; padding: 0 0 0 20px; display: flex; flex-direction: column; gap: 10px; }
+.mkt-list li { font-size: 15px; line-height: 1.65; color: var(--muted); }
+.mkt-list li b { color: var(--ink); font-weight: 700; }
+.faq { display: flex; flex-direction: column; gap: 6px; }
+.faq h3 { margin: 12px 0 2px; font-size: 16px; font-weight: 700; color: var(--ink); }
+.faq p { margin: 0; font-size: 14.5px; line-height: 1.65; color: var(--muted); max-width: 68ch; }
+.feat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 6px; }
+@media (max-width: 700px) { .feat-grid { grid-template-columns: 1fr; } }
+.feat-item {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 4px;
+  transition: transform .14s ease-out, box-shadow .14s ease-out;
+}
+.feat-item:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.feat-item b { font-size: 14px; font-weight: 700; }
+.feat-item span { font-size: 13px; line-height: 1.55; color: var(--muted); }
+.mkt-cta {
+  background: linear-gradient(120deg, var(--acc-soft), var(--surface) 75%);
+  border: 1px solid var(--border); border-radius: 20px; padding: 34px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+}
+.mkt-cta h2 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.015em; }
+.mkt-cta p { margin: 0 0 8px; font-size: 15px; color: var(--muted); }
