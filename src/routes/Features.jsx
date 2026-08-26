@@ -63,7 +63,7 @@ export default function Features() {
       <PublicNav />
       <main className="mkt">
         <section className="mkt-hero">
-          <h1>Everything your notes<br /><span className="grad">can do here.</span></h1>
+          <h1>Everything your notes <span className="grad">can do here.</span></h1>
           <p className="lede">
             From the first typed word to the finished task, this is the full toolbox.
             Write it once, then let GroveStudio reshape it, share it, and chase it.
@@ -73,9 +73,16 @@ export default function Features() {
           <section className="mkt-section" key={g.title}>
             <h2>{g.title}</h2>
             <p>{g.intro}</p>
-            <div className="feat-grid">
+            <div className="feat-grid" onMouseMove={(e) => {
+              const t = e.target.closest('.feat-item');
+              if (!t) return;
+              const r = t.getBoundingClientRect();
+              t.style.setProperty('--mx', `${e.clientX - r.left}px`);
+              t.style.setProperty('--my', `${e.clientY - r.top}px`);
+            }}>
               {g.items.map(([name, line]) => (
                 <div className="feat-item" key={name}>
+                  <span className="spot" aria-hidden="true"></span>
                   <b>{name}</b>
                   <span>{line}</span>
                 </div>

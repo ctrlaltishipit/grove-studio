@@ -61,6 +61,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/why" element={<Why />} />
+            <Route path="/about" element={<Why />} />
             <Route path="/features" element={<Features />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/app" element={<AppShell />}>

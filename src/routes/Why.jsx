@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import PublicNav, { usePageMeta } from '../components/PublicNav';
+import { VisualsFromNotes, DecisionFlow, LiveWriting, PrivacyRoles } from '../components/StoryVisuals';
 
 // "Why GroveStudio": the story page. Plain words, short paragraphs, real
 // answers. No dashes, no jargon.
@@ -15,57 +16,58 @@ export default function Why() {
       <PublicNav />
       <main className="mkt">
         <section className="mkt-hero">
-          <h1>Most meeting notes are never read again.<br /><span className="grad">Yours are about to be.</span></h1>
+          <h1>Most meeting notes are never read again. <span className="grad">Yours are about to be.</span></h1>
           <p className="lede">
             Every team writes notes. Very few teams use them. The ideas sit in a doc, the decisions fade,
             and by Friday nobody remembers who owned what. GroveStudio was built to end that quiet loss.
           </p>
         </section>
 
-        <section className="mkt-section">
-          <h2>Reading is slow. Seeing is fast.</h2>
-          <p>
-            Here is the difference. In GroveStudio, your notes do not stay as walls of text.
-            One click turns them into a slide deck, a mind map, an infographic, or a two host audio
-            episode you can play on your commute. The same words, in the shape your brain actually wants.
-          </p>
-          <p>
-            That is our promise: write once, understand it any way you like. A new teammate can listen to
-            the project instead of scrolling through it. A stakeholder can see the mind map instead of a memo.
-          </p>
+        <section className="mkt-section mkt-duo">
+          <div>
+            <h2>Reading is slow. Seeing is fast.</h2>
+            <p>
+              In GroveStudio your notes do not stay as walls of text. One click turns them into a slide deck,
+              a mind map, an infographic, or a two host audio episode for the commute.
+              Write once, understand it any way you like.
+            </p>
+          </div>
+          <VisualsFromNotes />
         </section>
 
-        <section className="mkt-section">
-          <h2>Decisions grow legs</h2>
-          <p>
-            A decision written in a note can become a task in two clicks: assigned to a teammate,
-            with a deadline, on a board everyone can see. The person is notified with the note attached,
-            so the context travels with the work.
-          </p>
-          <p>
-            Then GroveStudio does the part every team forgets. It checks in. A small, friendly nudge asks
-            how the task is going, a few hours in and then every few hours until the deadline.
-            Not a wall of reminders. One quiet question at the right time.
-          </p>
+        <section className="mkt-section mkt-duo rev">
+          <DecisionFlow />
+          <div>
+            <h2>Decisions grow legs</h2>
+            <p>
+              A sentence in a note becomes a task in two clicks: an owner, a deadline, a card on the board.
+              Then GroveStudio does the part every team forgets. It checks in, with one quiet question
+              at the right time, until the work is done.
+            </p>
+          </div>
         </section>
 
-        <section className="mkt-section">
-          <h2>Written together, live</h2>
-          <p>
-            Shared spaces work like a doc that several people hold at once. You see teammates typing,
-            with their name at their cursor. You can mention someone with @ to pull them in, comment on
-            a single line, or dictate instead of typing. Every change is kept in the note's history,
-            so you always know who wrote what, and you can restore any version.
-          </p>
+        <section className="mkt-section mkt-duo">
+          <div>
+            <h2>Written together, live</h2>
+            <p>
+              A shared note is a doc several people hold at once. You see teammates typing with their name
+              at their cursor, mention anyone with @, comment on a single line, or dictate instead of typing.
+              Every change is kept, with a one click restore.
+            </p>
+          </div>
+          <LiveWriting />
         </section>
 
-        <section className="mkt-section">
-          <h2>Private when it matters</h2>
-          <p>
-            Not everything is for everyone. Private spaces are only yours. In shared spaces, admins choose
-            who can edit and who can only view, and any author can lock a note so only they can change it.
-            Sharing a space never exposes your private notes.
-          </p>
+        <section className="mkt-section mkt-duo rev">
+          <PrivacyRoles />
+          <div>
+            <h2>Private when it matters</h2>
+            <p>
+              Private spaces are only yours. In shared spaces, admins choose who edits and who only views,
+              and any author can lock a note. Sharing a space never exposes your private notes.
+            </p>
+          </div>
         </section>
 
         <section className="mkt-section">
