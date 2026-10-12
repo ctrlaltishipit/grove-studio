@@ -1,23 +1,63 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useId } from 'react';
 import { memberColor, initials } from '../lib/colors';
+import { LEAF_PATH, SWOOSH_PATH, TILE, LOCKUP_VIEWBOX, WORD_GROVE_PATH, WORD_STUDIO_PATH } from './brand';
 
-export function Logo({ size = 30, imgSize = 26 }) {
+// The brand (A17). The tile and the lockup are drawn from one copy of the path
+// data in brand.js and coloured by the six --brand-* tokens, so they swap faces
+// with the theme the same way the chrome does. Nothing here animates.
+
+// The tile's inner drawing, shared by Logo and Wordmark. The gradient id must
+// be unique per instance or the first <defs> on the page wins for all of them.
+function TileArt({ gradientId }) {
   return (
-    <span className="mark" style={{ width: size, height: size }}>
-      <img src="/grove-mark.png" alt="" style={{ width: imgSize, height: imgSize }} />
-    </span>
+    <>
+      <defs>
+        <linearGradient id={gradientId} x1="0" y1="0" x2={TILE.size} y2={TILE.size} gradientUnits="userSpaceOnUse">
+          <stop offset="0" style={{ stopColor: 'var(--brand-tile-a)' }} />
+          <stop offset="1" style={{ stopColor: 'var(--brand-tile-b)' }} />
+        </linearGradient>
+      </defs>
+      <rect width={TILE.size} height={TILE.size} rx={TILE.radius} fill={`url(#${gradientId})`} />
+      <path d={LEAF_PATH} style={{ fill: 'var(--brand-leaf)' }} />
+      <path d={SWOOSH_PATH} style={{ fill: 'var(--brand-swoosh)' }} />
+    </>
+  );
+}
+
+// The tile on its own. Decorative unless given a label.
+export function Logo({ size = 26, label }) {
+  const uid = useId().replace(/:/g, '');
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${TILE.size} ${TILE.size}`}
+      role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : 'true'}
+      style={{ display: 'block', flex: 'none' }}>
+      <TileArt gradientId={`grove-tile-${uid}`} />
+    </svg>
+  );
+}
+
+const LOCKUP_ASPECT = LOCKUP_VIEWBOX.width / LOCKUP_VIEWBOX.height;
+
+// Tile + "GroveStudio", outlined so it is the same shape before and after the
+// webfont loads. Sized by height; the width follows. It always carries the
+// accessible name, because wherever it sits it is the only thing naming the app.
+export function Lockup({ height = 28 }) {
+  const uid = useId().replace(/:/g, '');
+  const { x, y, width, height: vh } = LOCKUP_VIEWBOX;
+  return (
+    <svg width={Math.round(height * LOCKUP_ASPECT)} height={height} viewBox={`${x} ${y} ${width} ${vh}`}
+      role="img" aria-label="GroveStudio" style={{ display: 'block', flex: 'none' }}>
+      <TileArt gradientId={`grove-tile-${uid}`} />
+      <path d={WORD_GROVE_PATH} style={{ fill: 'var(--brand-word)' }} />
+      <path d={WORD_STUDIO_PATH} style={{ fill: 'var(--brand-word-accent)' }} />
+    </svg>
   );
 }
 
 export function Wordmark({ onClick, small = false }) {
-  const inner = (
-    <>
-      <Logo size={small ? 26 : 30} imgSize={small ? 22 : 26} />
-      <span>Grove<em>Studio</em></span>
-    </>
-  );
+  const inner = <Lockup height={small ? 24 : 28} />;
   if (onClick) {
-    return <button className="sidebar-logo" onClick={onClick}>{inner}</button>;
+    return <button className="sidebar-logo" onClick={onClick} aria-label="Home">{inner}</button>;
   }
   return <div className="wordmark">{inner}</div>;
 }

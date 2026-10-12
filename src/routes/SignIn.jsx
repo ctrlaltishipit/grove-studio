@@ -4,7 +4,7 @@ import { useAuth, useToast } from '../state/Store';
 import { configError } from '../lib/supabase';
 import { signInWithGoogle, signInAsGuest } from '../lib/auth';
 import { loadGuestName, saveGuestName, savePendingJoin } from '../lib/local';
-import { Logo, Spinner } from '../components/ui';
+import { Lockup, Spinner } from '../components/ui';
 
 function GoogleG() {
   return (
@@ -62,12 +62,7 @@ export default function SignIn() {
   return (
     <div className="signin-wrap">
       <div className="signin-card">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Logo />
-          <span style={{ fontWeight: 700, fontSize: 17, letterSpacing: '-0.01em' }}>
-            Grove<em style={{ fontStyle: 'normal', color: 'var(--acc-deep)' }}>Studio</em>
-          </span>
-        </div>
+        <Lockup height={30} />
         <div>
           <h1>Welcome in.</h1>
           <p className="signin-sub">{joinCode

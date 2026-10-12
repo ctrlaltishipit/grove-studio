@@ -101,3 +101,17 @@ teams and consultancies; hackathon demo is milestone one, not the product.
 - Pricing hypothesis for consultancies: per-seat or per-session?
 - Which 3 design-partner teams do we pilot with post-hackathon?
 - Team details for the deck (group number, leader, WhatsApp) — still blank.
+
+## 2026-10-12 — The logo (A17)
+
+The notebook PNG is gone. The founder supplied a new identity — a rounded
+indigo tile with a branch and a leaf, plus a "GroveStudio" wordmark — in four
+SVGs, light and dark for each of icon and lockup. They are in `public/brand/`
+as supplied; the app draws them itself from `src/components/brand.js` via
+`Logo` (tile) and `Wordmark` (lockup) in `ui.jsx`, recoloured through six
+`--brand-*` tokens so the logo follows the theme toggle exactly as the chrome
+does. The wordmark is outlined, so it no longer depends on Manrope loading.
+
+Also new: `manifest.webmanifest` and `public/icons/*.png` (Safari tab, iOS home
+screen, Android install), and `public/brand/og.png` for link previews.
+`scripts/brand-icons.sh` regenerates the PNGs from the SVGs.
