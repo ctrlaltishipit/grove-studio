@@ -101,13 +101,8 @@
   -webkit-backdrop-filter: blur(16px) saturate(1.4); backdrop-filter: blur(16px) saturate(1.4);
   border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
 }
-.wordmark { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; letter-spacing: -0.01em; color: var(--ink); }
-.wordmark .mark {
-  width: 30px; height: 30px; border-radius: 8px; background: #FFFFFF;
-  border: 1px solid var(--border); display: grid; place-items: center; flex: none; overflow: hidden;
-}
-.wordmark .mark img { width: 26px; height: 26px; display: block; }
-.wordmark em { font-style: normal; color: var(--acc-deep); }
+/* The lockup (A17) is an SVG that sizes itself; these boxes only place it. */
+.wordmark { display: flex; align-items: center; flex: none; }
 
 .landing-hero {
   max-width: 1100px; margin: 0 auto; padding: 60px 28px 36px;
@@ -222,17 +217,10 @@
 }
 .sidebar-min-btn:hover { background: var(--sunken); color: var(--ink); }
 .sidebar-logo {
-  display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 15.5px;
-  letter-spacing: -0.01em; color: var(--ink); padding: 6px 10px; border: none;
+  display: flex; align-items: center; padding: 6px 10px; border: none;
   background: transparent; cursor: pointer; border-radius: 8px; text-align: left;
 }
 .sidebar-logo:hover { background: var(--sunken); }
-.sidebar-logo .mark {
-  width: 26px; height: 26px; border-radius: 7px; background: #FFFFFF;
-  border: 1px solid var(--border); display: grid; place-items: center; flex: none; overflow: hidden;
-}
-.sidebar-logo .mark img { width: 22px; height: 22px; display: block; }
-.sidebar-logo em { font-style: normal; color: var(--acc-deep); }
 
 .sidebar-search {
   margin: 10px 6px 12px; display: flex; align-items: center; gap: 8px;

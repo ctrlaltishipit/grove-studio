@@ -12,7 +12,7 @@ import ModalHost from './components/Modals';
 import StudioRail from './components/StudioRail';
 import DemoCheckinPop from './components/DemoCheckinPop';
 import Toasts from './components/Toasts';
-import { Spinner } from './components/ui';
+import { Spinner, Lockup } from './components/ui';
 import { loadNavMin, saveNavMin } from './lib/local';
 
 function AppShell() {
@@ -38,9 +38,7 @@ function AppShell() {
                   <path d="M2.5 4.5 h11 M2.5 8 h11 M2.5 11.5 h11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
                 </svg>
               </button>
-              <span style={{ fontWeight: 700, fontSize: 15.5, letterSpacing: '-0.01em' }}>
-                Grove<em style={{ fontStyle: 'normal', color: 'var(--acc-deep)' }}>Studio</em>
-              </span>
+              <Lockup height={22} />
             </div>
             <Outlet />
           </div>

@@ -123,3 +123,38 @@
   --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 8px 24px rgba(0, 0, 0, .35);
   --shadow-lg: 0 8px 20px rgba(0, 0, 0, .45), 0 28px 64px rgba(0, 0, 0, .55);
 }
+
+/* ============================================================
+   BRAND TOKENS — amendment A17 (12 Oct 2026). The logo only.
+   Six colours for the tile, its leaf and branch, and the two
+   halves of the wordmark. Nothing else in the product may use
+   them: the logo carries identity, never state or meaning.
+   Same two-selector dark pattern as above, so the logo follows
+   the toggle and the system setting exactly as the chrome does.
+   ============================================================ */
+:root {
+  --brand-tile-a:      #7474EE;   /* tile gradient, top-left */
+  --brand-tile-b:      #4B4BCB;   /* tile gradient, bottom-right */
+  --brand-leaf:        #D0D2FF;
+  --brand-swoosh:      #FFFFFF;
+  --brand-word:        #1C1D26;   /* "Grove" */
+  --brand-word-accent: #4D4FB1;   /* "Studio" */
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --brand-tile-a:      #A5ADFF;
+    --brand-tile-b:      #8A92F8;
+    --brand-leaf:        #444AA8;
+    --brand-swoosh:      #14152A;
+    --brand-word:        #EDEEF6;
+    --brand-word-accent: #B9BEFF;
+  }
+}
+:root[data-theme="dark"] {
+  --brand-tile-a:      #A5ADFF;
+  --brand-tile-b:      #8A92F8;
+  --brand-leaf:        #444AA8;
+  --brand-swoosh:      #14152A;
+  --brand-word:        #EDEEF6;
+  --brand-word-accent: #B9BEFF;
+}
