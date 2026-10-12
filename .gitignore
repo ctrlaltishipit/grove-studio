@@ -9,3 +9,7 @@ dist
 !.env.example
 
 *.log
+
+# Local Python env and bytecode (left over from the earlier tree)
+.venv
+__pycache__/

@@ -1,6 +1,6 @@
 {
-  "name": "Grove Studio",
-  "short_name": "Grove",
+  "name": "GroveStudio",
+  "short_name": "GroveStudio",
   "description": "Notes that don't stop at being notes — shared spaces, live co-writing, a board that assigns, and a studio that follows up.",
   "start_url": "/",
   "scope": "/",

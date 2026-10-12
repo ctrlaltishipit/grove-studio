@@ -1,4 +1,4 @@
-# Grove Studio — brand assets
+# GroveStudio — brand assets
 
 The source artwork for the logo, as supplied on 12 Oct 2026 (amendment A17).
 
