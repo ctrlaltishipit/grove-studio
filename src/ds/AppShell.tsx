@@ -6,7 +6,7 @@
 // and nothing here casts a shadow.
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Mark } from './Mark';
+import { Logo } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
 
 export interface ShellSpace { id: string; name: string; shared_notes: number }
@@ -25,8 +25,7 @@ export function AppShell({ spaces = [], activeSpaceId, onSignOut, children }: Ap
     <div className="shell">
       <aside className="shell__side" aria-label="Navigation">
         <Link to="/home" className="shell__brand">
-          <Mark size={22} />
-          Grove Studio
+          <Logo height={26} label="Grove Studio" />
         </Link>
 
         <Link to="/home" className="navitem" aria-current={pathname === '/home' ? 'page' : undefined}>

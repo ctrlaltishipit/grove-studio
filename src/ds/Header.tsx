@@ -3,7 +3,7 @@
 // MVP; MVP+ uses it.
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { Mark } from './Mark';
+import { Logo } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
 
 export interface HeaderProps {
@@ -19,8 +19,8 @@ export function Header({ left, centre, right, linkHome = true, nav }: HeaderProp
     <header className="app-header">
       <div className="page row" style={{ width: '100%' }}>
         {left || (linkHome
-          ? <Link to="/" className="wordmark row" style={{ gap: 'var(--space-2)' }}><Mark size={22} />Grove Studio</Link>
-          : <span className="wordmark row" style={{ gap: 'var(--space-2)' }}><Mark size={22} />Grove Studio</span>)}
+          ? <Link to="/" className="wordmark row"><Logo height={26} label="Grove Studio" /></Link>
+          : <span className="wordmark row"><Logo height={26} label="Grove Studio" /></span>)}
         {nav}
         <span className="spacer" />
         {centre}

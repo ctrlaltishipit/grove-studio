@@ -145,3 +145,24 @@ Still outstanding for the operator (both are one-time, both in a browser):
    `https://www.grovestudio.io` and `https://www.grovestudio.io/**` must be in
    the redirect allowlist. `grovestudio.io` 308-redirects to the `www` host, so
    without this Google sign-in returns to the login screen.
+
+## 2026-10-12 — The logo (A17)
+
+The A13 orb is gone. The founder supplied a new identity — a rounded indigo
+tile with a branch and a leaf, plus a "GroveStudio" wordmark — in four SVGs,
+light and dark for each of icon and lockup. They are in `public/brand/` as
+supplied; the app draws them itself from `src/ds/brand.ts` via `Mark` (tile)
+and `Logo` (lockup), recoloured through six `--brand-*` tokens so the logo
+follows the theme toggle exactly as the chrome does.
+
+Written down because it was a choice: **the logo is themed, not fixed.** A13
+said a brand mark must look identical in both themes. The supplied artwork has
+a deliberate dark face (lighter tile, dark branch), and ignoring it would have
+put a white-on-indigo tile on a near-black sidebar. So the rule flipped.
+
+Also new: `manifest.webmanifest` and `public/icons/*.png` (Safari tab, iOS home
+screen, Android install), and `public/brand/og.png` for link previews.
+`scripts/brand-icons.sh` regenerates the PNGs from the SVGs.
+
+Not done: there is no separate mobile app in this repo — "mobile" is the same
+site at phone widths, and the lockup is in the header and sidebar there too.

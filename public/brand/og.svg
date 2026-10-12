@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="Grove Studio">
+  <title>Grove Studio</title>
+  <!-- The link-preview card. Light ground (the app's bg token), the lockup
+       centred, one line of copy beneath. Rendered to og.png by scripts/brand-icons.sh. -->
+  <rect width="1200" height="630" fill="#FAF8F3"/>
+  <image href="grovestudio-logo-light.svg" x="240" y="200" width="720" height="164"/>
+  <text x="600" y="430" text-anchor="middle" font-family="Inter, -apple-system, Helvetica, Arial, sans-serif" font-size="30" fill="#6B6355">Write together, or write apart and see what you all noticed.</text>
+</svg>

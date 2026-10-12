@@ -13,7 +13,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CodeInput } from '../ds/CodeInput';
-import { Mark } from '../ds/Mark';
+import { Logo } from '../ds/Logo';
 import { Notice } from '../ds/Notice';
 import { OfflineBanner } from '../ds/OfflineBanner';
 import { ThemeToggle } from '../ds/ThemeToggle';
@@ -70,8 +70,7 @@ export default function Login() {
 
       <div className="gate__card">
         <div className="gate__side">
-          <Mark size={64} label="Grove Studio" />
-          <h1 className="gate__name">Grove Studio</h1>
+          <h1 className="gate__name"><Logo height={56} label="Grove Studio" /></h1>
           <p className="gate__line">
             Write together, or write apart and see what you all noticed.
           </p>

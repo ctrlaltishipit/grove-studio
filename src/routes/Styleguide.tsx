@@ -18,6 +18,8 @@ import { Empty } from '../ds/Empty';
 import { FindingCard } from '../ds/FindingCard';
 import { Header } from '../ds/Header';
 import { Icon, type IconName } from '../ds/Icon';
+import { Logo } from '../ds/Logo';
+import { Mark } from '../ds/Mark';
 import { NoteCard } from '../ds/NoteCard';
 import { Notice } from '../ds/Notice';
 import { OfflineBanner } from '../ds/OfflineBanner';
@@ -799,6 +801,23 @@ export function Styleguide() {
             <State label="Default — the accessible name reflects state">
               <ThemeToggle />
             </State>
+          </div>
+        </Spec>
+
+        <Spec id="brand" label="Logo — A17" note="The tile and the lockup, drawn from one copy of the path data and coloured by the six --brand-* tokens, so they swap faces with the theme. Flip the theme control above to check both. Nothing else in the product may use these colours.">
+          <div style={row}>
+            <State label="Lockup — header and sidebar, 26px">
+              <Logo height={26} />
+            </State>
+            <State label="Lockup — login, 56px">
+              <Logo height={56} />
+            </State>
+          </div>
+          <div style={row}>
+            <State label="Tile — 16px (tab)"><Mark size={16} /></State>
+            <State label="Tile — 22px"><Mark size={22} /></State>
+            <State label="Tile — 48px (avatar fallback)"><Mark size={48} /></State>
+            <State label="Tile — 96px"><Mark size={96} /></State>
           </div>
         </Spec>
 
