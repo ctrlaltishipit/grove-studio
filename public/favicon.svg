@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="Grove Studio">
-  <title>Grove Studio</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="GroveStudio">
+  <title>GroveStudio</title>
   <!-- Standalone copy of src/ds/Mark.tsx (amendment A17). The tab icon follows the
        OS theme only; the in-app toggle cannot reach it. Keep in step with brand.ts. -->
   <style>
