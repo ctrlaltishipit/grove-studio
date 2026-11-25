@@ -60,7 +60,7 @@
 
   /* Member palette: five hues at matched lightness and chroma. */
   --o1: #4687D8;
-  --o2: #9470CD;
+  --o2: #5F7189;
   --o3: #CD5F62;
   --o4: #B67700;
   --o5: #00A089;
@@ -103,7 +103,7 @@
     --link: var(--vivid-green);
 
     --o1: #81B4F6;
-    --o2: #BCA1ED;
+    --o2: #A9B8CC;
     --o3: #EF9494;
     --o4: #DAA75D;
     --o5: #52C8B4;
@@ -139,7 +139,7 @@
   --link: var(--vivid-green);
 
   --o1: #81B4F6;
-  --o2: #BCA1ED;
+  --o2: #A9B8CC;
   --o3: #EF9494;
   --o4: #DAA75D;
   --o5: #52C8B4;
