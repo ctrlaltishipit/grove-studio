@@ -477,3 +477,94 @@
 }
 .site .film-chapters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 @media (max-width: 640px) { .site .film-chapters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* --------------------------------------------- live screen flow -- */
+.sflow { max-width: 1120px; margin: 32px auto 0; }
+.sflow-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-bottom: 20px; }
+.sflow-tab { position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px 0 6px; border-radius: 99px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); font: 650 14px var(--font-sans); cursor: pointer; transition: all .25s var(--ease); }
+.sflow-tab:hover { color: var(--ink); transform: translateY(-1px); }
+.sflow-n { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 99px; background: var(--sunken); font-size: 12px; font-weight: 800; }
+.sflow-tab.past .sflow-n { background: var(--acc-soft); color: var(--acc); }
+.sflow-tab.on { background: var(--acc); color: var(--acc-ink); border-color: transparent; }
+.sflow-tab.on .sflow-n { background: rgba(255, 255, 255, .2); color: inherit; }
+.sflow-bar { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: var(--acc-bright); transform-origin: left; animation: stepBar linear both; }
+.sflow-frame { border-radius: 20px; overflow: hidden; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 50px 100px -40px rgba(15, 76, 58, .45), 0 0 0 1px color-mix(in oklab, var(--acc-line) 30%, transparent); }
+.sflow-chrome { display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; background: var(--sunken); border-bottom: 1px solid var(--border); }
+.sflow-url { flex: 1; max-width: 380px; margin: 0 auto; height: 24px; display: grid; place-items: center; border-radius: 7px; background: var(--surface); color: var(--muted); font-size: 12.5px; }
+.sflow-play { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 99px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font: 650 12px var(--font-sans); cursor: pointer; }
+.sflow-stage { position: relative; aspect-ratio: 1600 / 840; overflow: hidden; background: color-mix(in oklab, var(--sunken) 80%, var(--bg)); }
+.sflow-screen { position: absolute; inset: 0; display: grid; place-items: center; }
+.sflow-screen.entering { animation: sfIn .8s var(--ease) both; }
+.sflow-screen.leaving { animation: sfOut .8s var(--ease) both; z-index: 0; pointer-events: none; }
+.sflow-screen:not(.leaving) { z-index: 1; }
+@keyframes sfIn { from { opacity: 0; transform: scale(.86); filter: blur(6px); } }
+@keyframes sfOut { to { opacity: 0; transform: scale(1.18); filter: blur(4px); } }
+.sflow-img { position: relative; height: 100%; max-width: 100%; }
+.sflow-img img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.sflow-hot { position: absolute; padding: 0; border: 0; border-radius: 10px; background: transparent; cursor: pointer;
+  box-shadow: 0 0 0 2px rgba(46, 204, 113, .9), 0 0 0 8px rgba(46, 204, 113, .22); animation: hotPulse 1.8s ease-in-out infinite; }
+.sflow-hot:hover, .sflow-hot:focus-visible { box-shadow: 0 0 0 3px #2ECC71, 0 0 0 10px rgba(46, 204, 113, .3); }
+.sflow-hot.press { background: rgba(46, 204, 113, .18); }
+@keyframes hotPulse { 50% { box-shadow: 0 0 0 2px rgba(46, 204, 113, .9), 0 0 0 14px rgba(46, 204, 113, 0); } }
+.sflow-tip { position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%); padding: 4px 10px; border-radius: 8px; background: #12241C; color: #F7F9F6; font: 650 12px var(--font-sans); white-space: nowrap; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.sflow-hot:hover .sflow-tip, .sflow-hot:focus-visible .sflow-tip, .sflow-hot.press .sflow-tip { opacity: 1; }
+.sflow-cursor { position: absolute; left: 58%; top: 70%; z-index: 3; pointer-events: none; opacity: 0; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .3));
+  transition: left 1.3s cubic-bezier(.45, .05, .25, 1), top 1.3s cubic-bezier(.45, .05, .25, 1), opacity .3s; }
+.sflow-cursor.aim, .sflow-cursor.press { left: var(--tx); top: var(--ty); opacity: 1; }
+.sflow-cursor.press svg { transform: scale(.86); transition: transform .12s; }
+.sflow-ripple { position: absolute; left: -15px; top: -15px; width: 32px; height: 32px; border-radius: 99px; border: 2px solid #2ECC71; opacity: 0; }
+.sflow-cursor.press .sflow-ripple { animation: ripple .6s var(--ease); }
+.sflow-foot { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; margin-top: 18px; }
+.sflow-line { text-align: center; color: var(--muted); font-size: 16px; animation: enterUp .45s var(--ease) both; }
+.sflow-line b { color: var(--ink); }
+.sflow-arrow { width: 42px; height: 42px; border-radius: 99px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font-size: 22px; line-height: 1; cursor: pointer; transition: all .2s var(--ease); }
+.sflow-arrow:hover { border-color: var(--acc); transform: scale(1.06); }
+@media (max-width: 640px) {
+  .sflow-tab { height: 34px; font-size: 13px; padding-right: 11px; }
+  .sflow-n { width: 22px; height: 22px; }
+  .sflow-frame { border-radius: 12px; }
+  .sflow-chrome { height: 32px; } .sflow-url { display: none; }
+  .sflow-play span { display: none; }
+  .sflow-line { font-size: 14px; }
+  .sflow-arrow { width: 36px; height: 36px; }
+  .sflow-hot { border-radius: 6px; }
+}
+@media (prefers-reduced-motion: reduce) { .sflow-screen, .sflow-hot, .sflow-line { animation: none !important; } }
+
+/* ------------------------------------------------------- backdrop -- */
+/* Dot-grid notebook paper behind every public page, plus a faint drifting
+   network of notes. Sections are slightly see-through so it shows. */
+.site { position: relative; isolation: isolate; background:
+  radial-gradient(circle, color-mix(in oklab, var(--emerald-teal) 26%, transparent) 1px, transparent 1.4px) 0 0 / 22px 22px,
+  var(--bg); background-attachment: fixed, scroll; }
+:root[data-theme="dark"] .site { background:
+  radial-gradient(circle, rgba(52, 235, 136, .13) 1px, transparent 1.4px) 0 0 / 22px 22px,
+  var(--bg); background-attachment: fixed, scroll; }
+.site-backdrop { position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .5;
+  -webkit-mask-image: radial-gradient(120% 90% at 50% 40%, #000 30%, transparent 85%); mask-image: radial-gradient(120% 90% at 50% 40%, #000 30%, transparent 85%); }
+.site-backdrop svg { width: 100%; height: 100%; }
+.bd-net { animation: bdDrift 40s ease-in-out infinite alternate; }
+@keyframes bdDrift { to { transform: translate(-30px, 18px) scale(1.03); } }
+.bd-edge { stroke: color-mix(in oklab, var(--emerald-teal) 30%, transparent); stroke-width: 1; }
+.bd-node { fill: color-mix(in oklab, var(--emerald-teal) 40%, transparent); }
+.bd-note { fill: color-mix(in oklab, var(--surface) 60%, transparent); stroke: color-mix(in oklab, var(--emerald-teal) 35%, transparent); }
+.bd-pulse { fill: var(--sprout-green); opacity: .7; }
+:root[data-theme="dark"] .site-backdrop { opacity: .45; }
+:root[data-theme="dark"] .bd-edge { stroke: rgba(52, 235, 136, .22); }
+:root[data-theme="dark"] .bd-node { fill: rgba(52, 235, 136, .35); }
+:root[data-theme="dark"] .bd-note { fill: rgba(30, 45, 39, .7); stroke: rgba(52, 235, 136, .3); }
+/* let the paper show through the light bands */
+.site .band-sunken { background: color-mix(in oklab, var(--sunken) 55%, transparent); }
+:root[data-theme="dark"] .site .band-sunken { background: color-mix(in oklab, var(--forest-shadow) 28%, transparent); }
+.site .tint-band { background: linear-gradient(180deg, color-mix(in oklab, var(--sage-green) 14%, transparent), transparent); }
+@media (prefers-reduced-motion: reduce) { .bd-net { animation: none; } .bd-pulse { display: none; } }
+
+/* the app: the same dot paper, fainter, behind the workspace */
+.shell { background:
+  radial-gradient(circle, color-mix(in oklab, var(--emerald-teal) 16%, transparent) 1px, transparent 1.4px) 0 0 / 22px 22px,
+  var(--bg); }
+:root[data-theme="dark"] .shell { background:
+  radial-gradient(circle, rgba(52, 235, 136, .08) 1px, transparent 1.4px) 0 0 / 22px 22px,
+  var(--bg); }
+.sflow-screen { display: flex; align-items: center; justify-content: center; }
+.sflow-img { height: 100%; width: auto; max-width: 100%; }
