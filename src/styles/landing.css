@@ -464,3 +464,16 @@
   repeating-linear-gradient(180deg, transparent 0 31px, color-mix(in oklab, var(--acc-line) 13%, transparent) 31px 32px),
   linear-gradient(180deg, color-mix(in oklab, var(--sage-green) 12%, var(--bg)), var(--bg)); }
 @media (max-width: 1100px) { .sf-art { display: none; } }
+
+/* film chapters: an even grid, clear of the player */
+.site .film-chapters { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-top: 24px; justify-content: stretch; }
+.site .film-chapters li { display: flex; }
+.site .film-chapters button { width: 100%; height: 42px; justify-content: flex-start; padding: 0 12px 0 6px; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.site .film-chapters button span { flex: none; }
+@media (max-width: 1000px) { .site .film-chapters { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 640px) {
+  .site .film-chapters { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 18px; }
+  .site .film-chapters button { height: 40px; font-size: 13px; }
+}
+.site .film-chapters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 640px) { .site .film-chapters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
