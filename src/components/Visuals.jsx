@@ -313,14 +313,14 @@ export function Globe() {
       <svg viewBox="0 0 440 440" role="img" aria-label="A globe with teammates in nine cities working in the same notes. Drag to turn it.">
         <defs>
           <radialGradient id="gl-sea" cx="38%" cy="32%" r="75%">
-            <stop offset="0" stopColor="#1D7A62" stopOpacity=".55" />
-            <stop offset=".7" stopColor="#0F4C3A" stopOpacity=".35" />
+            <stop offset="0" stopColor="#17594A" stopOpacity=".55" />
+            <stop offset=".7" stopColor="#003F2D" stopOpacity=".35" />
             <stop offset="1" stopColor="#0A0F0D" stopOpacity=".2" />
           </radialGradient>
           <radialGradient id="gl-halo" cx="50%" cy="50%" r="50%">
-            <stop offset=".86" stopColor="#34EB88" stopOpacity="0" />
-            <stop offset=".93" stopColor="#34EB88" stopOpacity=".22" />
-            <stop offset="1" stopColor="#34EB88" stopOpacity="0" />
+            <stop offset=".86" stopColor="#7FD8B5" stopOpacity="0" />
+            <stop offset=".93" stopColor="#7FD8B5" stopOpacity=".22" />
+            <stop offset="1" stopColor="#7FD8B5" stopOpacity="0" />
           </radialGradient>
         </defs>
         <circle cx="220" cy="220" r="218" fill="url(#gl-halo)" />

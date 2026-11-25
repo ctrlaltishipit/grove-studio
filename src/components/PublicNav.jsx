@@ -50,6 +50,36 @@ function SunMoon({ dark }) {
   );
 }
 
+// The page's backdrop: dot-grid notebook paper with a faint network of notes
+// and threads drifting behind everything (fixed, very low contrast).
+const NODES = [[90, 120], [260, 80], [420, 200], [180, 300], [600, 110], [760, 260], [930, 140], [1110, 230], [1290, 90], [1180, 420], [980, 520], [760, 640], [520, 470], [300, 560], [120, 720], [420, 780], [880, 800], [1240, 700]];
+const EDGES = [[0, 1], [1, 2], [2, 3], [0, 3], [2, 4], [4, 5], [5, 6], [6, 7], [7, 8], [7, 9], [9, 10], [10, 11], [11, 12], [12, 2], [12, 13], [13, 14], [13, 15], [11, 16], [10, 17], [9, 17], [5, 12], [16, 15]];
+function Backdrop() {
+  return (
+    <div className="site-backdrop" aria-hidden="true">
+      <svg viewBox="0 0 1400 860" preserveAspectRatio="xMidYMid slice">
+        <g className="bd-net">
+          {EDGES.map(([a, b], i) => (
+            <line key={i} x1={NODES[a][0]} y1={NODES[a][1]} x2={NODES[b][0]} y2={NODES[b][1]} className="bd-edge" />
+          ))}
+          {EDGES.filter((_, i) => i % 3 === 0).map(([a, b], i) => (
+            <circle key={'p' + i} r="3" className="bd-pulse" style={{ '--i': i }}>
+              <animateMotion dur={`${7 + (i % 4) * 2}s`} repeatCount="indefinite" path={`M${NODES[a][0]} ${NODES[a][1]} L${NODES[b][0]} ${NODES[b][1]}`} />
+            </circle>
+          ))}
+          {NODES.map(([x, y], i) => (
+            <g key={i} transform={`translate(${x} ${y})`}>
+              {i % 4 === 0
+                ? <rect x="-14" y="-10" width="28" height="20" rx="4" className="bd-note" />
+                : <circle r={i % 3 === 0 ? 5 : 3.5} className="bd-node" />}
+            </g>
+          ))}
+        </g>
+      </svg>
+    </div>
+  );
+}
+
 export function Arrow() {
   return (
     <svg className="arrow" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
@@ -88,6 +118,7 @@ export default function PublicNav() {
 
   return (
     <>
+      <Backdrop />
       <a className="skip-link" href="#main">Skip to content</a>
       <header className={'site-header' + (scrolled || open ? ' is-solid' : '')}>
         <div className="wrap site-header-row">

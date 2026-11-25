@@ -5,9 +5,8 @@ import { StepMark } from '../components/Tour';
 import AppDemo from '../components/AppDemo';
 import WaitlistBand from '../components/Waitlist';
 import Film from '../components/Film';
-import { InsideStack } from '../components/Visuals';
+import ScreenFlow from '../components/ScreenFlow';
 import { MarginNote } from '../components/Origin';
-import { I } from '../components/Icons';
 import { TOUR } from '../lib/tourSteps';
 import { FILM } from '../lib/film';
 
@@ -44,17 +43,6 @@ function StoryStrip() {
   );
 }
 
-const L = '/tour/live/';
-const T = '/tour/';
-const INSIDE = [
-  { label: 'Home', icon: I.bell, line: 'Your tasks, your spaces and new assignments in one place.', media: { src: L + 'home.webp', alt: 'The Home dashboard with an assignment from Priya and the tasks assigned to you' }, url: 'grovestudio.io/app' },
-  { label: 'Join', icon: I.key, line: 'Type a six-character code and you are in.', media: { src: L + 'join.webp', alt: 'Joining a shared space with a six-character code' }, url: 'grovestudio.io/app' },
-  { label: 'Summary', icon: I.list, line: 'What was decided and what comes next.', media: { src: L + 'summary.webp', alt: 'A note with the Studio summary, decisions and next steps' }, url: 'grovestudio.io/app/space' },
-  { label: 'Slides', icon: I.slides, line: 'A deck made from the notes, ready to present.', media: { src: L + 'slides.webp', alt: 'A note with a Studio slide deck ready to play or download' }, url: 'grovestudio.io/app/space' },
-  { label: 'Audio', icon: I.audio, line: 'A two-host audio overview of your notes.', media: { src: L + 'audio.webp', alt: 'A note with the Studio audio overview player' }, url: 'grovestudio.io/app/space' },
-  { label: 'Board', icon: I.board, line: 'Every task, its owner and its date.', media: { src: L + 'board.webp', alt: 'The Kanban board with To do, In progress, In review and Done' }, url: 'grovestudio.io/app/space/board' },
-  { label: 'Mind map', icon: I.map, line: 'The meeting as one picture.', media: { src: T + 'mindmap.webp', alt: 'A mind map made by the Studio' } },
-];
 
 export default function Inside() {
   usePageMeta(
@@ -120,9 +108,10 @@ export default function Inside() {
           <div className="wrap">
             <div className="sec-head center rv">
               <p className="eyebrow">What’s inside GroveStudio</p>
-              <h2 id="inside-h">The real screens</h2>
+              <h2 id="inside-h">The real screens, come alive</h2>
+              <p className="lead">Watch the cursor move through the app, or click the highlighted button on any screen to go where it goes.</p>
             </div>
-            <div className="rv"><InsideStack items={INSIDE} /></div>
+            <div className="rv"><ScreenFlow /></div>
             <div className="center-link rv"><Link to="/features" className="text-link">See every feature <Arrow /></Link></div>
           </div>
         </section>
