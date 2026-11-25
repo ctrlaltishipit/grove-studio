@@ -51,6 +51,29 @@
   .dash-actions .btn { height: 40px; }
 }
 
+/* The note's own title and body are the page; a focus ring hugging the
+   text looked like a stray border. The caret shows focus there. */
+.shell .editor-title:focus-visible, .shell .editor-body:focus-visible { outline: none; }
+
+.demo-back { max-width: 760px; margin: 0 auto; padding: 18px 28px 0; }
+
+/* Phones: controls big enough to tap, board columns wide enough to read,
+   and long breadcrumbs that shorten instead of running off the edge. */
+@media (max-width: 860px) {
+  .btn-sm, .btn-xs, .btn-ghost, .filter-pill, .edit-mode-select { height: 36px; }
+  .task-row .task-status { min-height: 36px; }
+  .mic-btn { width: 36px; height: 36px; }
+  .code-chip { min-height: 32px; }
+  .studio-head .close { min-width: 40px; min-height: 40px; }
+  .move-btn { height: 32px; opacity: 1; }
+  .board-col { flex: 0 0 min(280px, 80vw); max-width: none; }
+  .board-head .n { white-space: nowrap; }
+  .editor-bar .crumb { max-width: 100%; }
+  /* Assign and Delete sat past the right edge, out of reach. */
+  .editor-bar .right { flex-wrap: wrap; margin-left: 0; width: 100%; row-gap: 8px; }
+  .demo-back { padding: 14px 14px 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .btn:active, .filter-pill:active, .task-status:active { transform: none; }
 }

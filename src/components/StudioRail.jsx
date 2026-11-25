@@ -1024,6 +1024,16 @@ function InfographicTool() {
   const { scope, scopeLabel } = useStudio();
   const gen = useGeneration('infographic', () => genInfographic(scope));
   const [fs, setFs] = useState(false);
+  // The preview scales to its frame, which is wider than the rail on phones.
+  const frameRef = useRef(null);
+  const [frameW, setFrameW] = useState(320);
+  useEffect(() => {
+    const el = frameRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return undefined;
+    const ro = new ResizeObserver(([e]) => { if (e.contentRect.width) setFrameW(e.contentRect.width); });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [gen.status]);
 
   const download = () => {
     // Self-contained, printable HTML (script-none CSP) — open + Print to PDF.
@@ -1042,11 +1052,11 @@ function InfographicTool() {
   }
   if (gen.status === 'busy') return <BusyCard label={`Designing from ${scopeLabel}… (about a minute)`} />;
   if (gen.status === 'error') return <ErrorCard error={gen.error} onRetry={gen.run} />;
-  const scale = 320 / gen.data.width;
+  const scale = frameW / gen.data.width;
   return (
     <>
       <div style={{ border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
-        <div style={{ width: '100%', aspectRatio: `${gen.data.width}/${gen.data.height}`, position: 'relative', overflow: 'hidden' }}>
+        <div ref={frameRef} style={{ width: '100%', aspectRatio: `${gen.data.width}/${gen.data.height}`, position: 'relative', overflow: 'hidden' }}>
           <iframe
             title="infographic"
             sandbox=""

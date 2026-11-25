@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Modal } from './ui';
+import { Modal, LockIcon } from './ui';
 import { useAuth, useData, useToast } from '../state/Store';
 import { joinSpace, createSpace, getSpace, notify, inviteByEmail } from '../lib/api';
 import { DEMO_SPACE_ID, DEMO_JOIN_CODE } from '../lib/demoData';
@@ -119,7 +119,7 @@ export function NewSpaceModal({ onClose }) {
         />
         <div style={{ display: 'flex', gap: 8 }}>
           <button className={'type-pick' + (kind === 'private' ? ' on' : '')} onClick={() => setKind('private')}>
-            <b>🔒 Private</b>
+            <b style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><LockIcon size={11} />Private</b>
             <span>Only you. Notes + studio, no board.</span>
           </button>
           <button className={'type-pick' + (kind === 'shared' ? ' on' : '')} onClick={() => setKind('shared')}>

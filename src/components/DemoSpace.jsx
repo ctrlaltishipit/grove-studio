@@ -325,7 +325,7 @@ export default function DemoSpace() {
 
           {tab === 'notes' && openNote && (
             <>
-              <div style={{ maxWidth: 760, margin: '0 auto', padding: '18px 28px 0' }}>
+              <div className="demo-back">
                 <button className="btn-ghost" onClick={() => setOpenId(null)}>← All notes</button>
               </div>
               <DemoNoteView note={openNote} comments={comments[openNote.id] ?? []} onComment={addComment} onShare={() => setShareOpen(true)} />

@@ -136,7 +136,7 @@ export default function Home() {
               ))}
             </div>
             <div className="acts">
-              <button className="btn btn-sm" style={{ height: 32 }} onClick={markDemoNotifsRead}>Got it</button>
+              <button className="btn btn-sm" onClick={markDemoNotifsRead}>Got it</button>
             </div>
           </div>
         )}
