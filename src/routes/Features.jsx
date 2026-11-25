@@ -7,6 +7,8 @@ import FeatureScene from '../components/FeatureScenes';
 import { CycleHeadline } from '../components/FeatureHero';
 import { I, Icon } from '../components/Icons';
 import { FEATURES_FAQ } from '../lib/faq';
+import Film from '../components/Film';
+import { FILM } from '../lib/film';
 
 const GROUPS = [
   {
@@ -90,8 +92,21 @@ export default function Features() {
           </div>
         </section>
 
+        {FILM && (
+          <section className="band band-sunken" id="film" aria-labelledby="film-h">
+            <div className="wrap">
+              <div className="sec-head center rv">
+                <p className="eyebrow">Check out the app</p>
+                <h2 id="film-h">GroveStudio in {FILM.minutes}</h2>
+                <p className="lead">{FILM.line}</p>
+              </div>
+              <div className="rv"><Film src={FILM.src} poster={FILM.poster} chapters={FILM.chapters} title={FILM.title} /></div>
+            </div>
+          </section>
+        )}
+
         {GROUPS.map((g, gi) => (
-          <section key={g.id} id={g.id} className={'band' + (gi % 2 ? '' : ' band-sunken')} aria-labelledby={`${g.id}-h`}>
+          <section key={g.id} id={g.id} className={'band' + (gi % 2 ? ' band-sunken' : '')} aria-labelledby={`${g.id}-h`}>
             <div className="wrap has-note">
               <div className={'fchap' + (gi % 2 ? ' flip' : '')}>
                 <div className="fchap-copy rv">
