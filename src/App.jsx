@@ -4,6 +4,7 @@ import { ToastProvider, AuthProvider, DataProvider, StudioProvider, useAuth } fr
 import Landing from './routes/Landing';
 import Why from './routes/Why';
 import Features from './routes/Features';
+import Tour from './routes/Tour';
 import SignIn from './routes/SignIn';
 import Home from './routes/Home';
 import Space from './routes/Space';
@@ -61,6 +62,7 @@ export default function App() {
             <Route path="/why" element={<Why />} />
             <Route path="/about" element={<Why />} />
             <Route path="/features" element={<Features />} />
+            <Route path="/tour" element={<Tour />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/app" element={<AppShell />}>
               <Route index element={<Home />} />

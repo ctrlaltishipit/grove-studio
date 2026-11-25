@@ -1,5 +1,39 @@
 import React from 'react';
-import PublicNav, { CloseBand, SiteFooter, usePageMeta } from '../components/PublicNav';
+import { Link } from 'react-router-dom';
+import PublicNav, { CloseBand, SiteFooter, Arrow, useInView, usePageMeta } from '../components/PublicNav';
+import { StepMark } from '../components/Tour';
+import { TOUR } from '../lib/tourSteps';
+
+// One line per step for the Features page's story strip.
+const SHORT = [
+  'Google or guest, in any browser.',
+  'Private for you, shared for the team.',
+  'Everyone types in one note, live.',
+  'Summary, mind map, slides, infographic, audio.',
+  'Owner and due date, linked to the note.',
+  'To do, In progress, In review, Done.',
+  'Your tasks and notifications in one place.',
+  'On track, Blocked or Done. Comments on any note.',
+];
+
+function StoryStrip() {
+  const [ref, seen] = useInView({ threshold: 0.2 });
+  return (
+    <ol ref={ref} className={'strip' + (seen ? ' in-view' : '')}>
+      <span className="strip-line" aria-hidden="true"><span /></span>
+      {TOUR.map((s, i) => (
+        <li key={s.title} className="strip-step" style={{ '--i': i }}>
+          <Link to={`/tour#tour-${i + 1}`} className="strip-link">
+            <span className="strip-mark"><StepMark kind={s.mark} /></span>
+            <span className="strip-n">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{s.title}</h3>
+            <p>{SHORT[i]}</p>
+          </Link>
+        </li>
+      ))}
+    </ol>
+  );
+}
 
 // Small line icons, drawn on a 24 grid, coloured by currentColor.
 const I = {
@@ -108,17 +142,29 @@ export default function Features() {
           </div>
         </section>
 
+        <section className="band band-sunken" aria-labelledby="story-h">
+          <div className="wrap">
+            <div className="sec-head rv">
+              <p className="eyebrow">How it works</p>
+              <h2 id="story-h">From sign&#8209;in to follow&#8209;up, step by step</h2>
+              <p className="lead">Eight steps, in the order your team will use them. Open any step to see it in the real app.</p>
+            </div>
+            <StoryStrip />
+            <div className="center-link rv"><Link to="/tour" className="text-link">Watch the full tour <Arrow /></Link></div>
+          </div>
+        </section>
+
         {GROUPS.map((g, gi) => (
-          <section key={g.id} id={g.id} className={'band' + (gi % 2 ? ' band-sunken' : '')} aria-labelledby={`${g.id}-h`}>
+          <section key={g.id} id={g.id} className={'band' + (gi % 2 ? '' : ' band-sunken')} aria-labelledby={`${g.id}-h`}>
             <div className="wrap">
-              <div className="sec-head">
+              <div className="sec-head rv">
                 <p className="eyebrow">0{gi + 1}</p>
                 <h2 id={`${g.id}-h`}>{g.title}</h2>
                 <p className="lead">{g.intro}</p>
               </div>
               <ul className="feature-grid">
-                {g.items.map(([d, name, line]) => (
-                  <li key={name} className="feature">
+                {g.items.map(([d, name, line], ii) => (
+                  <li key={name} className="feature rv" style={{ '--rv': ii }}>
                     <span className="feature-icon"><Icon d={d} /></span>
                     <h3>{name}</h3>
                     <p>{line}</p>

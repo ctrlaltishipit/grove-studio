@@ -1,5 +1,6 @@
 import React from 'react';
 import PublicNav, { CloseBand, SiteFooter, usePageMeta } from '../components/PublicNav';
+import { WHY_FAQ as FAQ } from '../lib/faq';
 import { VisualsFromNotes, DecisionFlow, LiveWriting, PrivacyRoles } from '../components/StoryVisuals';
 
 // "Why GroveStudio": the story page. Plain words, short paragraphs, real
@@ -39,13 +40,6 @@ const REASONS = [
   ['Follow-up is built in', 'Owners get a short check-in before each deadline, so work does not stall in silence.'],
 ];
 
-const FAQ = [
-  ['What is GroveStudio?', 'GroveStudio is a note-taking app for teams. You write notes together live, turn decisions into tasks with owners and dates, and GroveStudio checks in on those tasks until they are done. It can also turn your notes into slides, mind maps, infographics and audio.'],
-  ['How is it different from a normal doc?', 'A doc stops at text. GroveStudio turns the same text into visuals and audio, answers questions from it with sources, and turns decisions into tasks on a board.'],
-  ['Can I keep some notes private?', 'Yes. Private spaces are visible only to you. Inside shared spaces, you can lock any note you wrote so only you can edit it.'],
-  ['What can the Studio make from my notes?', 'A written summary, a mind map, a slide deck, an infographic, a two-voice audio overview, and direct answers to your questions. All of it comes only from what your notes say.'],
-  ['Does my team need to install anything?', 'No. GroveStudio runs in the browser on a laptop or a phone. Share a six-character code and your teammates are in.'],
-];
 
 export default function Why() {
   usePageMeta(

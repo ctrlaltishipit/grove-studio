@@ -9,9 +9,37 @@ import { Wordmark } from './ui';
 
 const LINKS = [
   ['/', 'Home'],
-  ['/why', 'Why GroveStudio'],
+  ['/tour', 'Product tour'],
   ['/features', 'Features'],
+  ['/why', 'Why GroveStudio'],
 ];
+
+// Reveal-on-scroll for any .rv element on the page. Adds .in once, then
+// stops watching. Reduced motion shows everything at once (site.css).
+function useReveal(pathname) {
+  useEffect(() => {
+    const els = [...document.querySelectorAll('.site .rv:not(.in)')];
+    if (!('IntersectionObserver' in window)) { els.forEach((e) => e.classList.add('in')); return; }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    els.forEach((e) => io.observe(e));
+    return () => io.disconnect();
+  }, [pathname]);
+}
+
+// The sliding pill under the active (or hovered) nav link.
+function usePill(navRef, pathname) {
+  const [pill, setPill] = useState(null);
+  const place = (el) => {
+    if (!el || !navRef.current) return setPill(null);
+    const a = el.getBoundingClientRect(), b = navRef.current.getBoundingClientRect();
+    setPill({ left: a.left - b.left, width: a.width });
+  };
+  const toActive = () => place(navRef.current?.querySelector('.site-link.on'));
+  useEffect(() => { toActive(); window.addEventListener('resize', toActive); return () => window.removeEventListener('resize', toActive); }, [pathname]);
+  return [pill, place, toActive];
+}
 
 function SunMoon({ dark }) {
   return dark ? (
@@ -36,6 +64,9 @@ export default function PublicNav() {
   const [dark, setDark] = useState(currentTheme() === 'dark');
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const navRef = useRef(null);
+  const [pill, placePill, resetPill] = usePill(navRef, pathname);
+  useReveal(pathname);
 
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 8);
@@ -60,9 +91,11 @@ export default function PublicNav() {
       <header className={'site-header' + (scrolled || open ? ' is-solid' : '')}>
         <div className="wrap site-header-row">
           <Link to="/" className="site-brand" aria-label="GroveStudio home"><Wordmark /></Link>
-          <nav className="site-links" aria-label="Site">
+          <nav className="site-links" aria-label="Site" ref={navRef} onMouseLeave={resetPill}>
+            {pill && <span className="site-pill" aria-hidden="true" style={{ transform: `translateX(${pill.left}px)`, width: pill.width }} />}
             {LINKS.slice(1).map(([to, label]) => (
-              <NavLink key={to} to={to} className={({ isActive }) => 'site-link' + (isActive ? ' on' : '')}>{label}</NavLink>
+              <NavLink key={to} to={to} className={({ isActive }) => 'site-link' + (isActive ? ' on' : '')}
+                onMouseEnter={(e) => placePill(e.currentTarget)} onFocus={(e) => placePill(e.currentTarget)}>{label}</NavLink>
             ))}
           </nav>
           <div className="site-actions">
@@ -118,11 +151,12 @@ export function SiteFooter() {
       <div className="wrap footer-row">
         <div className="footer-brand">
           <Wordmark small />
-          <p>Shared notes that turn into finished work.</p>
+          <p>Team notes, tasks and follow-ups in one place.</p>
         </div>
         <nav className="footer-links" aria-label="Footer">
-          <Link to="/why">Why GroveStudio</Link>
+          <Link to="/tour">Product tour</Link>
           <Link to="/features">Features</Link>
+          <Link to="/why">Why GroveStudio</Link>
           <Link to="/signin">Sign in</Link>
         </nav>
       </div>
@@ -151,7 +185,9 @@ export function useInView(options = { threshold: 0.35 }) {
 export function usePageMeta(title, description) {
   React.useEffect(() => {
     document.title = title;
-    window.scrollTo(0, 0);
+    const id = window.location.hash.slice(1);
+    const target = id && document.getElementById(id);
+    if (target) setTimeout(() => target.scrollIntoView(), 60); else window.scrollTo(0, 0);
     let m = document.querySelector('meta[name="description"]');
     if (!m) { m = document.createElement('meta'); m.setAttribute('name', 'description'); document.head.appendChild(m); }
     m.setAttribute('content', description);
