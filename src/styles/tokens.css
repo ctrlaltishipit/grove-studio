@@ -1,7 +1,16 @@
 /* ============================================================
-   GroveStudio design tokens — "Indigo Studio" reskin.
-   White-first surfaces, one indigo-violet accent, a five-hue
-   member palette matched in oklch, Manrope throughout.
+   GroveStudio design tokens — "Grove Green" (A18, 25 Nov 2026).
+   Replaces the Indigo Studio accent with the brand greens.
+
+   Light palette:  Deep Forest #0F4C3A · Sprout Green #2ECC71 ·
+                   Sage Green #82C99B · Warm Off-White #F7F9F6
+   Dark palette:   Emerald Teal #1D7A62 · Vivid Green #34EB88 ·
+                   Midnight #0A0F0D · Forest Shadow #1E2D27
+
+   Contrast rule: the bright greens (Sprout, Vivid) never carry
+   white text. In light, filled buttons are Deep Forest with white
+   ink; in dark they are Vivid Green with Midnight ink.
+
    Three theme states: explicit light, explicit dark (data-theme
    on <html>), or absent = follow the system preference — but the
    app stamps light by default (src/lib/theme.js), so "absent"
@@ -9,24 +18,37 @@
    ============================================================ */
 
 :root {
-  --accent: #5D5DDD;
+  /* The palette, by name. Use the role tokens below in components. */
+  --deep-forest: #0F4C3A;
+  --sprout-green: #2ECC71;
+  --sage-green: #82C99B;
+  --warm-off-white: #F7F9F6;
+  --emerald-teal: #1D7A62;
+  --vivid-green: #34EB88;
+  --midnight: #0A0F0D;
+  --forest-shadow: #1E2D27;
 
-  --bg: #FAFAFD;
+  --accent: var(--deep-forest);
+  --accent-bright: var(--sprout-green);
+
+  --bg: var(--warm-off-white);
   --surface: #FFFFFF;
-  --sunken: #F2F3F8;
-  --border: #E8E9F0;
-  --border-strong: #D6D8E4;
-  --ink: #1C1D26;
-  --muted: #5C5F70;
-  --faint: #989BAD;
+  --sunken: #EEF3EF;
+  --border: #E0E8E2;
+  --border-strong: #C9D7CD;
+  --ink: #12241C;
+  --muted: #53645B;
+  --faint: #93A299;
 
   --acc: var(--accent);
   --acc-ink: #FFFFFF;
   --acc-hover: color-mix(in oklab, var(--accent) 86%, #000);
-  --acc-soft: color-mix(in oklab, var(--accent) 10%, #FFFFFF);
-  --acc-deep: color-mix(in oklab, var(--accent) 78%, #1C1D26);
+  --acc-soft: color-mix(in oklab, var(--sage-green) 24%, #FFFFFF);
+  --acc-deep: #0B3A2C;
+  --acc-bright: var(--accent-bright);
+  --acc-line: var(--sage-green);
 
-  /* Single-accent brand: the studio hue is the same indigo. */
+  /* Single-accent brand: the studio hue is the same green. */
   --vio: var(--acc);
   --vio-soft: var(--acc-soft);
   --vio-deep: var(--acc-deep);
@@ -34,11 +56,11 @@
   --amber: #B77610;
   --amber-soft: #FBF3E4;
   --danger: #CB4644;
-  --link: #5152C1;
+  --link: var(--emerald-teal);
 
   /* Member palette: five hues at matched lightness and chroma. */
   --o1: #4687D8;
-  --o2: #9470CD;
+  --o2: #5F7189;
   --o3: #CD5F62;
   --o4: #B67700;
   --o5: #00A089;
@@ -46,8 +68,8 @@
   /* Ink used on top of the member palette and accent tiles. */
   --o-ink: #FFFFFF;
 
-  --shadow: 0 1px 2px rgba(28, 29, 38, .05), 0 8px 24px rgba(93, 93, 221, .07);
-  --shadow-lg: 0 6px 16px rgba(28, 29, 38, .08), 0 24px 56px rgba(93, 93, 221, .14);
+  --shadow: 0 1px 2px rgba(18, 36, 28, .05), 0 8px 24px rgba(15, 76, 58, .07);
+  --shadow-lg: 0 6px 16px rgba(18, 36, 28, .08), 0 24px 56px rgba(15, 76, 58, .14);
 
   --font-sans: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-serif: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -58,33 +80,35 @@
    explicitly chose System) and once for the explicit dark choice. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #14151F;
-    --surface: #1C1D2B;
-    --sunken: #101019;
-    --border: #2B2D40;
-    --border-strong: #3D4056;
-    --ink: #EDEEF6;
-    --muted: #A2A5B8;
-    --faint: #6E7186;
+    --bg: var(--midnight);
+    --surface: #131D19;
+    --sunken: #070B09;
+    --border: #22332B;
+    --border-strong: #2F463B;
+    --ink: #EEF4F0;
+    --muted: #A3B4AA;
+    --faint: #6C7D74;
 
-    --acc: #97A1FF;
-    --acc-ink: #14152A;
-    --acc-hover: color-mix(in oklab, #97A1FF 82%, #FFF);
-    --acc-soft: #262848;
-    --acc-deep: #B9BEFF;
+    --acc: var(--vivid-green);
+    --acc-ink: var(--midnight);
+    --acc-hover: color-mix(in oklab, var(--vivid-green) 82%, #FFF);
+    --acc-soft: color-mix(in oklab, var(--emerald-teal) 38%, var(--forest-shadow));
+    --acc-deep: #8FF5BE;
+    --acc-bright: var(--vivid-green);
+    --acc-line: var(--emerald-teal);
 
     --amber: #E1AD63;
     --amber-soft: #322A18;
     --danger: #EB827B;
-    --link: #AEB8FE;
+    --link: var(--vivid-green);
 
     --o1: #81B4F6;
-    --o2: #BCA1ED;
+    --o2: #A9B8CC;
     --o3: #EF9494;
     --o4: #DAA75D;
     --o5: #52C8B4;
 
-    --o-ink: #14152A;
+    --o-ink: #0A0F0D;
 
     --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 8px 24px rgba(0, 0, 0, .35);
     --shadow-lg: 0 8px 20px rgba(0, 0, 0, .45), 0 28px 64px rgba(0, 0, 0, .55);
@@ -92,69 +116,69 @@
 }
 
 :root[data-theme="dark"] {
-  --bg: #14151F;
-  --surface: #1C1D2B;
-  --sunken: #101019;
-  --border: #2B2D40;
-  --border-strong: #3D4056;
-  --ink: #EDEEF6;
-  --muted: #A2A5B8;
-  --faint: #6E7186;
+  --bg: var(--midnight);
+  --surface: #131D19;
+  --sunken: #070B09;
+  --border: #22332B;
+  --border-strong: #2F463B;
+  --ink: #EEF4F0;
+  --muted: #A3B4AA;
+  --faint: #6C7D74;
 
-  --acc: #97A1FF;
-  --acc-ink: #14152A;
-  --acc-hover: color-mix(in oklab, #97A1FF 82%, #FFF);
-  --acc-soft: #262848;
-  --acc-deep: #B9BEFF;
+  --acc: var(--vivid-green);
+  --acc-ink: var(--midnight);
+  --acc-hover: color-mix(in oklab, var(--vivid-green) 82%, #FFF);
+  --acc-soft: color-mix(in oklab, var(--emerald-teal) 38%, var(--forest-shadow));
+  --acc-deep: #8FF5BE;
+  --acc-bright: var(--vivid-green);
+  --acc-line: var(--emerald-teal);
 
   --amber: #E1AD63;
   --amber-soft: #322A18;
   --danger: #EB827B;
-  --link: #AEB8FE;
+  --link: var(--vivid-green);
 
   --o1: #81B4F6;
-  --o2: #BCA1ED;
+  --o2: #A9B8CC;
   --o3: #EF9494;
   --o4: #DAA75D;
   --o5: #52C8B4;
 
-  --o-ink: #14152A;
+  --o-ink: #0A0F0D;
 
   --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 8px 24px rgba(0, 0, 0, .35);
   --shadow-lg: 0 8px 20px rgba(0, 0, 0, .45), 0 28px 64px rgba(0, 0, 0, .55);
 }
 
 /* ============================================================
-   BRAND TOKENS — amendment A17 (12 Oct 2026). The logo only.
-   Six colours for the tile, its leaf and branch, and the two
+   BRAND TOKENS — amendment A18 (25 Nov 2026). The logo only.
+   The sprout-on-a-page mark: page outline, its folded corner,
+   the sprout gradient (stem, leaves, circuit nodes) and the two
    halves of the wordmark. Nothing else in the product may use
-   them: the logo carries identity, never state or meaning.
+   these names: the logo carries identity, never state or meaning.
    Same two-selector dark pattern as above, so the logo follows
    the toggle and the system setting exactly as the chrome does.
    ============================================================ */
 :root {
-  --brand-tile-a:      #7474EE;   /* tile gradient, top-left */
-  --brand-tile-b:      #4B4BCB;   /* tile gradient, bottom-right */
-  --brand-leaf:        #D0D2FF;
-  --brand-swoosh:      #FFFFFF;
-  --brand-word:        #1C1D26;   /* "Grove" */
-  --brand-word-accent: #4D4FB1;   /* "Studio" */
+  --brand-page:        #82C99B;   /* Sage Green */
+  --brand-sprout-a:    #1D7A62;   /* sprout gradient, base */
+  --brand-sprout-b:    #2ECC71;   /* sprout gradient, tip — Sprout Green */
+  --brand-word:        #0F4C3A;   /* "Grove" — Deep Forest */
+  --brand-word-accent: #0F4C3A;   /* "Studio" (lighter weight) */
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --brand-tile-a:      #A5ADFF;
-    --brand-tile-b:      #8A92F8;
-    --brand-leaf:        #444AA8;
-    --brand-swoosh:      #14152A;
-    --brand-word:        #EDEEF6;
-    --brand-word-accent: #B9BEFF;
+    --brand-page:        #1D7A62;   /* Emerald Teal */
+    --brand-sprout-a:    #2ECC71;
+    --brand-sprout-b:    #34EB88;   /* Vivid Green */
+    --brand-word:        #F7F9F6;
+    --brand-word-accent: #DDE7E1;
   }
 }
 :root[data-theme="dark"] {
-  --brand-tile-a:      #A5ADFF;
-  --brand-tile-b:      #8A92F8;
-  --brand-leaf:        #444AA8;
-  --brand-swoosh:      #14152A;
-  --brand-word:        #EDEEF6;
-  --brand-word-accent: #B9BEFF;
+  --brand-page:        #1D7A62;
+  --brand-sprout-a:    #2ECC71;
+  --brand-sprout-b:    #34EB88;
+  --brand-word:        #F7F9F6;
+  --brand-word-accent: #DDE7E1;
 }

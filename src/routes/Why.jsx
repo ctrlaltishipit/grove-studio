@@ -1,105 +1,122 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import PublicNav, { usePageMeta } from '../components/PublicNav';
+import PublicNav, { CloseBand, SiteFooter, usePageMeta } from '../components/PublicNav';
 import { VisualsFromNotes, DecisionFlow, LiveWriting, PrivacyRoles } from '../components/StoryVisuals';
 
 // "Why GroveStudio": the story page. Plain words, short paragraphs, real
 // answers. No dashes, no jargon.
+
+const STORY = [
+  {
+    eyebrow: 'Write',
+    title: 'Everyone writes in the same note',
+    body: 'A shared note works like a doc that several people hold at once. You see each teammate typing, with their name at their cursor. Mention anyone with @, comment on a single line, or talk instead of typing. Every change is saved, and you can go back to any version in one click.',
+    visual: <LiveWriting />,
+  },
+  {
+    eyebrow: 'Assign',
+    title: 'Decisions become tasks with owners',
+    body: 'Pick a sentence and turn it into a task in two clicks. It gets an owner, a date, and a card on the board. The card links back to the note, so the owner always knows why the task exists.',
+    visual: <DecisionFlow />,
+  },
+  {
+    eyebrow: 'Understand',
+    title: 'Notes you can read, see or hear',
+    body: 'Long notes are hard to take in. GroveStudio turns them into a slide deck, a mind map, an infographic, or a short audio episode you can play on the way home. Write once, then take it in whichever way suits you.',
+    visual: <VisualsFromNotes />,
+  },
+  {
+    eyebrow: 'Protect',
+    title: 'Private when it matters',
+    body: 'Private spaces are only yours. In shared spaces, admins decide who edits and who only views, and any author can lock a note. Sharing a space never shows your private notes.',
+    visual: <PrivacyRoles />,
+  },
+];
+
+const REASONS = [
+  ['One place for the whole job', 'Docs hold words. Boards hold tasks. GroveStudio holds both, and links them.'],
+  ['Answers you can check', 'Ask a question and the Studio answers only from your notes, with the source note attached.'],
+  ['Easy to join', 'A six-character code or an email invite gets a teammate in from any browser.'],
+  ['Follow-up is built in', 'Owners get a short check-in before each deadline, so work does not stall in silence.'],
+];
+
+const FAQ = [
+  ['What is GroveStudio?', 'GroveStudio is a note-taking app for teams. You write notes together live, turn decisions into tasks with owners and dates, and GroveStudio checks in on those tasks until they are done. It can also turn your notes into slides, mind maps, infographics and audio.'],
+  ['How is it different from a normal doc?', 'A doc stops at text. GroveStudio turns the same text into visuals and audio, answers questions from it with sources, and turns decisions into tasks on a board.'],
+  ['Can I keep some notes private?', 'Yes. Private spaces are visible only to you. Inside shared spaces, you can lock any note you wrote so only you can edit it.'],
+  ['What can the Studio make from my notes?', 'A written summary, a mind map, a slide deck, an infographic, a two-voice audio overview, and direct answers to your questions. All of it comes only from what your notes say.'],
+  ['Does my team need to install anything?', 'No. GroveStudio runs in the browser on a laptop or a phone. Share a six-character code and your teammates are in.'],
+];
+
 export default function Why() {
-  const nav = useNavigate();
   usePageMeta(
-    'Why GroveStudio? Meeting notes that turn into slides, audio and finished tasks',
-    'GroveStudio is a collaborative note taking app that turns meeting notes into slide decks, mind maps, infographics and audio overviews, then assigns the follow ups and checks in until they are done.'
+    'Why GroveStudio? Meeting notes that turn into tasks, slides and audio',
+    'GroveStudio is a note-taking app for teams. Write notes together, turn decisions into tasks with owners and dates, and turn notes into slides, mind maps, infographics and audio.'
   );
   return (
-    <div className="landing">
+    <div className="site">
       <PublicNav />
-      <main className="mkt">
-        <section className="mkt-hero">
-          <h1>Most meeting notes are never read again. <span className="grad">Yours are about to be.</span></h1>
-          <p className="lede">
-            Every team writes notes. Very few teams use them. The ideas sit in a doc, the decisions fade,
-            and by Friday nobody remembers who owned what. GroveStudio was built to end that quiet loss.
-          </p>
-        </section>
-
-        <section className="mkt-section mkt-duo">
-          <div>
-            <h2>Reading is slow. Seeing is fast.</h2>
-            <p>
-              In GroveStudio your notes do not stay as walls of text. One click turns them into a slide deck,
-              a mind map, an infographic, or a two host audio episode for the commute.
-              Write once, understand it any way you like.
-            </p>
-          </div>
-          <VisualsFromNotes />
-        </section>
-
-        <section className="mkt-section mkt-duo rev">
-          <DecisionFlow />
-          <div>
-            <h2>Decisions grow legs</h2>
-            <p>
-              A sentence in a note becomes a task in two clicks: an owner, a deadline, a card on the board.
-              Then GroveStudio does the part every team forgets. It checks in, with one quiet question
-              at the right time, until the work is done.
+      <main id="main">
+        <section className="page-hero">
+          <div className="hero-ground" aria-hidden="true" />
+          <div className="wrap page-hero-inner">
+            <p className="eyebrow enter" style={{ '--d': 0 }}><span className="sprout-dot" />Why GroveStudio</p>
+            <h1 className="enter" style={{ '--d': 1 }}>Most meeting notes are never read again. <span className="ink-accent">Yours will be.</span></h1>
+            <p className="hero-sub enter" style={{ '--d': 2 }}>
+              Every team writes notes. Few teams use them. The ideas sit in a doc, the decisions fade, and by Friday
+              nobody remembers who said they would do what. We built GroveStudio to fix that.
             </p>
           </div>
         </section>
 
-        <section className="mkt-section mkt-duo">
-          <div>
-            <h2>Written together, live</h2>
-            <p>
-              A shared note is a doc several people hold at once. You see teammates typing with their name
-              at their cursor, mention anyone with @, comment on a single line, or dictate instead of typing.
-              Every change is kept, with a one click restore.
-            </p>
-          </div>
-          <LiveWriting />
-        </section>
+        {STORY.map((s, i) => (
+          <section key={s.title} className={'band' + (i % 2 ? ' band-sunken' : '')} aria-labelledby={`story-${i}`}>
+            <div className={'wrap split split-visual' + (i % 2 ? ' rev' : '')}>
+              {i % 2 ? <div className="visual-card">{s.visual}</div> : null}
+              <div className="split-head">
+                <p className="eyebrow">{s.eyebrow}</p>
+                <h2 id={`story-${i}`}>{s.title}</h2>
+                <p className="lead">{s.body}</p>
+              </div>
+              {i % 2 ? null : <div className="visual-card">{s.visual}</div>}
+            </div>
+          </section>
+        ))}
 
-        <section className="mkt-section mkt-duo rev">
-          <PrivacyRoles />
-          <div>
-            <h2>Private when it matters</h2>
-            <p>
-              Private spaces are only yours. In shared spaces, admins choose who edits and who only views,
-              and any author can lock a note. Sharing a space never exposes your private notes.
-            </p>
-          </div>
-        </section>
-
-        <section className="mkt-section">
-          <h2>Why teams pick GroveStudio</h2>
-          <ul className="mkt-list">
-            <li><b>One home for the whole loop.</b> Docs hold words. Boards hold tasks. GroveStudio holds both, and draws the picture too.</li>
-            <li><b>Answers with receipts.</b> Ask a question and the Studio answers only from your notes, with the source note attached.</li>
-            <li><b>Nothing to install.</b> A six character code or an email invite gets a teammate in from any browser.</li>
-            <li><b>Follow up built in.</b> Assigned work gets gentle check ins until it is done, so deadlines never go quiet.</li>
-          </ul>
-        </section>
-
-        <section className="mkt-section">
-          <h2>Questions people ask</h2>
-          <div className="faq">
-            <h3>What is GroveStudio?</h3>
-            <p>GroveStudio is a collaborative note taking app where teams write notes together live, turn those notes into slides, mind maps, infographics and audio, and assign the follow ups with deadlines and check ins.</p>
-            <h3>How is it different from a normal doc?</h3>
-            <p>A doc stops at text. GroveStudio turns the same text into visuals and audio, answers questions from it with sources, and converts decisions into tracked tasks on a board.</p>
-            <h3>Can I keep some notes private?</h3>
-            <p>Yes. Private spaces are visible only to you, and inside shared spaces you can lock any note you wrote so only you can edit it.</p>
-            <h3>What can the Studio make from my notes?</h3>
-            <p>A written summary, a mind map, a designed slide deck, an infographic, a two host audio overview, and direct answers to questions, all grounded only in what your notes say.</p>
+        <section className="band" aria-labelledby="reasons-h">
+          <div className="wrap">
+            <div className="sec-head">
+              <p className="eyebrow">In short</p>
+              <h2 id="reasons-h">Why teams pick GroveStudio</h2>
+            </div>
+            <ul className="reason-grid">
+              {REASONS.map(([t, d]) => (
+                <li key={t} className="reason"><h3>{t}</h3><p>{d}</p></li>
+              ))}
+            </ul>
           </div>
         </section>
 
-        <section className="mkt-cta">
-          <h2>Give your notes a second life</h2>
-          <p>Start a space, write a note, and watch it become a deck.</p>
-          <button className="btn btn-primary btn-lg" onClick={() => nav('/signin')}>Start a space</button>
+        <section className="band band-sunken" aria-labelledby="faq-h">
+          <div className="wrap split">
+            <div className="split-head">
+              <p className="eyebrow">Questions</p>
+              <h2 id="faq-h">Questions people ask</h2>
+              <p className="lead">Short answers to what people ask before they start a space.</p>
+            </div>
+            <div className="faq-list">
+              {FAQ.map(([q, a], i) => (
+                <details key={q} className="faq-item" open={i === 0}>
+                  <summary>{q}<span className="faq-plus" aria-hidden="true" /></summary>
+                  <p>{a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
         </section>
+
+        <CloseBand title="Give your notes a second life" line="Start a space, write a note, and turn it into a plan your team can follow." />
       </main>
+      <SiteFooter />
     </div>
   );
 }

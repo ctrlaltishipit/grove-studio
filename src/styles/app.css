@@ -159,9 +159,9 @@
 
 /* -------------------------------------------------------- signin -- */
 
-.signin-wrap { min-height: 100vh; display: grid; place-items: center; padding: 24px; animation: fadeUp .3s ease-out both; }
+.signin-wrap { min-height: 100vh; min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; padding: max(24px, env(safe-area-inset-top)) 16px 24px; animation: fadeUp .3s ease-out both; }
 .signin-card {
-  width: 400px; max-width: 100%; background: var(--surface);
+  width: min(400px, 100%); box-sizing: border-box; background: var(--surface);
   border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow);
   padding: 28px; display: flex; flex-direction: column; gap: 16px;
 }
@@ -634,11 +634,11 @@
 .board-col .add:hover { background: color-mix(in oklab, var(--border) 50%, transparent); color: var(--ink); }
 
 .board-card {
-  background: var(--surface); border-radius: 5px; box-shadow: 0 1px 1px rgba(27,26,23,.10), 0 0 0 1px rgba(27,26,23,.04);
+  background: var(--surface); border-radius: 5px; box-shadow: 0 1px 1px rgba(18,36,28,.10), 0 0 0 1px rgba(18,36,28,.04);
   padding: 11px 12px 10px; display: flex; flex-direction: column; gap: 9px; cursor: grab;
   transition: box-shadow .12s ease-out;
 }
-.board-card:hover { box-shadow: 0 1px 2px rgba(27,26,23,.16), 0 0 0 1px rgba(27,26,23,.08); }
+.board-card:hover { box-shadow: 0 1px 2px rgba(18,36,28,.16), 0 0 0 1px rgba(18,36,28,.08); }
 .board-card .title { margin: 0; font-size: 14px; line-height: 1.4; font-weight: 500; color: var(--ink); }
 .board-card .chips { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
 .label-chip {
@@ -789,7 +789,7 @@
 /* ---------------------------------------------------- fullscreen deck -- */
 
 .deck-fs {
-  position: fixed; inset: 0; z-index: 120; background: #16150f;
+  position: fixed; inset: 0; z-index: 120; background: #0A0F0D;
   display: flex; align-items: center; justify-content: center; gap: 14px;
   animation: fadeUp .15s ease-out both;
 }
@@ -820,7 +820,7 @@
 /* --------------------------------------------- artboard full screen -- */
 
 .art-fs {
-  position: fixed; inset: 0; z-index: 120; background: #16150f;
+  position: fixed; inset: 0; z-index: 120; background: #0A0F0D;
   display: flex; flex-direction: column; animation: fadeUp .15s ease-out both;
 }
 .art-fs-head {
@@ -839,7 +839,7 @@
 /* --------------------------------------------------------- modals -- */
 
 .modal-veil {
-  position: fixed; inset: 0; background: rgba(20, 18, 14, .38); z-index: 80;
+  position: fixed; inset: 0; background: rgba(10, 15, 13, .42); z-index: 80;
   display: grid; place-items: center; animation: fadeUp .15s ease-out both;
 }
 .modal {
@@ -925,7 +925,7 @@
 .demo-checkin .meter .bar > div { height: 100%; border-radius: 99px; transition: width .2s ease-out; }
 .demo-checkin .meter .mono { font-size: 11px; color: var(--muted); flex: none; }
 .demo-checkin .acts { display: flex; gap: 6px; padding-top: 2px; }
-@media (max-width: 860px) { .demo-checkin { left: 12px; right: 12px; width: auto; bottom: 12px; } } }
+@media (max-width: 860px) { .demo-checkin { left: 12px; right: 12px; width: auto; bottom: 12px; } }
 .toast {
   background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
   box-shadow: var(--shadow-lg); padding: 11px 14px; max-width: 360px;
@@ -961,7 +961,7 @@
   /* Collapse is a desktop affordance; mobile keeps the topbar burger + drawer. */
   .sidebar-min, .sidebar-collapse { display: none; }
   .nav-veil {
-    position: fixed; inset: 0; background: rgba(20, 18, 14, .38); z-index: 91;
+    position: fixed; inset: 0; background: rgba(10, 15, 13, .42); z-index: 91;
     border: none; padding: 0; cursor: pointer;
   }
 
@@ -1105,7 +1105,7 @@
 .nav-item .sample-star { margin-left: auto; font-size: 11px; color: var(--acc-deep); flex: none; }
 
 
-/* ------------------------------------------- Indigo Studio polish -- */
+/* ------------------------------------------- Surface polish -- */
 
 /* Soft accent glow behind the dashboard and landing, gone in the dark. */
 .dash { position: relative; }
@@ -1177,7 +1177,7 @@
   background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--acc) 12%, transparent), transparent 65%);
   transition: opacity .2s ease-out;
 }
-.feat-item:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--acc) 40%, var(--border)); box-shadow: 0 22px 44px -20px color-mix(in srgb, var(--acc) 40%, transparent), 0 2px 8px rgba(28, 29, 38, .05); }
+.feat-item:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--acc) 40%, var(--border)); box-shadow: 0 22px 44px -20px color-mix(in srgb, var(--acc) 40%, transparent), 0 2px 8px rgba(18, 36, 28, .05); }
 .feat-item:hover .spot { opacity: 1; }
 .feat-item b, .feat-item > span:not(.spot) { position: relative; }
 .feat-item b { font-size: 14px; font-weight: 700; }
