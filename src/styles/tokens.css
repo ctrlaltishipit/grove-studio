@@ -19,14 +19,14 @@
 
 :root {
   /* The palette, by name. Use the role tokens below in components. */
-  --deep-forest: #0F4C3A;
-  --sprout-green: #2ECC71;
-  --sage-green: #82C99B;
+  --deep-forest: #003F2D;
+  --sprout-green: #2E9E78;
+  --sage-green: #80BBAD;
   --warm-off-white: #F7F9F6;
-  --emerald-teal: #1D7A62;
-  --vivid-green: #34EB88;
-  --midnight: #0A0F0D;
-  --forest-shadow: #1E2D27;
+  --emerald-teal: #17594A;
+  --vivid-green: #7FD8B5;
+  --midnight: #06100E;
+  --forest-shadow: #0F2420;
 
   --accent: var(--deep-forest);
   --accent-bright: var(--sprout-green);
