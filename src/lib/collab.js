@@ -159,3 +159,170 @@ export function findMentions(text, members) {
 
 export const ROLE_LABEL = { owner: 'Admin', editor: 'Can edit', member: 'Can edit', viewer: 'View only' };
 export const roleCanEdit = (role) => role === 'owner' || role === 'editor' || role === 'member';
+
+// ---- merging a teammate's edit into my own text ----------------------------
+// Peers broadcast their whole body. To keep both people's typing, find the
+// one region the peer changed since the last body I had from them, then
+// replay that change on my current text at the same spot, located by the
+// words around it. Nothing typed locally is ever thrown away.
+
+// The single changed region between two texts (common prefix and suffix).
+export function textDelta(a, b) {
+  if (a === b) return null;
+  let p = 0;
+  const max = Math.min(a.length, b.length);
+  while (p < max && a[p] === b[p]) p += 1;
+  let s = 0;
+  while (s < max - p && a[a.length - 1 - s] === b[b.length - 1 - s]) s += 1;
+  return { start: p, del: a.slice(p, a.length - s), ins: b.slice(p, b.length - s) };
+}
+
+function nearestIndex(hay, needle, around) {
+  if (!needle) return -1;
+  let best = -1, bestDist = Infinity, i = hay.indexOf(needle);
+  while (i !== -1) {
+    const d = Math.abs(i - around);
+    if (d < bestDist) { best = i; bestDist = d; }
+    i = hay.indexOf(needle, i + 1);
+  }
+  return best;
+}
+
+// prevTheirs: the last body I had from this peer (or the saved body).
+// theirs: the body they just sent. mine: what is in my editor now.
+export function rebaseRemote(prevTheirs, theirs, mine) {
+  if (mine === prevTheirs) return theirs;          // I changed nothing: take theirs
+  if (mine === theirs) return mine;
+  const d = textDelta(prevTheirs, theirs);
+  if (!d) return mine;                              // they changed nothing new
+  const C = 24;
+  const before = prevTheirs.slice(Math.max(0, d.start - C), d.start);
+  const after = prevTheirs.slice(d.start + d.del.length, d.start + d.del.length + C);
+  const tries = [
+    [before + d.del + after, before.length],
+    [before + d.del, before.length],
+    [d.del + after, 0],
+  ];
+  if (!d.del) tries.push([before, before.length], [after, 0]);
+  for (const [needle, off] of tries) {
+    if (!needle) continue;
+    const at = nearestIndex(mine, needle, d.start - (needle === before || needle.startsWith(before) ? before.length : 0));
+    if (at !== -1) {
+      const pos = at + off;
+      if (mine.slice(pos, pos + d.del.length) === d.del) {
+        return mine.slice(0, pos) + d.ins + mine.slice(pos + d.del.length);
+      }
+    }
+  }
+  // The text around their edit is gone on my side: keep mine and add their
+  // new words where they typed them, so nothing they wrote is lost.
+  if (!d.ins) return mine;
+  const pos = Math.min(d.start, mine.length);
+  return mine.slice(0, pos) + d.ins + mine.slice(pos);
+}
+
+// Three-way merge of whole note bodies. base is an older text both sides grew
+// from; mine and theirs are the two current versions. Unchanged parts stay,
+// a part only one side changed takes that side, and where both changed the
+// same spot the merge drops into single characters. Text that one side
+// already has from the other is never added twice.
+function matchSeq(a, b) {
+  const n = a.length, m = b.length;
+  const dp = Array.from({ length: n + 1 }, () => new Int32Array(m + 1));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) {
+    dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+  }
+  const map = new Array(n).fill(-1);
+  let i = 0, j = 0;
+  while (i < n && j < m) {
+    if (a[i] === b[j]) { map[i] = j; i++; j++; } else if (dp[i + 1][j] >= dp[i][j + 1]) i++; else j++;
+  }
+  return map;
+}
+const same = (x, y) => x.length === y.length && x.every((v, i) => v === y[i]);
+
+function diff3(B, M, T, conflict) {
+  const mm = matchSeq(B, M), mt = matchSeq(B, T);
+  const out = [];
+  let i = 0, j = 0, k = 0;
+  for (;;) {
+    let s = i;
+    while (s < B.length && !(mm[s] >= j && mt[s] >= k)) s++;
+    const mEnd = s < B.length ? mm[s] : M.length;
+    const tEnd = s < B.length ? mt[s] : T.length;
+    const b = B.slice(i, s), x = M.slice(j, mEnd), y = T.slice(k, tEnd);
+    if (same(x, y) || same(b, y)) out.push(...x);
+    else if (same(b, x)) out.push(...y);
+    else out.push(...conflict(b, x, y));
+    if (s >= B.length) break;
+    out.push(B[s]);
+    i = s + 1; j = mEnd + 1; k = tEnd + 1;
+  }
+  return out;
+}
+
+// Both sides changed the same characters. If one side only added text around
+// the old characters, apply the other side's change in the middle. Where both
+// typed new text at one spot, keep the version that already contains the
+// other, otherwise keep both, mine first.
+const combine = (p, q) => (p.includes(q) ? p : q.includes(p) ? q : p + q);
+function charConflict(b, x, y) {
+  const bs = b.join(''), xs = x.join(''), ys = y.join('');
+  if (bs) {
+    const ix = xs.indexOf(bs), iy = ys.indexOf(bs);
+    if (ix >= 0 && iy >= 0) return [...(combine(xs.slice(0, ix), ys.slice(0, iy)) + bs + combine(xs.slice(ix + bs.length), ys.slice(iy + bs.length)))];
+    if (ix >= 0) return [...(xs.slice(0, ix) + ys + xs.slice(ix + bs.length))];
+    if (iy >= 0) return [...(ys.slice(0, iy) + xs + ys.slice(iy + bs.length))];
+  }
+  return [...combine(xs, ys)];
+}
+
+function common(p, q) {
+  if (!p || !q || (p.length + 1) * (q.length + 1) > 4e5) return 0;
+  return matchSeq([...p], [...q]).filter((v) => v >= 0).length;
+}
+const similar = (p, q) => common(p, q) >= 0.6 * Math.min(p.length, q.length);
+// both are edits of the same original line
+const editsOf = (b, p, q) => b.length > 3 && common(b, p) >= 0.7 * b.length && common(b, q) >= 0.7 * b.length;
+
+// Both sides changed the same lines. One line edited by both at different
+// spots merges character by character. Otherwise merge whole lines: drop
+// lines either side deleted, keep each typed line once (a longer version of
+// a line replaces its shorter, half-typed self), mine first.
+function lineConflict(b, x, y) {
+  if (x.length === 1 && y.length === 1 && b.length <= 1 && (similar(x[0], y[0]) || editsOf(b.join(''), x[0], y[0]))) {
+    return [diff3([...b.join('')], [...x[0]], [...y[0]], charConflict).join('')];
+  }
+  const out = x.filter((l) => !(b.includes(l) && !y.includes(l)));
+  for (const l of y) {
+    if (b.includes(l) && !x.includes(l)) continue;
+    if (out.some((o) => o.includes(l))) continue;
+    const k = out.findIndex((o) => o && l.includes(o));
+    if (k >= 0) out[k] = l; else out.push(l);
+  }
+  return out;
+}
+
+export function merge3(base, mine, theirs) {
+  if (mine === theirs || theirs === base) return mine;
+  if (mine === base) return theirs;
+  const B = base.split('\n'), M = mine.split('\n'), T = theirs.split('\n');
+  if ((B.length + 1) * (Math.max(M.length, T.length) + 1) > 4e6) return mine.includes(theirs) ? mine : theirs.includes(mine) ? theirs : rebaseRemote(base, theirs, mine);
+  return diff3(B, M, T, lineConflict).join('\n');
+}
+
+// Which older text to merge against. Walk back through my recent saves and
+// use the newest one the sender had clearly seen (every line I added in it
+// appears in what they sent). If none, use the older shared text, so words
+// they have not seen yet are kept rather than read as deleted.
+export function pickBase(older, saved, incoming) {
+  const saves = Array.isArray(saved) ? saved : [saved];
+  const was = new Set(older.split('\n'));
+  for (let i = saves.length - 1; i >= 0; i--) {
+    const c = saves[i];
+    if (c === older) return older;
+    const added = c.split('\n').filter((l) => l.trim() && !was.has(l));
+    if (added.every((l) => incoming.includes(l))) return c;
+  }
+  return older;
+}

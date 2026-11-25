@@ -80,8 +80,8 @@ export async function fetchScope(userToken, { noteIds, spaceIds } = {}) {
   const scopeSpaces = [...new Set(notes.map((n) => n.project_id))];
   const label =
     nIds.length ? `${notes.length} selected note${notes.length === 1 ? '' : 's'}`
-      : sIds.length ? `${notes.length} notes across ${scopeSpaces.length} space${scopeSpaces.length === 1 ? '' : 's'}`
-        : `${notes.length} notes across all your spaces`;
+      : sIds.length ? `${notes.length} note${notes.length === 1 ? '' : 's'} across ${scopeSpaces.length} space${scopeSpaces.length === 1 ? '' : 's'}`
+        : `${notes.length} note${notes.length === 1 ? '' : 's'} across all your spaces`;
 
   return {
     notes: notes.map((n) => ({ ...n, spaceName: spaceName.get(n.project_id) ?? 'a space' })),
