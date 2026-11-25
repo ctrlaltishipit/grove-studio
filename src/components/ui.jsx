@@ -1,44 +1,46 @@
 import React, { useEffect, useId } from 'react';
 import { memberColor, initials } from '../lib/colors';
-import { LEAF_PATH, SWOOSH_PATH, TILE, LOCKUP_VIEWBOX, WORD_GROVE_PATH, WORD_STUDIO_PATH } from './brand';
+import { ICON_SIZE, PAGE_PATH, FOLD_PATH, STEM_PATH, LEAVES_PATH, SPROUT_AXIS, LOCKUP_VIEWBOX, WORD_GROVE_PATH, WORD_STUDIO_PATH } from './brand';
 
-// The brand (A17). The tile and the lockup are drawn from one copy of the path
-// data in brand.js and coloured by the six --brand-* tokens, so they swap faces
+// The brand (A18). The icon and the lockup are drawn from one copy of the path
+// data in brand.js and coloured by the --brand-* tokens, so they swap faces
 // with the theme the same way the chrome does. Nothing here animates.
 
-// The tile's inner drawing, shared by Logo and Wordmark. The gradient id must
-// be unique per instance or the first <defs> on the page wins for all of them.
-function TileArt({ gradientId }) {
+// The icon's drawing, shared by Logo and Lockup. The gradient id must be unique
+// per instance or the first <defs> on the page wins for all of them.
+function IconArt({ gradientId }) {
   return (
     <>
       <defs>
-        <linearGradient id={gradientId} x1="0" y1="0" x2={TILE.size} y2={TILE.size} gradientUnits="userSpaceOnUse">
-          <stop offset="0" style={{ stopColor: 'var(--brand-tile-a)' }} />
-          <stop offset="1" style={{ stopColor: 'var(--brand-tile-b)' }} />
+        <linearGradient id={gradientId} {...SPROUT_AXIS} gradientUnits="userSpaceOnUse">
+          <stop offset="0" style={{ stopColor: 'var(--brand-sprout-a)' }} />
+          <stop offset="1" style={{ stopColor: 'var(--brand-sprout-b)' }} />
         </linearGradient>
       </defs>
-      <rect width={TILE.size} height={TILE.size} rx={TILE.radius} fill={`url(#${gradientId})`} />
-      <path d={LEAF_PATH} style={{ fill: 'var(--brand-leaf)' }} />
-      <path d={SWOOSH_PATH} style={{ fill: 'var(--brand-swoosh)' }} />
+      <path d={PAGE_PATH} fill="none" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round"
+        style={{ stroke: 'var(--brand-page)' }} />
+      <path d={FOLD_PATH} fillOpacity=".55" style={{ fill: 'var(--brand-page)' }} />
+      <path d={STEM_PATH} fill="none" stroke={`url(#${gradientId})`} strokeWidth="10" strokeLinecap="round" />
+      <path d={LEAVES_PATH} fill={`url(#${gradientId})`} />
     </>
   );
 }
 
-// The tile on its own. Decorative unless given a label.
+// The icon on its own. Decorative unless given a label.
 export function Logo({ size = 26, label }) {
   const uid = useId().replace(/:/g, '');
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${TILE.size} ${TILE.size}`}
+    <svg width={size} height={size} viewBox={`0 0 ${ICON_SIZE} ${ICON_SIZE}`}
       role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : 'true'}
       style={{ display: 'block', flex: 'none' }}>
-      <TileArt gradientId={`grove-tile-${uid}`} />
+      <IconArt gradientId={`grove-icon-${uid}`} />
     </svg>
   );
 }
 
 const LOCKUP_ASPECT = LOCKUP_VIEWBOX.width / LOCKUP_VIEWBOX.height;
 
-// Tile + "GroveStudio", outlined so it is the same shape before and after the
+// Icon + "GroveStudio", outlined so it is the same shape before and after the
 // webfont loads. Sized by height; the width follows. It always carries the
 // accessible name, because wherever it sits it is the only thing naming the app.
 export function Lockup({ height = 28 }) {
@@ -47,7 +49,7 @@ export function Lockup({ height = 28 }) {
   return (
     <svg width={Math.round(height * LOCKUP_ASPECT)} height={height} viewBox={`${x} ${y} ${width} ${vh}`}
       role="img" aria-label="GroveStudio" style={{ display: 'block', flex: 'none' }}>
-      <TileArt gradientId={`grove-tile-${uid}`} />
+      <IconArt gradientId={`grove-icon-${uid}`} />
       <path d={WORD_GROVE_PATH} style={{ fill: 'var(--brand-word)' }} />
       <path d={WORD_STUDIO_PATH} style={{ fill: 'var(--brand-word-accent)' }} />
     </svg>

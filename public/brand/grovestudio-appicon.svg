@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="GroveStudio">
+  <title>GroveStudio</title>
+  <rect width="256" height="256" fill="#F7F9F6"/>
+  <g transform="translate(25.6 25.6) scale(.8)"><defs>
+    <linearGradient id="gs-app" x1="60" y1="244" x2="230" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1D7A62"/><stop offset="1" stop-color="#2ECC71"/>
+    </linearGradient>
+  </defs>
+  <path d="M128 78V54a10 10 0 0 0-10-10H66a10 10 0 0 0-10 10V222a10 10 0 0 0 10 10H104M196 136V188L156 234H140" fill="none" stroke="#82C99B" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M196 188H160a6 6 0 0 0-6 6L156 234Z" fill="#82C99B" fill-opacity=".55"/>
+  <path d="M30 96L56 110L78 124M104 232C134 226 140 200 138 172C136 148 146 130 168 118" fill="none" stroke="url(#gs-app)" stroke-width="10" stroke-linecap="round"/>
+  <path d="M138 172C136 136 110 114 72 110C74 144 100 168 138 172ZM160 124C150 78 186 44 236 32C244 82 212 120 160 124ZM16 96a14 14 0 1 0 28 0a14 14 0 1 0 -28 0ZM114 86a14 14 0 1 0 28 0a14 14 0 1 0 -28 0Z" fill="url(#gs-app)"/></g>
+</svg>
