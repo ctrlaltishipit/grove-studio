@@ -1,5 +1,5 @@
 import React from 'react';
-import { PROBLEM, VISION, MISSION, HOW, NOTES, FOUNDER } from '../lib/origin';
+import { PROBLEM, VISION, MISSION, HOW, NOTES, FOUNDER, HACKATHON } from '../lib/origin';
 import { Logo } from './ui';
 
 // A founder's margin note: a small comment card that sits in the empty space
@@ -67,6 +67,45 @@ export function OriginStory({ id = 'why-built' }) {
               </li>
             ))}
           </ol>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// The hackathon story: an assigned challenge, a 48-hour clock, and what
+// shipped. The clock ring fills and the checklist ticks as it scrolls in.
+export function HackathonStory() {
+  const h = HACKATHON;
+  return (
+    <section className="band hack" aria-labelledby="hack-h">
+      <div className="wrap hack-grid">
+        <div className="hack-copy rv">
+          <p className="eyebrow">{h.eyebrow}</p>
+          <h2 id="hack-h">{h.title}</h2>
+          {h.paras.map((t, i) => <p key={i} className="hack-p">{t}</p>)}
+          <blockquote className="hack-quote"><p><em>{h.quote}</em></p><small>{FOUNDER}</small></blockquote>
+        </div>
+        <div className="hack-card rv" style={{ '--rv': 1 }}>
+          <div className="hack-clock" aria-hidden="true">
+            <svg viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="52" className="hc-track" />
+              <circle cx="60" cy="60" r="52" className="hc-fill" pathLength="100" />
+              {Array.from({ length: 12 }, (_, k) => (
+                <line key={k} x1="60" y1="12" x2="60" y2={k % 3 ? 16 : 19} className="hc-tick" transform={`rotate(${k * 30} 60 60)`} />
+              ))}
+            </svg>
+            <span className="hc-num">48<small>hours</small></span>
+          </div>
+          <p className="hack-card-h">What we delivered</p>
+          <ul className="hack-list">
+            {h.shipped.map((t, i) => (
+              <li key={t} style={{ '--i': i }}>
+                <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><circle cx="10" cy="10" r="9" /><path d="M6 10.5l2.6 2.6L14 7.5" /></svg>
+                {t}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>
