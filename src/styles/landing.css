@@ -272,3 +272,7 @@
 .story-slide.on .app-media.focus, .story-inline .app-media.focus { animation: focusIn 2.6s var(--ease) .35s both; }
 @keyframes focusIn { from { transform: scale(1); } to { transform: scale(var(--fs)); } }
 @media (prefers-reduced-motion: reduce) { .story-slide.on .app-media.focus, .story-inline .app-media.focus { animation: none; transform: scale(var(--fs)); } }
+@media (max-width: 640px) {
+  .site .inside-stage { aspect-ratio: auto; height: calc((100vw - 2 * var(--gutter)) * 0.69 + 92px); }
+  .site .inside-cap { position: absolute; left: 0; right: 0; bottom: 0; margin: 0; transform: none; font-size: 14px; }
+}

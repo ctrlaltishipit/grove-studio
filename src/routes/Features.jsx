@@ -86,14 +86,15 @@ const GROUPS = [
 ];
 
 const T = '/tour/';
+const L = '/tour/live/';
 const INSIDE = [
-  { label: 'Notes', icon: I.pen, line: 'Write together, live, with every change saved.', media: { src: T + 'note.webp', alt: 'A shared note with its summary, text and comments' }, url: 'grovestudio.io/app/space' },
-  { label: 'Board', icon: I.board, line: 'Every task, its owner and its date.', media: { src: T + 'board.webp', alt: 'The Kanban board with four columns of tasks' }, url: 'grovestudio.io/app/space/board' },
-  { label: 'Studio', icon: I.spark, line: 'Turn notes into what you need.', media: { video: T + 'clip-studio.mp4', poster: T + 'clip-studio-poster.webp', alt: 'The Studio making a summary, mind map and slides' }, url: 'grovestudio.io/app/space' },
+  { label: 'Home', icon: I.bell, line: 'Your tasks, your spaces and new assignments in one place.', media: { src: L + 'home.webp', alt: 'The Home dashboard with an assignment from Priya and the tasks assigned to you' }, url: 'grovestudio.io/app' },
+  { label: 'Join', icon: I.key, line: 'Type a six-character code and you are in.', media: { src: L + 'join.webp', alt: 'Joining a shared space with a six-character code' }, url: 'grovestudio.io/app' },
+  { label: 'Summary', icon: I.list, line: 'What was decided and what comes next.', media: { src: L + 'summary.webp', alt: 'A note with the Studio summary, decisions and next steps' }, url: 'grovestudio.io/app/space' },
+  { label: 'Slides', icon: I.slides, line: 'A deck made from the notes, ready to present.', media: { src: L + 'slides.webp', alt: 'A note with a Studio slide deck ready to play or download' }, url: 'grovestudio.io/app/space' },
+  { label: 'Audio', icon: I.audio, line: 'A two-host audio overview of your notes.', media: { src: L + 'audio.webp', alt: 'A note with the Studio audio overview player' }, url: 'grovestudio.io/app/space' },
+  { label: 'Board', icon: I.board, line: 'Every task, its owner and its date.', media: { src: L + 'board.webp', alt: 'The Kanban board with To do, In progress, In review and Done' }, url: 'grovestudio.io/app/space/board' },
   { label: 'Mind map', icon: I.map, line: 'The meeting as one picture.', media: { src: T + 'mindmap.webp', alt: 'A mind map made by the Studio' } },
-  { label: 'Slides', icon: I.slides, line: 'A deck to present or download.', media: { src: T + 'deck.webp', alt: 'A slide deck made by the Studio' } },
-  { label: 'Dashboard', icon: I.bell, line: 'Your work across every project.', media: { src: T + 'dashboard.webp', alt: 'The personal dashboard with tasks and a notification' }, url: 'grovestudio.io/app' },
-  { label: 'Comments', icon: I.comment, line: 'Talk about any note, right on it.', media: { src: T + 'comments.webp', alt: 'Comments on a note with a reply box' } },
 ];
 
 const ANYWHERE = [
