@@ -8,6 +8,7 @@ import path from 'node:path';
 import { HOME_FAQ, WHY_FAQ, FEATURES_FAQ } from '../src/lib/faq.js';
 import { TOUR, STORYLINE } from '../src/lib/tourSteps.js';
 import { PRIVACY, TERMS, legalHtml } from '../src/lib/legal.js';
+import { FILM } from '../src/lib/film.js';
 
 const SITE = 'https://www.grovestudio.io';
 const DIST = path.resolve('dist');
@@ -24,6 +25,7 @@ const APP = {
   featureList: ['Live co-writing with named cursors', 'Version history', 'Comments and @mentions', 'Dictation', 'AI summaries, mind maps, slide decks, infographics and audio overviews', 'Answers with source notes', 'Kanban board', 'Task assignment with owners and due dates', 'Check-ins: On track, Blocked, Done', 'Personal dashboard with notifications', 'Roles: admin, editor, viewer', 'Private and shared spaces'],
   publisher: { '@id': `${SITE}/#org` },
 };
+const filmLd = () => (FILM ? [{ '@type': 'VideoObject', name: FILM.title, description: FILM.line, thumbnailUrl: `${SITE}${FILM.poster}`, contentUrl: `${SITE}${FILM.src}`, uploadDate: '2026-11-26', duration: 'PT1M29S' }] : []);
 const faqLd = (faq) => ({ '@type': 'FAQPage', mainEntity: faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) });
 const crumbs = (name, p) => ({ '@type': 'BreadcrumbList', itemListElement: [
   { '@type': 'ListItem', position: 1, name: 'GroveStudio', item: `${SITE}/` },
@@ -59,7 +61,7 @@ const ROUTES = [
   {
     path: '/features', title: 'GroveStudio features: live notes, the Studio, Kanban board, check-ins and sharing',
     description: 'Every GroveStudio feature: live co-writing with named cursors and version history, a Studio that makes summaries, slides, mind maps, infographics and audio, a Kanban board with check-ins, and sharing by code or email.',
-    ld: [ORG, APP, crumbs('Features', '/features'), faqLd(FEATURES_FAQ)],
+    ld: [ORG, APP, crumbs('Features', '/features'), faqLd(FEATURES_FAQ), ...filmLd()],
     body: `<h1>Notes, Studio and board. One place.</h1><p>Write it together. See it your way. Get it done.</p>
 <h2>Write together</h2><p>Live co-writing, named cursors, dictation, version history, line comments and mentions.</p>
 <h2>The Studio</h2><p>Ask with sources, summaries, slide decks, mind maps, infographics and audio overviews made from your notes.</p>
@@ -70,7 +72,7 @@ const ROUTES = [
   {
     path: '/inside', title: 'Inside GroveStudio: try the app before you sign in',
     description: 'Look inside GroveStudio: a working preview of the app, the real screens, and a guided walk from sign-in to notes, the Studio, the Kanban board, notifications and check-ins.',
-    ld: [ORG, crumbs('Inside the app', '/inside')],
+    ld: [ORG, crumbs('Inside the app', '/inside'), ...filmLd()],
     body: `<h1>Check out the app, before you sign in</h1><p>Watch it, click through it, and see the real screens.</p><h2>From sign-in to follow-up</h2>${stepsHtml(TOUR)}`,
   },
   {
