@@ -597,3 +597,13 @@
 .site .band-deep .eyebrow, .site .wl-band .eyebrow, .site .glass-head .eyebrow { color: #A8D5C7 !important; }
 .site .flist-ic, .site .fh-step.on .fh-dot { background: var(--gloss); color: #FFFFFF; }
 .site .hx-chip { background: rgba(1, 42, 45, .82); border-color: rgba(255, 255, 255, .18); }
+
+/* film chapters: nine chips, 5 + 4 centred on desktop, 3 x 3 on tablets, 2 per row on phones */
+.site .film-chapters { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin: 36px auto 0; max-width: 1080px; }
+.site .film-chapters li { flex: 0 0 calc((100% - 4 * 14px) / 5); }
+.site .film-chapters button { height: 46px; padding: 0 14px 0 7px; font-size: 14.5px; }
+.site #film { padding-bottom: clamp(72px, 8vw, 112px); }
+@media (max-width: 1000px) { .site .film-chapters li { flex-basis: calc((100% - 2 * 14px) / 3); } }
+@media (max-width: 640px) { .site .film-chapters { gap: 10px; margin-top: 24px; } .site .film-chapters li { flex-basis: calc((100% - 10px) / 2); } .site .film-chapters button { height: 42px; font-size: 13.5px; } }
+.site .film-chapters li { min-width: 0; }
+@media (max-width: 640px) { .site .film-chapters li:first-child { flex-basis: 100%; } .site .film-chapters li:first-child button { justify-content: center; } }

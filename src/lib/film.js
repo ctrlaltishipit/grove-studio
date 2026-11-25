@@ -7,6 +7,7 @@ export const FILM = {
   minutes: '90 seconds',
   line: 'Sara signs in, finds the task Priya gave her, asks her notes, joins a space, writes together, uses the Studio and clears the board.',
   chapters: [
+    { at: 0, label: 'Intro' },
     { at: 15.4, label: 'Sign in' },
     { at: 20.5, label: 'Assigned to you' },
     { at: 27.7, label: 'Ask your notes' },
