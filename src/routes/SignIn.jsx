@@ -66,7 +66,7 @@ export default function SignIn() {
         <div>
           <h1>Welcome in.</h1>
           <p className="signin-sub">{joinCode
-              ? <>Sign in to join with code <b style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.12em' }}>{joinCode}</b> — the space opens right after.</>
+              ? <>Sign in to join with code <b style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.12em' }}>{joinCode}</b>. The space opens right after.</>
               : 'Your spaces, notes and tasks follow your account across devices.'}</p>
         </div>
 
@@ -79,7 +79,7 @@ export default function SignIn() {
             </button>
             <div className="signin-divider">or</div>
             <input
-              className="signin-input" placeholder="Your name — e.g. Priya R." maxLength={40}
+              className="signin-input" placeholder="Your name, for example Priya R." maxLength={40}
               value={name} onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') guest(); }}
             />

@@ -925,7 +925,7 @@
 .demo-checkin .meter .bar > div { height: 100%; border-radius: 99px; transition: width .2s ease-out; }
 .demo-checkin .meter .mono { font-size: 11px; color: var(--muted); flex: none; }
 .demo-checkin .acts { display: flex; gap: 6px; padding-top: 2px; }
-@media (max-width: 860px) { .demo-checkin { left: 12px; right: 12px; width: auto; bottom: 12px; } } }
+@media (max-width: 860px) { .demo-checkin { left: 12px; right: 12px; width: auto; bottom: 12px; } }
 .toast {
   background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
   box-shadow: var(--shadow-lg); padding: 11px 14px; max-width: 360px;

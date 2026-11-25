@@ -1,7 +1,7 @@
 {
   "name": "GroveStudio",
   "short_name": "GroveStudio",
-  "description": "Notes that don't stop at being notes — shared spaces, live co-writing, a board that assigns, and a studio that follows up.",
+  "description": "Shared meeting notes that turn into finished work. Write together, turn decisions into tasks, and get check-ins until they are done.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
