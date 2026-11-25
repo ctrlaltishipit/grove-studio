@@ -10,7 +10,8 @@ import { Wordmark } from './ui';
 const LINKS = [
   ['/', 'Home'],
   ['/tour', 'Product tour'],
-  ['/features', 'Inside the app'],
+  ['/features', 'Features'],
+  ['/inside', 'Inside the app'],
   ['/why', 'Why GroveStudio'],
 ];
 
@@ -147,24 +148,45 @@ export function CloseBand({ title, line, action = 'Start a space' }) {
   );
 }
 
+// The footer's light backdrop: a ruled page with a few doodles from the app
+// (a note, a cursor flag, a Studio spark, a check, sprouts) drifting slowly.
+function FooterArt() {
+  return (
+    <svg className="sf-art" viewBox="600 0 600 220" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <g className="sf-d d1" transform="translate(760 40)"><rect width="96" height="70" rx="10" className="sf-note" /><rect x="14" y="16" width="50" height="7" rx="3.5" className="sf-ink" /><rect x="14" y="32" width="66" height="5" rx="2.5" className="sf-ink2" /><rect x="14" y="44" width="56" height="5" rx="2.5" className="sf-ink2" /></g>
+      <g className="sf-d d2" transform="translate(900 120)"><rect width="3" height="22" className="sf-flag" /><rect y="-16" width="48" height="16" rx="4" className="sf-flag" /><text x="7" y="-4" className="sf-flag-t">Priya</text></g>
+      <g className="sf-d d3" transform="translate(1010 50)"><path d="M14 0v10M14 18v10M0 14h10M18 14h10M4 4l6 6M18 18l6 6M4 24l6-6M18 10l6-6" className="sf-spark" /></g>
+      <g className="sf-d d4" transform="translate(1080 130)"><circle r="16" cx="16" cy="16" className="sf-check-c" /><path d="M9 16l5 5 9-10" className="sf-check" /></g>
+      {[[640, 200, 1], [700, 200, .7], [1150, 200, .9]].map(([x, y, sc], i) => (
+        <g key={i} className={'sf-sprout s' + i} transform={`translate(${x} ${y}) scale(${sc})`}>
+          <path d="M0 0V-40" className="sf-stem" />
+          <path d="M0-26C-4-38-14-44-24-42C-22-32-12-26 0-26Z" className="sf-leaf" />
+          <path d="M0-34C4-48 16-54 26-50C23-40 12-34 0-34Z" className="sf-leaf b" />
+        </g>
+      ))}
+    </svg>
+  );
+}
+
 export function SiteFooter() {
   return (
-    <footer className="site-footer">
-      <div className="wrap footer-row">
+    <footer className="site-footer sf">
+      <FooterArt />
+      <div className="wrap sf-grid">
         <div className="footer-brand">
           <Wordmark small />
           <p>Team notes, tasks and follow-ups in one place.</p>
+          <p className="sf-tag"><em>Write it together. See it your way. Get it done.</em></p>
         </div>
-        <nav className="footer-links" aria-label="Footer">
-          <Link to="/tour">Product tour</Link>
-          <Link to="/features">Inside the app</Link>
-          <Link to="/why">Why GroveStudio</Link>
-          <Link to="/signin">Sign in</Link>
+        <nav className="sf-cols" aria-label="Footer">
+          <div><span className="sf-h">Product</span><Link to="/tour">Product tour</Link><Link to="/features">Features</Link><Link to="/inside">Inside the app</Link></div>
+          <div><span className="sf-h">Company</span><Link to="/why">Why GroveStudio</Link><a href="#early-access">Early access</a><Link to="/signin">Sign in</Link></div>
+          <div><span className="sf-h">Legal</span><Link to="/privacy">Privacy note</Link><Link to="/terms">Terms of use</Link></div>
         </nav>
       </div>
       <div className="wrap footer-base">
         <span>© {new Date().getFullYear()} GroveStudio</span>
-        <span className="footer-legal"><Link to="/privacy">Privacy note</Link><Link to="/terms">Terms of use</Link></span>
+        <span className="sf-made">Made for teams that meet every day</span>
       </div>
     </footer>
   );

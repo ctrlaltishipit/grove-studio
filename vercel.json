@@ -14,6 +14,10 @@
       "destination": "/features/index.html"
     },
     {
+      "source": "/inside",
+      "destination": "/inside/index.html"
+    },
+    {
       "source": "/why",
       "destination": "/why/index.html"
     },

@@ -214,7 +214,7 @@ export default function Landing() {
           <div className="wrap has-note">
             <MarginNote id="bento" side="right" tilt={-1.5} />
             <div className="sec-head rv">
-              <p className="eyebrow">Inside the app</p>
+              <p className="eyebrow">Features</p>
               <h2 id="bento-h">Everything a working team needs</h2>
               <p className="lead">Notes, understanding, tasks and follow-up live together, so you are not copying between four tools and nobody asks where the latest version is.</p>
             </div>
@@ -245,7 +245,7 @@ export default function Landing() {
             <div className="split-head rv">
               <p className="eyebrow">Questions</p>
               <h2 id="faq-h">GroveStudio in short</h2>
-              <p className="lead">More answers on <Link to="/features" className="text-link inline">Inside the app</Link> and <Link to="/why" className="text-link inline">Why GroveStudio</Link>.</p>
+              <p className="lead">More answers on <Link to="/features" className="text-link inline">Features</Link> and <Link to="/why" className="text-link inline">Why GroveStudio</Link>.</p>
             </div>
             <div className="faq-list rv">
               {FAQ.map(([q, a], i) => (

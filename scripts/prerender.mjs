@@ -57,13 +57,21 @@ const ROUTES = [
     body: `<h1>A tour of the app, one step at a time</h1><p>Eight steps, from opening GroveStudio for the first time to closing out the work your meeting created.</p>${stepsHtml(TOUR)}`,
   },
   {
-    path: '/features', title: 'GroveStudio features: live notes, AI Studio, Kanban board, dashboard and check-ins',
-    description: 'Try GroveStudio before you sign in: a working preview of live notes, the AI Studio, the Kanban board and your dashboard. See what is inside, how teams work across countries, and join early access.',
+    path: '/features', title: 'GroveStudio features: live notes, the Studio, Kanban board, check-ins and sharing',
+    description: 'Every GroveStudio feature: live co-writing with named cursors and version history, a Studio that makes summaries, slides, mind maps, infographics and audio, a Kanban board with check-ins, and sharing by code or email.',
     ld: [ORG, APP, crumbs('Features', '/features'), faqLd(FEATURES_FAQ)],
-    body: `<h1>Notes, Studio and board. One place.</h1><p>Write it together. See it your way. Get it done. Try a working preview of the app before you sign in, or join the early access list.</p>
-<h2>From sign-in to follow-up</h2>${stepsHtml(TOUR)}
-<h2>Work from anywhere</h2><p>Your team can be in any country and still write in the same note at the same time. Tasks, mentions, comments and check-ins reach the right person wherever they work.</p>
+    body: `<h1>Notes, Studio and board. One place.</h1><p>Write it together. See it your way. Get it done.</p>
+<h2>Write together</h2><p>Live co-writing, named cursors, dictation, version history, line comments and mentions.</p>
+<h2>The Studio</h2><p>Ask with sources, summaries, slide decks, mind maps, infographics and audio overviews made from your notes.</p>
+<h2>Make work move</h2><p>A Kanban board, tasks from notes with owners and dates, check-ins, notifications, roles and note locks.</p>
+<h2>Share in seconds</h2><p>Six-character codes, email invites, emailing a note, private spaces and a sample space.</p>
 <h2>Frequently asked</h2>${faqHtml(FEATURES_FAQ)}`,
+  },
+  {
+    path: '/inside', title: 'Inside GroveStudio: try the app before you sign in',
+    description: 'Look inside GroveStudio: a working preview of the app, the real screens, and a guided walk from sign-in to notes, the Studio, the Kanban board, notifications and check-ins.',
+    ld: [ORG, crumbs('Inside the app', '/inside')],
+    body: `<h1>Check out the app, before you sign in</h1><p>Watch it, click through it, and see the real screens.</p><h2>From sign-in to follow-up</h2>${stepsHtml(TOUR)}`,
   },
   {
     path: '/why', title: 'Why GroveStudio? Meeting notes that turn into tasks, slides and audio',
@@ -134,6 +142,7 @@ fs.writeFileSync(path.join(DIST, 'llms.txt'), `# GroveStudio
 - [Home](${SITE}/): what GroveStudio is and who it is for
 - [Product tour](${SITE}/tour): the app step by step, from sign-in to follow-up
 - [Features](${SITE}/features): every feature, grouped
+- [Inside the app](${SITE}/inside): a working preview and the real screens
 - [Why GroveStudio](${SITE}/why): the problem it solves and common questions
 - [Privacy note](${SITE}/privacy): what data GroveStudio collects and how it is used
 - [Terms of use](${SITE}/terms): the rules for using GroveStudio
