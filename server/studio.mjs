@@ -161,7 +161,7 @@ const BRAND_CANVAS = (w, h, root) => `TECHNICAL CANVAS (hard constraints):
 - Each artboard is EXACTLY ${w}x${h}px, root element <div class="${root}">...</div>. Anything past the edges is clipped.
 - Rendered in a sandboxed iframe: NO animation, NO transitions, NO JavaScript, NO external resources of any kind. Inline SVG is fully supported (gradients, patterns, masks, stroke-dasharray) — use it for motifs, diagrams, connective lines, texture.
 - Fonts already loaded, nothing else exists: 'Source Serif 4' (serif, 400-700 + italics) and 'Inter' (sans, 400-700) and 'JetBrains Mono' (mono, 400/600).
-- GroveStudio brand palette — stay strictly inside it: paper #F7F6F2, surface #FFFFFF, sunken #F1EFE9, borders #E8E4DB / #D6D0C3, ink #1B1A17, muted #6E6A5F, faint #9C968A, greens #3F7A4F (accent) #2E5C3A (deep) #567F63 #7C8F5D #3E6B54 #6B8A50 #4E8578, soft green #E4EDE6, amber #B07D2E on #F7EED9 for caution only. No other hues, ever. Light paper canvases, generous whitespace, hairline borders, rounded 12-16px panels — calm editorial, never loud.
+- GroveStudio brand palette (Grove Green), stay strictly inside it: paper #F7F9F6, surface #FFFFFF, sunken #EEF3EF, borders #E0E8E2 / #C9D7CD, ink #12241C, muted #53645B, faint #93A299, greens #1D7A62 (accent) #0F4C3A (deep) #2E9E6A #82C99B #16624C #5DB585 #1F8A72, soft green #E3F2E8, amber #B07D2E on #F7EED9 for caution only. No other hues, ever. Light paper canvases, generous whitespace, hairline borders, rounded 12-16px panels. Calm editorial, never loud. Never use em dashes in any text; use commas, colons or full stops.
 - Body text >= 22px, labels >= 14px, line-height >= 1.4, text keeps >= 48px from canvas edges, contrast >= 4.5:1. Readable text never overlaps readable text.
 - FULL-CANVAS COMPOSITION: a fixed poster, not a web page — distribute the design across the ENTIRE canvas (masthead, commanding middle, footer strip pinned to the bottom). A dead bottom half is a defect.`;
 
@@ -219,7 +219,7 @@ SIZE BUDGET (hard): the WHOLE response must stay under about 9000 words — keep
     const narration = pm[2].trim().slice(0, 900);
     if (html && narration) slides.push({ html, narration });
   }
-  if (slides.length < 3) throw new Error('the deck came back too short — try again');
+  if (slides.length < 3) throw new Error('the deck came back too short. Try again');
   const deck = { title: section(raw, 'TITLE') || 'Video overview' };
 
   onProgress?.(0.4);
@@ -285,7 +285,7 @@ SIZE BUDGET (hard): the WHOLE response must stay under about 6000 words — CSS 
   });
   const css = sanitizeCss(section(raw, 'CSS'));
   const html = sanitizeHtml(section(raw, 'HTML'), 'board');
-  if (!html || html.length < 200) throw new Error('empty infographic — try again');
+  if (!html || html.length < 200) throw new Error('empty infographic. Try again');
   return {
     title: section(raw, 'TITLE') || 'Infographic',
     css,

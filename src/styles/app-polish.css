@@ -1,0 +1,79 @@
+/* ============================================================
+   App polish (25 Nov 2026). Loaded after app.css.
+   - Dates, counts and percentages use Manrope with tabular digits;
+     monospace stays only for join codes and keyboard hints.
+   - Avatar stacks overlap less, so initials stay readable.
+   - Every button presses on click; keyboard focus is always visible.
+   - Task rows on phones go to two lines so titles are not cut off.
+   ============================================================ */
+
+.mono,
+.notif-row .time,
+.section-head .n,
+.task-progress .pct,
+.space-card .updated,
+.note-card .updated,
+.save-state,
+.note-tasks-head .n,
+.thread-head .n,
+.comment .c-time,
+.board-head .n,
+.chat-cite {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+.avatar-stack { padding-left: 5px; }
+.avatar-stack .avatar { margin-left: -5px; border-width: 1.5px; }
+
+.btn, .filter-pill, .task-status, .space-card, .note-card, .icon-btn {
+  transition: background-color .15s ease-out, border-color .15s ease-out, color .15s ease-out,
+    transform .15s ease-out, box-shadow .15s ease-out;
+}
+.btn:active:not(:disabled), .filter-pill:active, .task-status:active { transform: scale(.97); }
+.shell :focus-visible, .modal :focus-visible, .signin-wrap :focus-visible {
+  outline: 2px solid var(--acc); outline-offset: 2px; border-radius: 8px;
+}
+
+.task-status { width: auto; min-width: 72px; padding: 5px 12px; }
+.task-row { transition: background-color .15s ease-out; }
+.task-row:hover { background: color-mix(in oklab, var(--acc-soft) 40%, var(--surface)); }
+
+@media (max-width: 860px) {
+  .task-row { flex-wrap: wrap; row-gap: 8px; align-items: center; }
+  .task-row .task-main { order: 1; flex: 1 1 calc(100% - 44px); }
+  .task-row > .avatar { order: 2; }
+  .task-row .task-status { order: 3; min-width: 0; }
+  .task-row .due-chip { order: 4; }
+  .task-main .title, .task-main .meta { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .task-main .meta { -webkit-line-clamp: 1; }
+  .dash-actions .btn { height: 40px; }
+}
+
+/* The note's own title and body are the page; a focus ring hugging the
+   text looked like a stray border. The caret shows focus there. */
+.shell .editor-title:focus-visible, .shell .editor-body:focus-visible { outline: none; }
+
+.demo-back { max-width: 760px; margin: 0 auto; padding: 18px 28px 0; }
+
+/* Phones: controls big enough to tap, board columns wide enough to read,
+   and long breadcrumbs that shorten instead of running off the edge. */
+@media (max-width: 860px) {
+  .btn-sm, .btn-xs, .btn-ghost, .filter-pill, .edit-mode-select { height: 36px; }
+  .task-row .task-status { min-height: 36px; }
+  .mic-btn { width: 36px; height: 36px; }
+  .code-chip { min-height: 32px; }
+  .studio-head .close { min-width: 40px; min-height: 40px; }
+  .move-btn { height: 32px; opacity: 1; }
+  .board-col { flex: 0 0 min(280px, 80vw); max-width: none; }
+  .board-head .n { white-space: nowrap; }
+  .editor-bar .crumb { max-width: 100%; }
+  /* Assign and Delete sat past the right edge, out of reach. */
+  .editor-bar .right { flex-wrap: wrap; margin-left: 0; width: 100%; row-gap: 8px; }
+  .demo-back { padding: 14px 14px 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn:active, .filter-pill:active, .task-status:active { transform: none; }
+}

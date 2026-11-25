@@ -9,9 +9,38 @@ import { Wordmark } from './ui';
 
 const LINKS = [
   ['/', 'Home'],
-  ['/why', 'Why GroveStudio'],
+  ['/tour', 'Product tour'],
   ['/features', 'Features'],
+  ['/inside', 'Inside the app'],
+  ['/why', 'Why GroveStudio'],
 ];
+
+// Reveal-on-scroll for any .rv element on the page. Adds .in once, then
+// stops watching. Reduced motion shows everything at once (site.css).
+function useReveal(pathname) {
+  useEffect(() => {
+    const els = [...document.querySelectorAll('.site .rv:not(.in)')];
+    if (!('IntersectionObserver' in window)) { els.forEach((e) => e.classList.add('in')); return; }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    els.forEach((e) => io.observe(e));
+    return () => io.disconnect();
+  }, [pathname]);
+}
+
+// The sliding pill under the active (or hovered) nav link.
+function usePill(navRef, pathname) {
+  const [pill, setPill] = useState(null);
+  const place = (el) => {
+    if (!el || !navRef.current) return setPill(null);
+    const a = el.getBoundingClientRect(), b = navRef.current.getBoundingClientRect();
+    setPill({ left: a.left - b.left, width: a.width });
+  };
+  const toActive = () => place(navRef.current?.querySelector('.site-link.on'));
+  useEffect(() => { toActive(); window.addEventListener('resize', toActive); return () => window.removeEventListener('resize', toActive); }, [pathname]);
+  return [pill, place, toActive];
+}
 
 function SunMoon({ dark }) {
   return dark ? (
@@ -36,6 +65,9 @@ export default function PublicNav() {
   const [dark, setDark] = useState(currentTheme() === 'dark');
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const navRef = useRef(null);
+  const [pill, placePill, resetPill] = usePill(navRef, pathname);
+  useReveal(pathname);
 
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 8);
@@ -60,15 +92,18 @@ export default function PublicNav() {
       <header className={'site-header' + (scrolled || open ? ' is-solid' : '')}>
         <div className="wrap site-header-row">
           <Link to="/" className="site-brand" aria-label="GroveStudio home"><Wordmark /></Link>
-          <nav className="site-links" aria-label="Site">
+          <nav className="site-links" aria-label="Site" ref={navRef} onMouseLeave={resetPill}>
+            {pill && <span className="site-pill" aria-hidden="true" style={{ transform: `translateX(${pill.left}px)`, width: pill.width }} />}
             {LINKS.slice(1).map(([to, label]) => (
-              <NavLink key={to} to={to} className={({ isActive }) => 'site-link' + (isActive ? ' on' : '')}>{label}</NavLink>
+              <NavLink key={to} to={to} className={({ isActive }) => 'site-link' + (isActive ? ' on' : '')}
+                onMouseEnter={(e) => placePill(e.currentTarget)} onFocus={(e) => placePill(e.currentTarget)}>{label}</NavLink>
             ))}
           </nav>
           <div className="site-actions">
             <button className="icon-btn" onClick={toggleTheme} aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'} title={dark ? 'Light mode' : 'Dark mode'}>
               <SunMoon dark={dark} />
             </button>
+            <a className="s-btn s-btn-quiet s-btn-sm hide-sm" href="#early-access">Early access</a>
             <button className="s-btn s-btn-primary s-btn-sm hide-sm" onClick={go}>
               {user ? 'Open GroveStudio' : 'Sign in'}
             </button>
@@ -85,6 +120,7 @@ export default function PublicNav() {
             <NavLink key={to} to={to} end className={({ isActive }) => 'site-menu-link' + (isActive ? ' on' : '')}>{label}</NavLink>
           ))}
         </nav>
+        <a className="s-btn s-btn-quiet s-btn-lg s-btn-block" href="#early-access" onClick={() => setOpen(false)}>Get early access</a>
         <button className="s-btn s-btn-primary s-btn-lg s-btn-block" onClick={go}>
           {user ? 'Open GroveStudio' : 'Sign in'} <Arrow />
         </button>
@@ -112,21 +148,46 @@ export function CloseBand({ title, line, action = 'Start a space' }) {
   );
 }
 
+// The footer's light backdrop: a ruled page with a few doodles from the app
+// (a note, a cursor flag, a Studio spark, a check, sprouts) drifting slowly.
+function FooterArt() {
+  return (
+    <svg className="sf-art" viewBox="600 0 600 220" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <g className="sf-d d1" transform="translate(760 40)"><rect width="96" height="70" rx="10" className="sf-note" /><rect x="14" y="16" width="50" height="7" rx="3.5" className="sf-ink" /><rect x="14" y="32" width="66" height="5" rx="2.5" className="sf-ink2" /><rect x="14" y="44" width="56" height="5" rx="2.5" className="sf-ink2" /></g>
+      <g className="sf-d d2" transform="translate(900 120)"><rect width="3" height="22" className="sf-flag" /><rect y="-16" width="48" height="16" rx="4" className="sf-flag" /><text x="7" y="-4" className="sf-flag-t">Priya</text></g>
+      <g className="sf-d d3" transform="translate(1010 50)"><path d="M14 0v10M14 18v10M0 14h10M18 14h10M4 4l6 6M18 18l6 6M4 24l6-6M18 10l6-6" className="sf-spark" /></g>
+      <g className="sf-d d4" transform="translate(1080 130)"><circle r="16" cx="16" cy="16" className="sf-check-c" /><path d="M9 16l5 5 9-10" className="sf-check" /></g>
+      {[[640, 200, 1], [700, 200, .7], [1150, 200, .9]].map(([x, y, sc], i) => (
+        <g key={i} className={'sf-sprout s' + i} transform={`translate(${x} ${y}) scale(${sc})`}>
+          <path d="M0 0V-40" className="sf-stem" />
+          <path d="M0-26C-4-38-14-44-24-42C-22-32-12-26 0-26Z" className="sf-leaf" />
+          <path d="M0-34C4-48 16-54 26-50C23-40 12-34 0-34Z" className="sf-leaf b" />
+        </g>
+      ))}
+    </svg>
+  );
+}
+
 export function SiteFooter() {
   return (
-    <footer className="site-footer">
-      <div className="wrap footer-row">
+    <footer className="site-footer sf">
+      <FooterArt />
+      <div className="wrap sf-grid">
         <div className="footer-brand">
           <Wordmark small />
-          <p>Shared notes that turn into finished work.</p>
+          <p>Team notes, tasks and follow-ups in one place.</p>
+          <p className="sf-tag"><em>Write it together. See it your way. Get it done.</em></p>
         </div>
-        <nav className="footer-links" aria-label="Footer">
-          <Link to="/why">Why GroveStudio</Link>
-          <Link to="/features">Features</Link>
-          <Link to="/signin">Sign in</Link>
+        <nav className="sf-cols" aria-label="Footer">
+          <div><span className="sf-h">Product</span><Link to="/tour">Product tour</Link><Link to="/features">Features</Link><Link to="/inside">Inside the app</Link></div>
+          <div><span className="sf-h">Company</span><Link to="/why">Why GroveStudio</Link><a href="#early-access">Early access</a><Link to="/signin">Sign in</Link></div>
+          <div><span className="sf-h">Legal</span><Link to="/privacy">Privacy note</Link><Link to="/terms">Terms of use</Link></div>
         </nav>
       </div>
-      <div className="wrap footer-base">© {new Date().getFullYear()} GroveStudio</div>
+      <div className="wrap footer-base">
+        <span>© {new Date().getFullYear()} GroveStudio</span>
+        <span className="sf-made">Made for teams that meet every day</span>
+      </div>
     </footer>
   );
 }
@@ -151,7 +212,9 @@ export function useInView(options = { threshold: 0.35 }) {
 export function usePageMeta(title, description) {
   React.useEffect(() => {
     document.title = title;
-    window.scrollTo(0, 0);
+    const id = window.location.hash.slice(1);
+    const target = id && document.getElementById(id);
+    if (target) setTimeout(() => target.scrollIntoView(), 60); else window.scrollTo(0, 0);
     let m = document.querySelector('meta[name="description"]');
     if (!m) { m = document.createElement('meta'); m.setAttribute('name', 'description'); document.head.appendChild(m); }
     m.setAttribute('content', description);

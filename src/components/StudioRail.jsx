@@ -238,7 +238,7 @@ function SummaryTool() {
     return (
       <>
         <p style={{ margin: 0, fontSize: 13, color: 'var(--muted)' }}>
-          A tight summary of {scopeLabel} — what happened, what was decided, what's next.
+          A tight summary of {scopeLabel}: what happened, what was decided, and what's next.
         </p>
         <button className="btn btn-vio" style={{ height: 34, fontSize: 13 }} onClick={gen.run}>Generate summary</button>
       </>
@@ -295,7 +295,7 @@ function SummaryTool() {
               {assigned.has(i) && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: 'var(--acc-deep)' }}>
                   <svg width="11" height="11" viewBox="0 0 10 10"><path d="M1.5 5.5 L4 8 L8.5 2.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  Assigned — owner notified with the deadline
+                  Assigned. The owner has the deadline
                 </div>
               )}
             </div>
@@ -381,7 +381,7 @@ function AskTool() {
       <div className="studio-chat" ref={scrollRef} style={{ overflowY: 'auto', minHeight: 0 }}>
         {chat.length === 0 && (
           <div className="chat-msg" style={{ background: 'var(--bg)', color: 'var(--ink)' }}>
-            Ask anything about {scopeLabel} — I answer only from what's written there, with the source attached.
+            Ask anything about {scopeLabel}. Answers come only from what's written there, with the source attached.
           </div>
         )}
         {chat.map((m, i) => (
@@ -760,7 +760,7 @@ function AudioTool() {
       {useSpeech
         ? (speechSupported()
           ? <SpeechAudioPlayer key={d.title} data={d} />
-          : <div className="setup-callout" style={{ fontSize: 12 }}>Gemini TTS quota is used up and this browser can't voice text — the transcript is below.</div>)
+          : <div className="setup-callout" style={{ fontSize: 12 }}>Gemini TTS quota is used up and this browser can't voice text. The transcript is below.</div>)
         : <AudioPlayer key={(d.audioUrl ?? d.audioBase64 ?? d.wavBase64).slice(0, 32)} data={d} />}
       {useSpeech && d.ttsFailed && (
         <div style={{ fontSize: 11.5, color: 'var(--faint)' }}>
@@ -775,7 +775,7 @@ function AudioTool() {
       <SavedNote spaceId={spaceId} saved={saved} />
       {useSpeech && (
         <div style={{ fontSize: 11, color: 'var(--faint)' }}>
-          Browser-voiced audio plays live and can't be saved as a file — it downloads as a file once Gemini voices it (quota permitting).
+          Browser-voiced audio plays live and can't be saved as a file. It downloads as a file once Gemini voices it, if quota allows.
         </div>
       )}
       {!useSpeech && showScript && (
@@ -855,7 +855,7 @@ function useDeckPlayback(data) {
 function SlideFrame({ data, idx, width }) {
   const scale = width / data.width;
   return (
-    <div style={{ width, aspectRatio: `${data.width}/${data.height}`, position: 'relative', overflow: 'hidden', background: '#F7F6F2' }}>
+    <div style={{ width, aspectRatio: `${data.width}/${data.height}`, position: 'relative', overflow: 'hidden', background: '#F7F9F6' }}>
       <iframe
         title={`slide ${idx + 1}`}
         sandbox=""
@@ -919,7 +919,7 @@ function DeckPlayer({ data }) {
   const fitW = Math.min(320, Math.round(240 * (data.width / data.height))) || 320;
   return (
     <>
-      <div style={{ border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden', background: '#F7F6F2' }}>
+      <div style={{ border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden', background: '#F7F9F6' }}>
         <div style={{ position: 'relative', display: 'grid', placeItems: 'center' }}>
           <SlideFrame data={data} idx={p.idx} width={fitW} />
           {!p.playing && (
@@ -965,7 +965,7 @@ function VideoTool() {
     return (
       <>
         <p style={{ margin: 0, fontSize: 13, color: 'var(--muted)' }}>
-          A designed slide deck over {scopeLabel} — laid out by Claude, narrated for playback. View full screen or download it.
+          A designed slide deck over {scopeLabel}, laid out by Claude and narrated for playback. View full screen or download it.
         </p>
         <button className="btn btn-vio" style={{ height: 34, fontSize: 13 }} onClick={gen.run}>Generate slide deck</button>
       </>
@@ -984,7 +984,7 @@ function VideoTool() {
         <button className="btn btn-xs" onClick={gen.run}>Regenerate</button>
       </div>
       <div style={{ fontSize: 11, color: 'var(--faint)' }}>
-        Download opens as a full slideshow — File → Print → Save as PDF for a PDF.
+        Download opens as a full slideshow. For a PDF, use File, Print, Save as PDF.
       </div>
       {d.quotaHit && (
         <div style={{ fontSize: 11.5, color: 'var(--faint)' }}>
@@ -1011,7 +1011,7 @@ function InfographicFullscreen({ data, onClose }) {
   const scale = w / data.width;
   return (
     <FullscreenOverlay title={data.title} onClose={onClose}>
-      <div style={{ width: w, aspectRatio: `${data.width}/${data.height}`, position: 'relative', overflow: 'hidden', background: '#F7F6F2', boxShadow: '0 8px 40px rgba(0,0,0,.5)' }}>
+      <div style={{ width: w, aspectRatio: `${data.width}/${data.height}`, position: 'relative', overflow: 'hidden', background: '#F7F9F6', boxShadow: '0 8px 40px rgba(0,0,0,.5)' }}>
         <iframe title="infographic full" sandbox=""
           srcDoc={artboardDoc({ ...data, rootClass: 'board' })}
           style={{ width: data.width, height: data.height, border: 'none', transform: `scale(${scale})`, transformOrigin: 'top left', position: 'absolute', top: 0, left: 0 }} />
@@ -1024,6 +1024,16 @@ function InfographicTool() {
   const { scope, scopeLabel } = useStudio();
   const gen = useGeneration('infographic', () => genInfographic(scope));
   const [fs, setFs] = useState(false);
+  // The preview scales to its frame, which is wider than the rail on phones.
+  const frameRef = useRef(null);
+  const [frameW, setFrameW] = useState(320);
+  useEffect(() => {
+    const el = frameRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return undefined;
+    const ro = new ResizeObserver(([e]) => { if (e.contentRect.width) setFrameW(e.contentRect.width); });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [gen.status]);
 
   const download = () => {
     // Self-contained, printable HTML (script-none CSP) — open + Print to PDF.
@@ -1042,11 +1052,11 @@ function InfographicTool() {
   }
   if (gen.status === 'busy') return <BusyCard label={`Designing from ${scopeLabel}… (about a minute)`} />;
   if (gen.status === 'error') return <ErrorCard error={gen.error} onRetry={gen.run} />;
-  const scale = 320 / gen.data.width;
+  const scale = frameW / gen.data.width;
   return (
     <>
       <div style={{ border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
-        <div style={{ width: '100%', aspectRatio: `${gen.data.width}/${gen.data.height}`, position: 'relative', overflow: 'hidden' }}>
+        <div ref={frameRef} style={{ width: '100%', aspectRatio: `${gen.data.width}/${gen.data.height}`, position: 'relative', overflow: 'hidden' }}>
           <iframe
             title="infographic"
             sandbox=""
@@ -1060,7 +1070,7 @@ function InfographicTool() {
         <button className="btn btn-xs" onClick={download}>↓ Download</button>
         <button className="btn btn-xs" onClick={gen.run}>Regenerate</button>
       </div>
-      <div style={{ fontSize: 11, color: 'var(--faint)' }}>Download opens as a page — File → Print → Save as PDF for a PDF or image.</div>
+      <div style={{ fontSize: 11, color: 'var(--faint)' }}>Download opens as a page. For a PDF, use File, Print, Save as PDF.</div>
       <GroundingNote data={gen.data} />
       {fs && <InfographicFullscreen data={gen.data} onClose={() => setFs(false)} />}
     </>

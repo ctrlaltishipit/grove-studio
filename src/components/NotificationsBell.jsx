@@ -66,7 +66,7 @@ export default function NotificationsBell() {
           {notifications.length === 0 && (
             <div className="empty-note">
               {tasksReady
-                ? 'Quiet for now — assignments and check-ins land here.'
+                ? 'Quiet for now. Assignments and check-ins land here.'
                 : 'Notifications switch on once sql/06_grovestudio.sql is applied.'}
             </div>
           )}

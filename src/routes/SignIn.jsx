@@ -88,6 +88,10 @@ export default function SignIn() {
               {busy ? 'One moment…' : 'Continue as guest'}
             </button>
             <p className="signin-fine">
+              By continuing you agree to the <a href="/terms" target="_blank" rel="noopener">Terms of use</a> and
+              the <a href="/privacy" target="_blank" rel="noopener">Privacy note</a>.
+            </p>
+            <p className="signin-fine">
               Guest sessions live in this browser. Sign in with Google to keep your spaces for good.
             </p>
           </>

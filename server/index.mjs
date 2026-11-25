@@ -11,11 +11,12 @@
 
 import express from 'express';
 import { pathToFileURL } from 'node:url';
-import { verifyUser, fetchScope, supabaseConfigured, spaceBrief, callerName, inviteMember } from './notes.mjs';
+import { verifyUser, fetchScope, supabaseConfigured, spaceBrief, callerName, inviteMember, joinWaitlist } from './notes.mjs';
 import { geminiConfigured } from './gemini.mjs';
 import { claudeConfigured } from './claude.mjs';
-import { emailConfigured, sendInviteEmail, sendNotesEmail } from './email.mjs';
+import { emailConfigured, sendInviteEmail, sendNotesEmail, sendWaitlistEmail } from './email.mjs';
 import * as studio from './studio.mjs';
+import { friendlyError } from './friendlyError.mjs';
 
 // Where links in emails point. Resolved per request so a real user never
 // gets a localhost link, whatever the environment looks like:
@@ -68,17 +69,20 @@ async function withUser(req, res, next) {
     req.user = user;
     next();
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('[auth] failed:', e.message);
+    res.status(500).json({ error: friendlyError(e) });
   }
 }
 
 function needs(engine) {
   return (_req, res, next) => {
     if (engine === 'gemini' && !geminiConfigured()) {
-      return res.status(503).json({ error: 'Gemini is not configured — set LLM_API_KEY in .env.local and restart.' });
+      console.error('[studio] Gemini is not configured: set LLM_API_KEY');
+      return res.status(503).json({ error: 'This Studio tool is not switched on yet. Try another one, or check back later.' });
     }
     if (engine === 'claude' && !claudeConfigured()) {
-      return res.status(503).json({ error: 'Claude is not configured — set ANTHROPIC_API_KEY in .env.local and restart.' });
+      console.error('[studio] Claude is not configured: set ANTHROPIC_API_KEY');
+      return res.status(503).json({ error: 'Ask is not switched on yet. Try another Studio tool, or check back later.' });
     }
     next();
   };
@@ -87,7 +91,7 @@ function needs(engine) {
 async function loadScope(req, res) {
   const scope = await fetchScope(req.userToken, req.body?.scope ?? {});
   if (!scope.notes.length) {
-    res.status(422).json({ error: 'No readable notes in this scope — write a note or widen the selection.' });
+    res.status(422).json({ error: 'No readable notes in this scope. Write a note or widen the selection.' });
     return null;
   }
   return scope;
@@ -102,7 +106,7 @@ const route = (engine, fn) => [
       res.json(await fn(scope, req));
     } catch (e) {
       console.error(`[studio] ${req.path} failed:`, e.message);
-      res.status(500).json({ error: e.message });
+      res.status(500).json({ error: friendlyError(e) });
     }
   },
 ];
@@ -129,11 +133,11 @@ app.post('/api/studio/ask', withUser, needs('claude'), async (req, res) => {
   try {
     const scope = req.body?.scope?.demo ? demoScope(req.body.scope) : await loadScope(req, res);
     if (!scope) return;
-    if (!scope.notes.length) return res.status(422).json({ error: 'No readable notes in this scope — write a note or widen the selection.' });
+    if (!scope.notes.length) return res.status(422).json({ error: 'No readable notes in this scope. Write a note or widen the selection.' });
     res.json(await studio.ask(scope, req.body?.question ?? '', req.body?.history ?? []));
   } catch (e) {
     console.error('[studio] ask failed:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: friendlyError(e) });
   }
 });
 app.post('/api/studio/mindmap', withUser, ...route('gemini', (scope) => studio.mindmap(scope)));
@@ -190,7 +194,47 @@ app.post('/api/invite', withUser, async (req, res) => {
     });
   } catch (e) {
     console.error('[invite] failed:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: friendlyError(e, 'invite') });
+  }
+});
+
+// ---- early access list + newsletter (public, no sign-in) --------------------
+// A hidden "website" field catches simple bots; a small per-IP limit stops a
+// script from filling the list. The same answer comes back whether or not the
+// email was already on the list, so the form cannot be used to test addresses.
+const waitlistHits = new Map();
+function tooMany(ip) {
+  const now = Date.now();
+  const recent = (waitlistHits.get(ip) ?? []).filter((t) => now - t < 10 * 60 * 1000);
+  recent.push(now);
+  waitlistHits.set(ip, recent);
+  return recent.length > 6;
+}
+app.post('/api/waitlist', async (req, res) => {
+  try {
+    const b = req.body ?? {};
+    if (b.website) return res.json({ ok: true });
+    const email = String(b.email ?? '').trim().toLowerCase();
+    if (!EMAIL_RE.test(email) || email.length > 254) return res.status(400).json({ error: 'That doesn’t look like an email address.' });
+    const ip = String(req.headers['x-forwarded-for'] ?? req.socket?.remoteAddress ?? '').split(',')[0].trim();
+    if (tooMany(ip)) return res.status(429).json({ error: 'Too many tries from here. Wait a few minutes and try again.' });
+    if (!supabaseConfigured()) return res.status(503).json({ error: 'The early access list is not open yet. Try again soon.' });
+    const out = await joinWaitlist({
+      email,
+      name: String(b.name ?? '').slice(0, 80),
+      team: String(b.team ?? '').slice(0, 80),
+      newsletter: b.newsletter === true,
+      source: String(b.source ?? '').slice(0, 40),
+    });
+    if (out?.new && emailConfigured()) {
+      sendWaitlistEmail({ to: email, newsletter: b.newsletter === true, appUrl: appUrlFor(req) })
+        .catch((e) => console.error('[waitlist] email failed:', e.message));
+    }
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[waitlist] failed:', e.message);
+    if (e.code === 'NO_TABLE') return res.status(503).json({ error: 'The early access list is not open yet. Try again soon.' });
+    res.status(500).json({ error: 'We could not add you just now. Try again in a minute.' });
   }
 });
 
@@ -223,7 +267,7 @@ app.post('/api/share-notes', withUser, async (req, res) => {
     res.json({ ok: true, emailed: true, count: notes.length });
   } catch (e) {
     console.error('[share-notes] failed:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: friendlyError(e, 'email') });
   }
 });
 

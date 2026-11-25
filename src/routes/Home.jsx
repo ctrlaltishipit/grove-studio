@@ -136,7 +136,7 @@ export default function Home() {
               ))}
             </div>
             <div className="acts">
-              <button className="btn btn-sm" style={{ height: 32 }} onClick={markDemoNotifsRead}>Got it</button>
+              <button className="btn btn-sm" onClick={markDemoNotifsRead}>Got it</button>
             </div>
           </div>
         )}
@@ -175,7 +175,7 @@ export default function Home() {
               ))}
               {!shownTasks.length && !shownDemo.length && (
                 <div className="empty-note">
-                  Nothing here — tasks assigned to you land in this list the moment someone assigns them.
+                  Nothing here yet. Tasks assigned to you show up in this list straight away.
                 </div>
               )}
             </div>
@@ -183,7 +183,7 @@ export default function Home() {
             <div className="setup-callout">
               Boards, assignments and notifications need one more backend step: paste
               <code> sql/06_grovestudio.sql</code> into the Supabase SQL editor and reload. Everything
-              else — spaces, notes, live co-writing — is already on.
+              else (spaces, notes, live co-writing) is already on.
             </div>
           )}
         </div>

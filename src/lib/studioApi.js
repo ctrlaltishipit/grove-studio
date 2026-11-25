@@ -23,7 +23,11 @@ async function call(path, body = {}) {
   });
   let data;
   try { data = await res.json(); } catch { data = {}; }
-  if (!res.ok) throw new Error(data.error ?? `Studio request failed (${res.status})`);
+  if (!res.ok) {
+    throw new Error(data.error ?? (res.status === 504
+      ? 'That took too long. Try again with fewer notes selected.'
+      : 'The Studio could not be reached. Try again in a minute.'));
+  }
   return data;
 }
 
@@ -106,7 +110,7 @@ const ARTBOARD_CSP =
 // Wrap a server-sanitized artboard in a complete document for a sandboxed
 // iframe (the same wrapper-owned guard idea as MT_V2's deck renderer).
 export function artboardDoc({ css, html, width, height, rootClass }) {
-  const guard = `*{box-sizing:border-box}html,body{margin:0;padding:0;background:#F7F6F2}` +
+  const guard = `*{box-sizing:border-box}html,body{margin:0;padding:0;background:#F7F9F6}` +
     `.${rootClass}{width:${width}px !important;height:${height}px !important;overflow:hidden !important;position:relative;-webkit-font-smoothing:antialiased;font-family:'Inter',system-ui,sans-serif}`;
   return `<!doctype html><html><head><meta charset="utf-8">` +
     `<meta http-equiv="Content-Security-Policy" content="${ARTBOARD_CSP}">` +
@@ -124,7 +128,7 @@ export function deckDownloadDoc(data) {
     @page { size: ${width}px ${height}px; margin: 0; }
     *{box-sizing:border-box} html,body{margin:0;background:#2a2926}
     .deck{display:flex;flex-direction:column;align-items:center;gap:20px;padding:20px}
-    .slide{width:${width}px;height:${height}px;position:relative;overflow:hidden;background:#F7F6F2;
+    .slide{width:${width}px;height:${height}px;position:relative;overflow:hidden;background:#F7F9F6;
       box-shadow:0 6px 28px rgba(0,0,0,.45);font-family:'Inter',system-ui,sans-serif;
       scroll-snap-align:center;-webkit-font-smoothing:antialiased}
     html{scroll-snap-type:y proximity}
@@ -159,6 +163,6 @@ export function artboardFullPage(data) {
     `<meta http-equiv="Content-Security-Policy" content="${outerCsp}">` +
     `<title>${(data.title ?? 'Artboard').replace(/[<>&]/g, '')}</title>` +
     `<style>html,body{margin:0;background:#0d0c0a;display:grid;place-items:center;min-height:100vh}` +
-    `iframe{border:none;width:${data.width}px;height:${data.height}px;max-width:100vw;background:#F7F6F2}</style></head>` +
+    `iframe{border:none;width:${data.width}px;height:${data.height}px;max-width:100vw;background:#F7F9F6}</style></head>` +
     `<body><iframe sandbox="" srcdoc="${inner}"></iframe></body></html>`;
 }

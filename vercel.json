@@ -6,8 +6,36 @@
       "destination": "/api/index"
     },
     {
+      "source": "/tour",
+      "destination": "/tour/index.html"
+    },
+    {
+      "source": "/features",
+      "destination": "/features/index.html"
+    },
+    {
+      "source": "/inside",
+      "destination": "/inside/index.html"
+    },
+    {
+      "source": "/why",
+      "destination": "/why/index.html"
+    },
+    {
+      "source": "/about",
+      "destination": "/why/index.html"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/privacy/index.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/terms/index.html"
+    },
+    {
       "source": "/((?!api/).*)",
-      "destination": "/index.html"
+      "destination": "/app.html"
     }
   ],
   "functions": {

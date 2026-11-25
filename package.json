@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "concurrently -k -n studio,vite \"npm:studio\" \"vite\"",
     "studio": "node --env-file-if-exists=.env.local server/index.mjs",
-    "build": "vite build",
+    "build": "vite build && node scripts/prerender.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

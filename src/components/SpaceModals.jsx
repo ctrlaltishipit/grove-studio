@@ -13,14 +13,14 @@ export function inviteToastCopy(r, addr) {
       title: `Invite emailed to ${addr}`,
       sub: r.addedMember ? `${name} was added to the space too`
         : r.alreadyMember ? `${name} is already a member`
-          : 'They can join from the link — or the code in the email',
+          : 'They can join from the link, or with the code in the email',
       kind: 'ok',
     };
   }
   if (r.emailConfigured === false) {
     return {
       title: r.addedMember ? `${name} added to the space` : r.alreadyMember ? `${name} is already a member` : 'Ready to invite',
-      sub: r.code ? `Email isn't set up yet — share the code ${r.code}` : "Email isn't set up yet — share the join code.",
+      sub: r.code ? `Email isn't set up yet. Share the code ${r.code}` : "Email isn't set up yet. Share the join code.",
       kind: r.addedMember || r.alreadyMember ? 'ok' : 'warn',
     };
   }
@@ -116,7 +116,7 @@ export function ShareNotesRow({ projectId, picked, demo = false }) {
           {busy ? 'Sending…' : 'Send notes'}
         </button>
       </div>
-      <div className="fine" style={{ marginTop: 6 }}>They get the full text of these notes by email — no account needed.</div>
+      <div className="fine" style={{ marginTop: 6 }}>They get the full text of these notes by email. They don't need an account.</div>
     </div>
   );
 }
@@ -158,7 +158,7 @@ export function ShareSpaceModal({ space, members, note, meUserId, onClose, onCha
             {isNoteShare
               ? (canShareNote
                 ? 'This note is private to you. Share it and everyone in the space can read it live.'
-                : 'This note is shared — everyone in the space reads it live as it changes.')
+                : 'This note is shared. Everyone in the space sees it change live.')
               : 'Anyone with the six-character code joins as a member and sees the shared notes.'}
           </div>
         </div>
@@ -209,7 +209,7 @@ export function ShareSpaceModal({ space, members, note, meUserId, onClose, onCha
           </div>
         </div>
         <div className="fine">
-          Access is per-space. Private notes stay private — sharing the code never exposes them.
+          Access is per-space. Private notes stay private. Sharing the code never shows them.
         </div>
       </div>
     </Modal>
@@ -232,7 +232,7 @@ export function AssignModal({ space, task, members, noteTitle, onClose, onChange
       refreshTasks();
       const first = m.name.split(' ')[0];
       toast(`${current ? 'Reassigned' : 'Assigned'} to ${m.name}`,
-        `${first} was notified${noteTitle ? ` — note link “${noteTitle}”` : ''}${task.due_date ? ` · due ${fmtDue(task.due_date)}` : ''}`,
+        `${first} was notified${noteTitle ? `, with a link to “${noteTitle}”` : ''}${task.due_date ? ` · due ${fmtDue(task.due_date)}` : ''}`,
         'assign');
       if (m.userId !== user.id) {
         notify([m.userId], {
@@ -252,7 +252,7 @@ export function AssignModal({ space, task, members, noteTitle, onClose, onChange
       <div className="modal-stack" style={{ gap: 12 }}>
         <div>
           <h3>{current ? 'Reassign task' : 'Assign task'}</h3>
-          <div className="sub">“{task.title}” — the new owner is notified instantly with the note link and deadline.</div>
+          <div className="sub">“{task.title}”. The new owner is notified straight away, with the note link and deadline.</div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {members.map((m) => (
@@ -316,7 +316,7 @@ export function NewTaskModal({ space, members, notes, status, presetNoteId, pres
           projectId: space.id, taskId: task.id, noteId: noteId || null,
         });
       } else {
-        toast('Card added', 'Pick an owner any time — they’ll be notified', 'ok');
+        toast('Card added', 'Pick an owner any time. They’ll be notified', 'ok');
       }
     } catch (e) {
       toast('Could not add the card', e.message, 'error');
@@ -329,7 +329,7 @@ export function NewTaskModal({ space, members, notes, status, presetNoteId, pres
       <div className="modal-stack">
         <div>
           <h3>New card</h3>
-          <div className="sub">Type a title, pick an owner — they'll be notified with the note link and deadline.</div>
+          <div className="sub">Type a title and pick an owner. They'll get the note link and deadline.</div>
         </div>
         <input className="modal-input" placeholder="What needs doing?" autoFocus
           value={title} onChange={(e) => setTitle(e.target.value)}

@@ -165,7 +165,7 @@ function LiveSpace() {
               catch { toast(`Code: ${space.joinCode}`, null, 'ok'); }
             }}>{space.joinCode}</button>
           ) : (
-            <span className="private-chip"><LockIcon size={10} />PRIVATE — only you</span>
+            <span className="private-chip"><LockIcon size={10} />Private, only you</span>
           )}
           <div className="right">
             {isShared && (

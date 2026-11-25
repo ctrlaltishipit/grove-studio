@@ -38,7 +38,7 @@ function seed() {
     notifs: [{
       id: 'dn-seed', read: false, at: Date.now(),
       text: 'Priya S. assigned you “Create your first space”',
-      sub: 'Getting started with GroveStudio — it’s in “Assigned to you” below',
+      sub: 'Getting started with GroveStudio. It’s in “Assigned to you” below',
     }],
     // Assigned-to-you tasks with a deadline are armed from the start: the
     // clock runs from assignment, so the first nudge lands a few hours in.
@@ -105,8 +105,8 @@ export function reassignDemoTask(id, member) {
   const notifs = toYou
     ? [{
         id: `dnotif-${Date.now()}`, read: false, at: Date.now(),
-        text: `Assigned to you — “${task.title}”`,
-        sub: 'From the sample board — it’s in “Assigned to you” below',
+        text: `Assigned to you: “${task.title}”`,
+        sub: 'From the sample board. It’s in “Assigned to you” below',
       }, ...state.notifs]
     : state.notifs;
   // Assignment with a deadline starts the check-in clock for the assignee.
