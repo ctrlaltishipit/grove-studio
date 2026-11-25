@@ -178,7 +178,7 @@ export async function shareNotesByEmail(projectId, email, { noteIds, notes } = {
   });
   let data;
   try { data = await res.json(); } catch { data = {}; }
-  if (!res.ok) throw new Error(data.error || `Share failed (${res.status})`);
+  if (!res.ok) throw new Error(data.error || 'The notes could not be sent right now. Try again in a minute.');
   return data;
 }
 
@@ -202,7 +202,7 @@ export async function inviteByEmail(projectId, email) {
       if (error) throw error;
       return { emailed: false, emailConfigured: false, addedMember: !!rpcData?.invited, alreadyMember: !!rpcData?.already, name: rpcData?.name ?? null, sidecarDown: true };
     }
-    throw new Error(data.error ?? `Invite failed (${res.status})`);
+    throw new Error(data.error ?? 'The invite could not be sent right now. Try again in a minute.');
   }
   return data;
 }

@@ -16,6 +16,7 @@ import { geminiConfigured } from './gemini.mjs';
 import { claudeConfigured } from './claude.mjs';
 import { emailConfigured, sendInviteEmail, sendNotesEmail } from './email.mjs';
 import * as studio from './studio.mjs';
+import { friendlyError } from './friendlyError.mjs';
 
 // Where links in emails point. Resolved per request so a real user never
 // gets a localhost link, whatever the environment looks like:
@@ -68,17 +69,20 @@ async function withUser(req, res, next) {
     req.user = user;
     next();
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('[auth] failed:', e.message);
+    res.status(500).json({ error: friendlyError(e) });
   }
 }
 
 function needs(engine) {
   return (_req, res, next) => {
     if (engine === 'gemini' && !geminiConfigured()) {
-      return res.status(503).json({ error: 'Gemini is not configured. Set LLM_API_KEY in .env.local and restart.' });
+      console.error('[studio] Gemini is not configured: set LLM_API_KEY');
+      return res.status(503).json({ error: 'This Studio tool is not switched on yet. Try another one, or check back later.' });
     }
     if (engine === 'claude' && !claudeConfigured()) {
-      return res.status(503).json({ error: 'Claude is not configured. Set ANTHROPIC_API_KEY in .env.local and restart.' });
+      console.error('[studio] Claude is not configured: set ANTHROPIC_API_KEY');
+      return res.status(503).json({ error: 'Ask is not switched on yet. Try another Studio tool, or check back later.' });
     }
     next();
   };
@@ -102,7 +106,7 @@ const route = (engine, fn) => [
       res.json(await fn(scope, req));
     } catch (e) {
       console.error(`[studio] ${req.path} failed:`, e.message);
-      res.status(500).json({ error: e.message });
+      res.status(500).json({ error: friendlyError(e) });
     }
   },
 ];
@@ -133,7 +137,7 @@ app.post('/api/studio/ask', withUser, needs('claude'), async (req, res) => {
     res.json(await studio.ask(scope, req.body?.question ?? '', req.body?.history ?? []));
   } catch (e) {
     console.error('[studio] ask failed:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: friendlyError(e) });
   }
 });
 app.post('/api/studio/mindmap', withUser, ...route('gemini', (scope) => studio.mindmap(scope)));
@@ -190,7 +194,7 @@ app.post('/api/invite', withUser, async (req, res) => {
     });
   } catch (e) {
     console.error('[invite] failed:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: friendlyError(e, 'invite') });
   }
 });
 
@@ -223,7 +227,7 @@ app.post('/api/share-notes', withUser, async (req, res) => {
     res.json({ ok: true, emailed: true, count: notes.length });
   } catch (e) {
     console.error('[share-notes] failed:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: friendlyError(e, 'email') });
   }
 });
 

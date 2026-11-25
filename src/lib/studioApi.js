@@ -23,7 +23,11 @@ async function call(path, body = {}) {
   });
   let data;
   try { data = await res.json(); } catch { data = {}; }
-  if (!res.ok) throw new Error(data.error ?? `Studio request failed (${res.status})`);
+  if (!res.ok) {
+    throw new Error(data.error ?? (res.status === 504
+      ? 'That took too long. Try again with fewer notes selected.'
+      : 'The Studio could not be reached. Try again in a minute.'));
+  }
   return data;
 }
 
