@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { updateNote, shareNoteToSpace, listComments, addComment, fetchProfiles, features, notify, listVersions, addVersion, setNoteEditMode } from '../lib/api';
 import {
-  caretAfterRemote, measureCaret, lineOfOffset, lineText, offsetOfLine, mentionQuery, insertMention, findMentions,
+  caretAfterRemote, merge3, pickBase, measureCaret, lineOfOffset, lineText, offsetOfLine, mentionQuery, insertMention, findMentions,
   changeSummary, rangesLabel, blame, roleCanEdit,
 } from '../lib/collab';
 import { SAVE_DEBOUNCE_MS, POLL_MS } from '../config';
@@ -421,18 +421,32 @@ export default function NoteEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [note.id, isSharedNote]);
 
-  // Apply peer keystrokes when they're about this note and I'm not mid-burst.
+  // Apply peer keystrokes as a merge: replay what they changed onto my text,
+  // so two people typing at the same moment both keep their words.
+  const peerBase = useRef(new Map());          // userId -> last body they sent
+  const sharedBase = useRef(note.body ?? '');  // last body received from others
+  const lastSaved = useRef(note.body ?? '');   // last body I saved myself
+  const savedHistory = useRef([note.body ?? '']); // my recent saves, oldest first
+  const scheduleSaveRef = useRef(null);
   useEffect(() => {
     if (!remoteEdit || remoteEdit.noteId !== note.id || remoteEdit.userId === meUserId) return;
-    if (Date.now() - lastTypedAt.current < 1500) return;
-    if (typeof remoteEdit.title === 'string') { setTitle(remoteEdit.title); latest.current.title = remoteEdit.title; }
+    if (typeof remoteEdit.title === 'string' && Date.now() - lastTypedAt.current > 1500) {
+      setTitle(remoteEdit.title); latest.current.title = remoteEdit.title;
+    }
     if (typeof remoteEdit.body === 'string') {
+      const prev = pickBase(peerBase.current.get(remoteEdit.userId) ?? sharedBase.current, savedHistory.current, remoteEdit.body);
+      const mine = latest.current.body;
+      const merged = merge3(prev, mine, remoteEdit.body);
+      peerBase.current.set(remoteEdit.userId, remoteEdit.body);
+      if (merged === mine) return;
       // Keep my caret on the same characters while their edit lands.
       const el = bodyRef.current;
       const focused = el && document.activeElement === el;
-      const next = caretAfterRemote(latest.current.body, remoteEdit.body, el?.selectionStart ?? 0);
-      setBody(remoteEdit.body); latest.current.body = remoteEdit.body;
+      const next = caretAfterRemote(mine, merged, el?.selectionStart ?? 0);
+      setBody(merged); latest.current.body = merged;
       if (focused) requestAnimationFrame(() => { try { el.setSelectionRange(next, next); setCaret(next); } catch { /* fine */ } });
+      // If my own words are in the merge, make sure they are saved too.
+      if (merged !== remoteEdit.body) scheduleSaveRef.current?.();
     }
   }, [remoteEdit, note.id, meUserId]);
 
@@ -534,14 +548,35 @@ export default function NoteEditor({
     toast('Version restored', `Back to how it was at ${when}. The restore itself is in the history too.`, 'ok');
   };
 
-  // Fresh server rows (poll/nudge) win only when I'm idle AND nothing of mine
-  // is still on its way to the server — a stale poll must not revert a save.
-  useEffect(() => {
-    if (pendingSave.current || Date.now() - lastTypedAt.current < 2000) return;
+  // Fresh server rows (poll/nudge) are merged, never pasted over my text:
+  // a teammate's save lands next to my own words. My own saves coming back
+  // are ignored. If my words were missing from their save, save the merge.
+  // While I am mid-save or mid-word, try again shortly rather than skip.
+  const mergeTimer = useRef(null);
+  const mergeServer = useRef(null);
+  mergeServer.current = () => {
+    clearTimeout(mergeTimer.current);
+    if (pendingSave.current || Date.now() - lastTypedAt.current < 1200) {
+      mergeTimer.current = setTimeout(() => mergeServer.current(), 900);
+      return;
+    }
     if (note.title !== latest.current.title) { setTitle(note.title); latest.current.title = note.title; }
-    if ((note.body ?? '') !== latest.current.body) { setBody(note.body ?? ''); latest.current.body = note.body ?? ''; }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [note.title, note.body]);
+    const server = note.body ?? '';
+    if (server === latest.current.body || server === lastSaved.current) return;
+    const mine = latest.current.body;
+    const merged = merge3(pickBase(sharedBase.current, savedHistory.current, server), mine, server);
+    sharedBase.current = server;
+    if (merged !== mine) {
+      const el = bodyRef.current;
+      const focused = el && document.activeElement === el;
+      const next = caretAfterRemote(mine, merged, el?.selectionStart ?? 0);
+      setBody(merged); latest.current.body = merged;
+      if (focused) requestAnimationFrame(() => { try { el.setSelectionRange(next, next); setCaret(next); } catch { /* fine */ } });
+    }
+    if (merged !== server) scheduleSaveRef.current?.();
+  };
+  useEffect(() => { mergeServer.current(); }, [note.title, note.body]);
+  useEffect(() => () => clearTimeout(mergeTimer.current), []);
 
   const fireSave = useCallback(async () => {
     try {
@@ -555,6 +590,8 @@ export default function NoteEditor({
         setSaveState('readonly');
       } else {
         pendingSave.current = false;
+        lastSaved.current = row?.body ?? latest.current.body;
+        savedHistory.current = [...savedHistory.current.slice(-19), lastSaved.current];
         setSaveState('saved');
         onChanged?.();
         snapshot();
@@ -576,6 +613,7 @@ export default function NoteEditor({
     saveTimer.current = setTimeout(fireSave, SAVE_DEBOUNCE_MS);
   }, [fireSave]);
 
+  scheduleSaveRef.current = scheduleSave;
   useEffect(() => () => clearTimeout(saveTimer.current), []);
 
   const onType = (patch) => {
@@ -687,6 +725,7 @@ export default function NoteEditor({
 
       <input
         className="editor-title" value={title} placeholder="Untitled note"
+        onFocus={(e) => { if (e.target.value === 'Untitled note') e.target.select(); }}
         readOnly={blocked}
         onChange={(e) => onType({ title: e.target.value })}
       />
