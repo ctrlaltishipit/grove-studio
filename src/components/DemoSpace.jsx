@@ -41,7 +41,7 @@ function DemoBoard({ tasks, onSetStatus, onReassign, onCreate }) {
   return (
     <div className="board">
       <div className="board-head">
-        <span className="hint">Move a card, click its avatar to reassign, or create your own — changes stay in this sample.</span>
+        <span className="hint">Move a card, click its avatar to reassign, or create your own. Changes stay in this sample.</span>
         <span className="n">{tasks.length} tasks</span>
       </div>
       <div className="board-cols">
@@ -77,7 +77,7 @@ function DemoBoard({ tasks, onSetStatus, onReassign, onCreate }) {
                       <div className="card-right">
                         <StatusMenu status={t.status} onPick={(s) => onSetStatus(t.id, s)} />
                         <MemberMenu members={DEMO_MEMBERS} currentUserId="demo-you" assigneeUserId={t.assignee_user} onPick={(m) => onReassign(t.id, m)}>
-                          <button className="assignee-btn" title={a ? `${a.name} — reassign` : 'Assign'}>
+                          <button className="assignee-btn" title={a ? `Reassign from ${a.name}` : 'Assign'}>
                             {a ? <Avatar name={a.name} colourIndex={a.colourIndex} size={24} />
                                : <span className="avatar unassigned" style={{ width: 24, height: 24 }}>?</span>}
                           </button>
@@ -91,7 +91,7 @@ function DemoBoard({ tasks, onSetStatus, onReassign, onCreate }) {
                 <div className="add-form">
                   <input
                     autoFocus
-                    placeholder="Task title — Enter to add"
+                    placeholder="Task title, then press Enter"
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     onKeyDown={(e) => {
@@ -202,7 +202,7 @@ function DemoNoteView({ note, comments, onComment, onShare }) {
           <Avatar name="You" colourIndex={0} size={30} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="composer">
-              <textarea ref={areaRef} rows={1} placeholder="Add to the conversation — type or dictate…"
+              <textarea ref={areaRef} rows={1} placeholder="Add a comment. Type or dictate…"
                 value={draft}
                 onChange={(e) => { setDraft(e.target.value); grow(e.target); }}
                 onInput={(e) => grow(e.target)}
@@ -257,7 +257,7 @@ export default function DemoSpace() {
   const reassignTask = (id, member) => {
     const who = reassignDemoTask(id, member);
     if (who === 'you') {
-      toast('Assigned to you', 'Check your dashboard — the notification is there, and check-ins follow while it’s in progress', 'assign');
+      toast('Assigned to you', 'Check your dashboard. The notification is there, and check-ins follow while it’s in progress', 'assign');
     } else if (who === 'other') {
       toast(`Reassigned to ${member.name}`, 'In a real space, they’d be notified with the note link and deadline', 'assign');
     }
@@ -291,11 +291,11 @@ export default function DemoSpace() {
           {tab === 'notes' && !openNote && (
             <div className="notes-list">
               <div className="demo-hello">
-                <span>👋 A <b>sample space</b> — open a note, move cards on the <b>Board</b>, try the <b>Studio</b> on the right.</span>
+                <span>This is a <b>sample space</b>. Open a note, move cards on the <b>Board</b>, or try the <b>Studio</b>.</span>
                 <button className="btn btn-sm" onClick={() => openModal('new')}>Create your own space</button>
               </div>
               <div className="list-head">
-                <span className="label">{DEMO_NOTES.length} shared notes — everyone in this space can read them</span>
+                <span className="label">{DEMO_NOTES.length} shared notes. Everyone in this space can read them</span>
               </div>
               {DEMO_NOTES.map((n) => {
                 const author = memberByMemberId.get(n.author_id);
@@ -341,7 +341,7 @@ export default function DemoSpace() {
             <div>
               <h3>Share the sample space</h3>
               <div className="sub">
-                A real invite email goes out with a join link and the code <b>{demoSpace.joinCode}</b> — the code opens this sample for them once they sign in.
+                A real invite email goes out with a join link and the code <b>{demoSpace.joinCode}</b>. The code opens this sample for them once they sign in.
               </div>
             </div>
             <InviteRow spaceId={DEMO_SPACE_ID} onInvited={() => setShareOpen(false)} />

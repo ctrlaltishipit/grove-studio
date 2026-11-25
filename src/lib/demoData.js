@@ -31,17 +31,17 @@ export const DEMO_NOTES = [
     id: 'dn-1',
     project_id: DEMO_SPACE_ID,
     author_id: 'dm-priya',
-    title: 'Start here — what GroveStudio is',
+    title: 'Start here: what GroveStudio is',
     visibility: 'shared',
     created_at: iso(3), updated_at: iso(0, 8),
     brief: 'GroveStudio organises work into private or shared spaces; shared spaces co-write live, and access is shared by code or email, by consent.',
     body:
-`GroveStudio is a shared workspace where notes don't stop at being notes. You work inside "spaces" — a space is one project.
+`GroveStudio is a shared workspace where notes don't stop at being notes. You work inside "spaces". A space is one project.
 
 Private space: only you can see it. Your own notes, plus the full Studio.
-Shared space: your team writes together, live, like a doc — you watch each other's words land as they type.
+Shared space: your team writes together, live, like a doc. You watch each other's words land as they type.
 
-Every note saves on every keystroke. You can type, or press the microphone and dictate — the words appear as you speak and are never auto-submitted.
+Every note saves on every keystroke. You can type, or press the microphone and dictate. The words appear as you speak and are never auto-submitted.
 
 To bring people in, share a space's six-character code, or invite them by email. Sharing is by consent: the person who created a note or a space is its admin, and can share a single note, several, or a whole project.`,
   },
@@ -49,38 +49,38 @@ To bring people in, share a space's six-character code, or invite them by email.
     id: 'dn-2',
     project_id: DEMO_SPACE_ID,
     author_id: 'dm-you',
-    title: 'The Studio — turn notes into anything',
+    title: 'The Studio: turn notes into anything',
     visibility: 'shared',
     created_at: iso(2), updated_at: iso(0, 9),
-    brief: 'The Studio turns the notes you can see into Ask, Summary, Mind map, Slide deck, Infographic and an Audio overview — always grounded, never invented.',
+    brief: 'The Studio turns the notes you can see into Ask, Summary, Mind map, Slide deck, Infographic and an Audio overview. It only uses what your notes say.',
     body:
 `Open the Studio from the right-hand panel. It reads only the notes you're allowed to see, and turns them into whatever format your team actually consumes:
 
-Ask — ask a question and get an answer drawn only from your notes, with the source attached.
-Summary — the decisions, the open questions, and the key people, in seconds. Inside a note you also get a one-line auto-summary that refreshes when you reopen it.
-Mind map — the themes across your notes and how they connect, at a glance.
-Slide deck — a designed deck, laid out automatically, that you can view full screen and download.
-Infographic — a shareable one-image version of the meeting.
-Audio overview — a two-host briefing you can play on your commute.
+Ask: ask a question and get an answer drawn only from your notes, with the source attached.
+Summary: the decisions, the open questions, and the key people, in seconds. Inside a note you also get a one-line auto-summary that refreshes when you reopen it.
+Mind map: the themes across your notes and how they connect, at a glance.
+Slide deck: a designed deck, laid out for you, that you can view full screen and download.
+Infographic: a shareable one-image version of the meeting.
+Audio overview: a two-host briefing you can play on your commute.
 
-Everything is grounded in your notes — it never invents facts — and it only ever uses notes you have access to.`,
+Everything comes from your notes. It never makes up facts, and it only uses notes you have access to.`,
   },
   {
     id: 'dn-3',
     project_id: DEMO_SPACE_ID,
     author_id: 'dm-nikhil',
-    title: 'The board & follow-up — notes become owned work',
+    title: 'The board and follow-up: notes become owned work',
     visibility: 'shared',
     created_at: iso(1), updated_at: iso(0, 10),
     brief: 'Notes become owned board tasks with deadlines and instant notifications, and GroveStudio follows up with check-ins so work never quietly slips.',
     body:
 `Every shared space has a board: To do, In progress, In review, Done.
 
-Turn a decision into a task and assign it to a teammate — from the board, or straight from inside a note. The owner is notified instantly with the note link, the reason, and the deadline. Reassign any time.
+Turn a decision into a task and assign it to a teammate, from the board, or straight from inside a note. The owner is notified instantly with the note link, the reason, and the deadline. Reassign any time.
 
 Your dashboard has an "Assigned to you" list: every task across every space, with live status.
 
-Then the part no other notetaker has: GroveStudio follows up. When a task is due it checks in — On track, Blocked, or Done in one tap. "Blocked" tells the assigner right away, so work never quietly dies.
+Then the part no other notetaker has: GroveStudio follows up. When a task is due it checks in: On track, Blocked, or Done in one tap. "Blocked" tells the assigner right away, so work never quietly dies.
 
 That's the whole loop: capture together, decide, assign, and get followed up until it's done.`,
   },
@@ -89,12 +89,12 @@ That's the whole loop: capture together, decide, assign, and get followed up unt
 // Conversation threads, keyed by note id.
 export const DEMO_COMMENTS = {
   'dn-1': [
-    { id: 'dc-1', note_id: 'dn-1', author_user: 'demo-arjun', body: 'The live co-writing is the part that sold me — you actually see teammates type.', created_at: iso(0, 8) },
+    { id: 'dc-1', note_id: 'dn-1', author_user: 'demo-arjun', body: 'The live co-writing is the part that sold me. You actually see teammates type.', created_at: iso(0, 8) },
     { id: 'dc-2', note_id: 'dn-1', author_user: 'demo-sara', body: 'And the mic in the comment box means I can dictate a quick note on mobile. 🎙️', created_at: iso(0, 9) },
   ],
   'dn-2': [
     { id: 'dc-3', note_id: 'dn-2', author_user: 'demo-priya', body: 'Ask answering only from our notes, with the source attached, is exactly what I wanted.', created_at: iso(0, 9) },
-    { id: 'dc-4', note_id: 'dn-2', author_user: 'demo-you', body: 'Try the Slide deck — it lays itself out and you can download it as a PDF.', created_at: iso(0, 10) },
+    { id: 'dc-4', note_id: 'dn-2', author_user: 'demo-you', body: 'Try the Slide deck. It lays itself out and you can download it as a PDF.', created_at: iso(0, 10) },
   ],
   'dn-3': [
     { id: 'dc-5', note_id: 'dn-3', author_user: 'demo-nikhil', body: 'The check-in on due tasks is what makes things actually get done. No more silent slips.', created_at: iso(0, 10) },
@@ -116,7 +116,7 @@ export const demoSpace = {
   name: 'Getting started with GroveStudio',
   kind: 'shared',
   joinCode: DEMO_JOIN_CODE,
-  description: 'A sample space that shows what GroveStudio can do — explore the notes, board, comments and Studio. Read-only.',
+  description: 'A sample space that shows what GroveStudio can do. Explore the notes, board, comments and Studio. Read-only.',
   memberCount: DEMO_MEMBERS.length,
   sharedNotes: DEMO_NOTES.length,
   myPrivateNotes: 0,

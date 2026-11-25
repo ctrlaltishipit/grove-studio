@@ -302,7 +302,7 @@ export async function renderDialogue(dialogue, voices, onProgress) {
     pcm = Buffer.concat(parts);
   } catch (err) {
     if (/429|RESOURCE_EXHAUSTED/.test(String(err.message))) {
-      throw new Error('The Gemini TTS free-tier quota is used up for now — wait a minute or two and generate again.');
+      throw new Error('The Gemini TTS free-tier quota is used up for now. Wait a minute or two and generate again.');
     }
     // Fallback: voice-pinned per-turn synthesis.
     const runs = groupRuns(turns);
@@ -334,7 +334,7 @@ export async function renderNarration(text, voiceName = 'Kore', stylePrompt = nu
     return { wav: pcmToWav(pcm), mp3: pcmToMp3(pcm, SAMPLE_RATE), durationSec: pcm.length / (SAMPLE_RATE * 2) };
   } catch (err) {
     if (/429|RESOURCE_EXHAUSTED/.test(String(err.message))) {
-      throw new Error('The Gemini TTS free-tier quota is used up for now — wait a minute or two and generate again.');
+      throw new Error('The Gemini TTS free-tier quota is used up for now. Wait a minute or two and generate again.');
     }
     throw err;
   }

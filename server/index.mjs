@@ -75,10 +75,10 @@ async function withUser(req, res, next) {
 function needs(engine) {
   return (_req, res, next) => {
     if (engine === 'gemini' && !geminiConfigured()) {
-      return res.status(503).json({ error: 'Gemini is not configured — set LLM_API_KEY in .env.local and restart.' });
+      return res.status(503).json({ error: 'Gemini is not configured. Set LLM_API_KEY in .env.local and restart.' });
     }
     if (engine === 'claude' && !claudeConfigured()) {
-      return res.status(503).json({ error: 'Claude is not configured — set ANTHROPIC_API_KEY in .env.local and restart.' });
+      return res.status(503).json({ error: 'Claude is not configured. Set ANTHROPIC_API_KEY in .env.local and restart.' });
     }
     next();
   };
@@ -87,7 +87,7 @@ function needs(engine) {
 async function loadScope(req, res) {
   const scope = await fetchScope(req.userToken, req.body?.scope ?? {});
   if (!scope.notes.length) {
-    res.status(422).json({ error: 'No readable notes in this scope — write a note or widen the selection.' });
+    res.status(422).json({ error: 'No readable notes in this scope. Write a note or widen the selection.' });
     return null;
   }
   return scope;
@@ -129,7 +129,7 @@ app.post('/api/studio/ask', withUser, needs('claude'), async (req, res) => {
   try {
     const scope = req.body?.scope?.demo ? demoScope(req.body.scope) : await loadScope(req, res);
     if (!scope) return;
-    if (!scope.notes.length) return res.status(422).json({ error: 'No readable notes in this scope — write a note or widen the selection.' });
+    if (!scope.notes.length) return res.status(422).json({ error: 'No readable notes in this scope. Write a note or widen the selection.' });
     res.json(await studio.ask(scope, req.body?.question ?? '', req.body?.history ?? []));
   } catch (e) {
     console.error('[studio] ask failed:', e.message);

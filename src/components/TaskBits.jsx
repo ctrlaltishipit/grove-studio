@@ -180,7 +180,7 @@ export function TaskRow({ task, spaceName, byName, byColour, noteTitle, onCycle 
         <div className="bar"><div style={{ width: `${task.progress ?? 0}%`, background: barColor }} /></div>
         <span className="pct">{task.progress ?? 0}% done</span>
       </div>
-      <span className="due-chip" style={{ color: due.color, background: due.bg }}>{due.label}</span>
+      {task.status !== 'done' && <span className="due-chip" style={{ color: due.color, background: due.bg }}>{due.label}</span>}
       {byName && <Avatar name={byName} colourIndex={byColour} size={26} title={`Assigned by ${byName}`} />}
     </div>
   );
@@ -210,7 +210,7 @@ export function CheckinBanner({ task, spaceName, byName }) {
         </svg>
       </span>
       <div className="body">
-        <b>Quick check-in — “{task.title}”</b>
+        <b>Quick check-in: “{task.title}”</b>
         <span>
           You're at {task.progress ?? 0}%{dueLabel ? `, due ${dueLabel}` : ''}. Still on track?
           GroveStudio nudges you so deadlines don't go quiet.
@@ -219,7 +219,7 @@ export function CheckinBanner({ task, spaceName, byName }) {
       <div className="acts">
         <button className="btn btn-primary btn-sm" style={{ height: 32 }} onClick={() => {
           done();
-          toast('Logged — on track', 'Next gentle check-in: tomorrow', 'ok');
+          toast('Logged as on track', 'Next gentle check-in: tomorrow', 'ok');
         }}>On track</button>
         <button className="btn btn-sm" style={{ height: 32 }} onClick={async () => {
           done();

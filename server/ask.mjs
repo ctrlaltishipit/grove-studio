@@ -96,7 +96,7 @@ export async function askNotes({ scope, question, history }) {
         } else throw e;
       }
       if (res.stop_reason === 'refusal') {
-        return { answer: "I can't help with that one — ask me something else about these notes.", sources: [], model: res.model };
+        return { answer: "I can't help with that one. Ask me something else about these notes.", sources: [], model: res.model };
       }
       const text = res.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
       return { ...parseAnswer(text, scope.notes), model: res.model };

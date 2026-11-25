@@ -178,7 +178,7 @@ export function StudioProvider({ children }) {
   const scopeLabel = useMemo(() => {
     if (selNotes.size) return `${selNotes.size} selected note${selNotes.size === 1 ? '' : 's'}`;
     if (selSpaces.size) return `${selSpaces.size} selected space${selSpaces.size === 1 ? '' : 's'}`;
-    if (context?.spaceName) return `this space — ${context.spaceName}`;
+    if (context?.spaceName) return `this space, ${context.spaceName}`;
     return 'all your spaces';
   }, [selNotes, selSpaces, context]);
 

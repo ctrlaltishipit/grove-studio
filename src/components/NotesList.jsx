@@ -27,8 +27,8 @@ export default function NotesList({ space, notes, members, presence, meUserId, m
   const memberByMemberId = new Map(members.map((m) => [m.memberId, m]));
 
   const label = isShared
-    ? `${notes.length} note${notes.length === 1 ? '' : 's'} — shared ones are live for everyone in this space`
-    : `${notes.length} private note${notes.length === 1 ? '' : 's'} — visible only to you`;
+    ? `${notes.length} note${notes.length === 1 ? '' : 's'}. Shared notes update live for everyone here`
+    : `${notes.length} private note${notes.length === 1 ? '' : 's'}, visible only to you`;
 
   return (
     <div className="notes-list">
@@ -70,7 +70,7 @@ export default function NotesList({ space, notes, members, presence, meUserId, m
                 )}
               </div>
             </div>
-            <p className="preview">{(n.body ?? '').trim().replace(/\s+/g, ' ').slice(0, 140) || 'Empty — open it and start typing.'}</p>
+            <p className="preview">{(n.body ?? '').trim().replace(/\s+/g, ' ').slice(0, 140) || 'Empty. Open it and start typing.'}</p>
             <div className="foot">
               <span className="byline">by {mine ? 'you' : (author?.name ?? 'a teammate')}{author?.role === 'owner' || mine ? ' · admin' : ''}</span>
               <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -84,7 +84,7 @@ export default function NotesList({ space, notes, members, presence, meUserId, m
 
       {!notes.length && (
         <div className="empty-note" style={{ background: 'var(--surface)', border: '1px dashed var(--border-strong)', borderRadius: 14 }}>
-          No notes yet. Hit <b>+ New note</b> — {isShared ? 'teammates see it appear in their list right away.' : 'only you will ever see what you write here.'}
+          No notes yet. Hit <b>+ New note</b>. {isShared ? 'Teammates see it in their list right away.' : 'Only you will ever see what you write here.'}
         </div>
       )}
     </div>

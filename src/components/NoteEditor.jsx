@@ -301,7 +301,7 @@ function Thread({ note, space, meUserId, meName, meAvatar, live, remoteComment, 
         <div style={{ fontSize: 12.5, color: 'var(--faint)', marginBottom: 12 }}>
           {features.tasks === false
             ? 'Comments switch on once sql/06_grovestudio.sql is applied to the backend.'
-            : 'No comments yet — say something, everyone in the space sees it instantly.'}
+            : 'No comments yet. Say something and everyone in the space sees it straight away.'}
         </div>
       )}
 
@@ -319,7 +319,7 @@ function Thread({ note, space, meUserId, meName, meAvatar, live, remoteComment, 
             <textarea
               ref={areaRef}
               rows={1}
-              placeholder={anchor ? `Comment on line ${anchor.line}…` : 'Add to the conversation — type, dictate, or @mention…'}
+              placeholder={anchor ? `Comment on line ${anchor.line}…` : 'Add a comment. Type, dictate, or @mention someone…'}
               value={draft}
               onChange={(e) => { setDraft(e.target.value); grow(e.target); picker.update(); }}
               onInput={(e) => grow(e.target)}
@@ -351,9 +351,9 @@ function Thread({ note, space, meUserId, meName, meAvatar, live, remoteComment, 
           </div>
           <div className="composer-hint" style={{ paddingLeft: 2 }}>
             {dict.listening
-              ? `Recording · ${String(Math.floor(dict.seconds / 60)).padStart(2, '0')}:${String(dict.seconds % 60).padStart(2, '0')} — dictation lands in the box, you press send`
+              ? `Recording · ${String(Math.floor(dict.seconds / 60)).padStart(2, '0')}:${String(dict.seconds % 60).padStart(2, '0')}. Your words land in the box, then you press send`
               : dict.micError
-                ? 'The microphone was refused — allow it in the browser and try again.'
+                ? 'The microphone was blocked. Allow it in the browser and try again.'
                 : 'Enter sends · Shift+Enter for a new line · @ mentions a teammate'}
           </div>
         </div>
@@ -620,7 +620,7 @@ export default function NoteEditor({
               <span className="avatar-stack">
                 {here.slice(0, 4).map((p) => (
                   <Avatar key={p.userId} name={p.name} colourIndex={p.colourIndex} size={24} ring={p.typing}
-                    title={`${p.name} — ${p.typing ? 'editing' : 'viewing'}`} />
+                    title={`${p.name}, ${p.typing ? 'editing' : 'viewing'}`} />
                 ))}
               </span>
               <span className="typing-label">
@@ -728,14 +728,14 @@ export default function NoteEditor({
       <div className="editor-hint" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <span style={{ flex: 1, minWidth: 200 }}>
           {bodyDict.micError
-            ? 'The microphone was refused — allow it in the browser and try again. Typing works as ever.'
+            ? 'The microphone was blocked. Allow it in the browser and try again. Typing still works.'
             : viewerOnly
-              ? 'View only — you have view-only access in this space. An admin can change that from Share.'
+              ? 'View only. You have view-only access in this space. An admin can change that from Share.'
               : lockedByAuthor
-                ? `View only — ${author?.name ?? 'the author'} set this note to author-only editing.`
+                ? `View only. ${author?.name ?? 'The author'} set this note so only they can edit it.`
                 : readOnly
-                  ? 'View only — co-editing switches on once sql/06_grovestudio.sql is applied to the backend.'
-                  : `Every keystroke saves — typed or dictated — and ${audienceLine}.${isSharedNote ? ' Type @ to mention a teammate.' : ''}`}
+                  ? 'View only. Co-editing switches on once sql/06_grovestudio.sql is applied to the backend.'
+                  : `Every keystroke saves, typed or dictated, and ${audienceLine}.${isSharedNote ? ' Type @ to mention a teammate.' : ''}`}
         </span>
         {isSharedNote && collabOn && (
           <button className="btn btn-xs" onClick={() => setAnchor({ line: caretLine, text: lineText(body, caretLine).trim().slice(0, 120) })}
@@ -759,7 +759,7 @@ export default function NoteEditor({
               <div className="note-task-row" key={t.id}>
                 <span className="task-status" style={{ background: ss.bg, color: ss.ink, width: 88, cursor: 'default' }}>{STATUS_LABEL[t.status]}</span>
                 <span className="nt-title" style={{ textDecoration: t.status === 'done' ? 'line-through' : 'none' }}>{t.title}</span>
-                <button className="assignee-btn" title={a ? `${a.name} — reassign` : 'Assign'} onClick={() => onReassign(t)}>
+                <button className="assignee-btn" title={a ? `Reassign from ${a.name}` : 'Assign'} onClick={() => onReassign(t)}>
                   {a ? <Avatar name={a.name} colourIndex={a.colourIndex} size={24} />
                      : <span className="avatar unassigned" style={{ width: 24, height: 24 }}>?</span>}
                   <span className="who">{a ? a.name.split(' ')[0] : 'Assign'}</span>
@@ -772,7 +772,7 @@ export default function NoteEditor({
           })}
           {!noteTasks.length && (
             <div style={{ fontSize: 12.5, color: 'var(--faint)' }}>
-              No tasks yet — assign one and its owner is notified with a link back to this note.
+              No tasks yet. Assign one and its owner gets a link back to this note.
             </div>
           )}
         </div>
@@ -826,7 +826,7 @@ function HistoryModal({ history, setHistory, body, nameOf, onRestore }) {
           <div className="sub">Every edit is kept. Pick a version to see it, and restore it if you need to.</div>
         </div>
         {versions.length === 0 ? (
-          <div className="fine">No versions yet — they start being recorded as people edit this note.</div>
+          <div className="fine">No versions yet. They are saved as people edit this note.</div>
         ) : (
           <>
             <div className="history-list">
@@ -849,7 +849,7 @@ function HistoryModal({ history, setHistory, body, nameOf, onRestore }) {
                 <div className="version-preview">{pickedV.body || '(empty)'}</div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                   <button className="btn btn-primary btn-sm" onClick={() => onRestore(pickedV)}>Restore this version</button>
-                  <span className="fine">Restoring records a new version — nothing is ever lost.</span>
+                  <span className="fine">Restoring saves a new version, so nothing is ever lost.</span>
                 </div>
               </>
             )}

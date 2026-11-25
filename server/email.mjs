@@ -41,35 +41,35 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => (
 function inviteHtml({ inviterName, spaceName, code, joinUrl }) {
   const who = esc(inviterName) || 'Someone';
   const space = esc(spaceName) || 'a space';
-  return `<!doctype html><html><body style="margin:0;background:#F7F6F2;font-family:'Helvetica Neue',Arial,sans-serif;color:#1B1A17">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F6F2;padding:32px 0">
+  return `<!doctype html><html><body style="margin:0;background:#F7F9F6;font-family:'Helvetica Neue',Arial,sans-serif;color:#12241C">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F9F6;padding:32px 0">
     <tr><td align="center">
-      <table role="presentation" width="440" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border:1px solid #E8E4DB;border-radius:16px;overflow:hidden">
+      <table role="presentation" width="440" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border:1px solid #E0E8E2;border-radius:16px;overflow:hidden">
         <tr><td style="padding:26px 28px 8px">
-          <div style="font-size:17px;font-weight:700;letter-spacing:-0.01em">Grove<span style="color:#2E5C3A">Studio</span></div>
+          <div style="font-size:17px;font-weight:700;letter-spacing:-0.01em">Grove<span style="color:#0F4C3A">Studio</span></div>
         </td></tr>
         <tr><td style="padding:8px 28px 4px">
           <div style="font-size:21px;font-weight:600;line-height:1.3">${who} invited you to<br>&ldquo;${space}&rdquo;</div>
         </td></tr>
         <tr><td style="padding:8px 28px 0">
-          <p style="margin:0;font-size:14.5px;line-height:1.6;color:#6E6A5F">
+          <p style="margin:0;font-size:14.5px;line-height:1.6;color:#53645B">
             Join the space to read and write shared notes together — live, like a doc — and see the board of who's doing what.
           </p>
         </td></tr>
         <tr><td style="padding:22px 28px 6px">
-          <a href="${esc(joinUrl)}" style="display:inline-block;background:#3F7A4F;color:#FFFFFF;text-decoration:none;font-size:15px;font-weight:600;padding:12px 22px;border-radius:99px">Open GroveStudio &amp; join</a>
+          <a href="${esc(joinUrl)}" style="display:inline-block;background:#1D7A62;color:#FFFFFF;text-decoration:none;font-size:15px;font-weight:600;padding:12px 22px;border-radius:99px">Open GroveStudio &amp; join</a>
         </td></tr>
         <tr><td style="padding:16px 28px 4px">
-          <div style="font-size:12px;color:#9C968A;text-transform:uppercase;letter-spacing:.06em">Or join with this code</div>
-          <div style="font-family:'Courier New',monospace;font-size:26px;font-weight:700;letter-spacing:.28em;color:#1B1A17;margin-top:6px">${esc(code)}</div>
+          <div style="font-size:12px;color:#93A299;text-transform:uppercase;letter-spacing:.06em">Or join with this code</div>
+          <div style="font-family:'Courier New',monospace;font-size:26px;font-weight:700;letter-spacing:.28em;color:#12241C;margin-top:6px">${esc(code)}</div>
         </td></tr>
         <tr><td style="padding:18px 28px 26px">
-          <p style="margin:0;font-size:12px;line-height:1.6;color:#9C968A">
+          <p style="margin:0;font-size:12px;line-height:1.6;color:#93A299">
             No account yet? Opening the link lets you sign in with Google or as a guest, then the code drops you straight into the space.
           </p>
         </td></tr>
       </table>
-      <div style="font-size:11px;color:#9C968A;margin-top:14px">You received this because ${who} invited you on GroveStudio.</div>
+      <div style="font-size:11px;color:#93A299;margin-top:14px">You received this because ${who} invited you on GroveStudio.</div>
     </td></tr>
   </table>
 </body></html>`;
@@ -111,26 +111,26 @@ function notesHtml({ sharerName, spaceName, notes, appUrl }) {
           <div style="font-size:16px;font-weight:600;line-height:1.35">${esc(n.title)}</div>
         </td></tr>
         <tr><td style="padding:4px 28px 14px">
-          <div style="font-size:14px;line-height:1.65;color:#3C3A34;white-space:pre-wrap">${esc(n.body || '(empty note)')}</div>
+          <div style="font-size:14px;line-height:1.65;color:#2A3A32;white-space:pre-wrap">${esc(n.body || '(empty note)')}</div>
         </td></tr>
-        <tr><td style="padding:0 28px"><div style="height:1px;background:#E8E4DB"></div></td></tr>`).join('');
-  return `<!doctype html><html><body style="margin:0;background:#F7F6F2;font-family:'Helvetica Neue',Arial,sans-serif;color:#1B1A17">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F6F2;padding:32px 0">
+        <tr><td style="padding:0 28px"><div style="height:1px;background:#E0E8E2"></div></td></tr>`).join('');
+  return `<!doctype html><html><body style="margin:0;background:#F7F9F6;font-family:'Helvetica Neue',Arial,sans-serif;color:#12241C">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F9F6;padding:32px 0">
     <tr><td align="center">
-      <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border:1px solid #E8E4DB;border-radius:16px;overflow:hidden">
+      <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border:1px solid #E0E8E2;border-radius:16px;overflow:hidden">
         <tr><td style="padding:26px 28px 8px">
-          <div style="font-size:17px;font-weight:700;letter-spacing:-0.01em">Grove<span style="color:#2E5C3A">Studio</span></div>
+          <div style="font-size:17px;font-weight:700;letter-spacing:-0.01em">Grove<span style="color:#0F4C3A">Studio</span></div>
         </td></tr>
         <tr><td style="padding:8px 28px 12px">
           <div style="font-size:20px;font-weight:600;line-height:1.3">${who} shared ${notes.length} note${notes.length === 1 ? '' : 's'} from<br>&ldquo;${esc(spaceName)}&rdquo;</div>
         </td></tr>
-        <tr><td style="padding:0 28px"><div style="height:1px;background:#E8E4DB"></div></td></tr>
+        <tr><td style="padding:0 28px"><div style="height:1px;background:#E0E8E2"></div></td></tr>
         ${items}
         <tr><td style="padding:18px 28px 26px">
-          <a href="${esc(appUrl)}/app" style="display:inline-block;background:#3F7A4F;color:#FFFFFF;text-decoration:none;font-size:14px;font-weight:600;padding:11px 20px;border-radius:99px">Open GroveStudio</a>
+          <a href="${esc(appUrl)}/app" style="display:inline-block;background:#1D7A62;color:#FFFFFF;text-decoration:none;font-size:14px;font-weight:600;padding:11px 20px;border-radius:99px">Open GroveStudio</a>
         </td></tr>
       </table>
-      <div style="font-size:11px;color:#9C968A;margin-top:14px">You received this because ${who} shared notes with you on GroveStudio.</div>
+      <div style="font-size:11px;color:#93A299;margin-top:14px">You received this because ${who} shared notes with you on GroveStudio.</div>
     </td></tr>
   </table>
 </body></html>`;

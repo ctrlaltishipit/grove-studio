@@ -32,7 +32,7 @@ export default function Board({ space, tasks, members, notes, onChanged, openAss
       refreshTasks();
       if (next === 'done') {
         const a = memberByUser.get(t.assignee_user);
-        toast('Nice — done', a && t.assignee_user !== user.id
+        toast('Marked done', a && t.assignee_user !== user.id
           ? `${firstName(a.name)}'s dashboard and the assigner are updated`
           : 'The assigner sees the update on their dashboard', 'ok');
         if (t.assigned_by_user && t.assigned_by_user !== user.id) {
@@ -51,7 +51,7 @@ export default function Board({ space, tasks, members, notes, onChanged, openAss
   return (
     <div className="board">
       <div className="board-head">
-        <span className="hint">Assign a card and its owner is notified instantly — with the note link and deadline.</span>
+        <span className="hint">Assign a card and its owner is notified straight away, with the note link and deadline.</span>
         <span className="n">{tasks.length} task{tasks.length === 1 ? '' : 's'}</span>
       </div>
       <div className="board-cols">
@@ -93,7 +93,7 @@ export default function Board({ space, tasks, members, notes, onChanged, openAss
                       ) : <span className="key-chip empty">No source</span>}
                       <div className="card-right" onClick={(e) => e.stopPropagation()}>
                         <StatusMenu status={t.status} onPick={(s) => move(t, s)} />
-                        <button className="assignee-btn" title={assignee ? `${assignee.name} — reassign` : 'Assign'} onClick={() => openAssign(t)}>
+                        <button className="assignee-btn" title={assignee ? `Reassign from ${assignee.name}` : 'Assign'} onClick={() => openAssign(t)}>
                           {assignee
                             ? <Avatar name={assignee.name} colourIndex={assignee.colourIndex} size={24} />
                             : <span className="avatar unassigned" style={{ width: 24, height: 24 }}>?</span>}

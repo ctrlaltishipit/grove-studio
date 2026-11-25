@@ -31,7 +31,7 @@ export function JoinModal({ onClose, initialCode = '' }) {
     if (code === DEMO_JOIN_CODE) {
       onClose();
       nav(`/app/s/${DEMO_SPACE_ID}`);
-      toast("That's the sample space", "It's already in your sidebar — take a look around", 'ok');
+      toast("That's the sample space", "It's already in your sidebar. Take a look around", 'ok');
       return;
     }
     setBusy(true);
@@ -41,7 +41,7 @@ export function JoinModal({ onClose, initialCode = '' }) {
       onClose();
       nav(`/app/s/${projectId}`);
       const space = await getSpace(projectId).catch(() => null);
-      toast(`Joined ${space?.name ?? 'the space'}`, "You're in — the roster updated for everyone", 'ok');
+      toast(`Joined ${space?.name ?? 'the space'}`, "You're in. Everyone can see you joined", 'ok');
       if (space?.createdBy && space.createdBy !== user.id) {
         notify([space.createdBy], {
           actorName: displayName, kind: 'share',
@@ -60,7 +60,7 @@ export function JoinModal({ onClose, initialCode = '' }) {
       <div className="modal-stack">
         <div>
           <h3>Join a shared space</h3>
-          <div className="sub">Six characters. No O, zero, I, one or L — they get misheard.</div>
+          <div className="sub">Six characters. No O, zero, I, one or L, because they get misheard.</div>
         </div>
         <input
           className="code-input" placeholder="GRV7PK" maxLength={6} autoFocus
@@ -96,8 +96,8 @@ export function NewSpaceModal({ onClose }) {
       toast(
         `${name.trim()} created`,
         kind === 'private'
-          ? 'Private — notes + studio, no board'
-          : `Shared — invite people with code ${space.joinCode}`,
+          ? 'Private: notes and studio, no board'
+          : `Shared: invite people with code ${space.joinCode}`,
         'ok');
     } catch (e) {
       toast('Could not create the space', e.message, 'error');
@@ -110,10 +110,10 @@ export function NewSpaceModal({ onClose }) {
       <div className="modal-stack">
         <div>
           <h3>New space</h3>
-          <div className="sub">A space is a project — it holds notes, a studio, and (if shared) a board.</div>
+          <div className="sub">A space is a project. It holds notes, a studio, and (if shared) a board.</div>
         </div>
         <input
-          className="modal-input" placeholder="Space name — e.g. Q4 Research" autoFocus
+          className="modal-input" placeholder="Space name, for example Q4 Research" autoFocus
           value={name} onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') create(); }}
         />
@@ -177,12 +177,12 @@ export function ShareSpacesModal({ onClose }) {
     } else if (added > 0) {
       onClose(); refreshSpaces();
       toast(`Added ${name ?? addr} to ${added} space${added === 1 ? '' : 's'}`,
-        anyEmailConfig ? 'They were added; the email did not send' : "Email isn't set up yet — they're added and can also use the code", 'ok');
+        anyEmailConfig ? 'They were added; the email did not send' : "Email isn't set up yet. They're added and can use the code", 'ok');
     } else if (failed === n) {
-      toast('Could not invite', 'Something went wrong — try again in a moment.', 'error');
+      toast('Could not invite', 'Something went wrong. Try again in a moment.', 'error');
     } else {
       toast('No account with that email yet', anyEmailConfig
-        ? "We emailed them a join link — they'll be in once they sign in."
+        ? "We emailed them a join link. They'll be in once they sign in."
         : "Set up SMTP to email invites, or share a space's join code.", 'warn');
     }
   };
@@ -192,10 +192,10 @@ export function ShareSpacesModal({ onClose }) {
       <div className="modal-stack">
         <div>
           <h3>Share spaces</h3>
-          <div className="sub">Pick the spaces, add the person's email — they become a member of each, instantly.</div>
+          <div className="sub">Pick the spaces, add the person's email. They join each one straight away.</div>
         </div>
         {shareable.length === 0 && (
-          <div className="fine">No shared spaces yet — create one first. Private spaces can't be shared.</div>
+          <div className="fine">No shared spaces yet. Create one first. Private spaces can't be shared.</div>
         )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 260, overflowY: 'auto' }}>
           {shareable.map((s) => (
@@ -212,7 +212,7 @@ export function ShareSpacesModal({ onClose }) {
           ))}
         </div>
         <input
-          className="modal-input" type="email" placeholder="Their email — the one they sign in with"
+          className="modal-input" type="email" placeholder="The email they sign in with"
           value={email} onChange={(e) => setEmail(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') share(); }}
         />
@@ -220,7 +220,7 @@ export function ShareSpacesModal({ onClose }) {
           disabled={busy || !picked.size || !email.trim()} onClick={share}>
           {busy ? 'Sharing…' : `Share ${picked.size || ''} space${picked.size === 1 ? '' : 's'}`}
         </button>
-        <div className="fine">Guests sign in without an email — hand them the six-character join code instead.</div>
+        <div className="fine">Guests sign in without an email. Give them the six-character join code instead.</div>
       </div>
     </Modal>
   );

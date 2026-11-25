@@ -334,7 +334,7 @@ export async function createTask(projectId, { title, label, noteId, assigneeUser
 // re-run; turn the raw Postgres check-violation into a clear instruction.
 function friendlyTaskError(error) {
   if (error?.code === '23514' && /status/.test(error.message ?? '')) {
-    return new Error('Re-run sql/06_grovestudio.sql in Supabase — the board’s “In review” column needs the updated status set.');
+    return new Error('Re-run sql/06_grovestudio.sql in Supabase. The board’s “In review” column needs the updated status set.');
   }
   return error;
 }
