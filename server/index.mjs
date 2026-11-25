@@ -11,10 +11,10 @@
 
 import express from 'express';
 import { pathToFileURL } from 'node:url';
-import { verifyUser, fetchScope, supabaseConfigured, spaceBrief, callerName, inviteMember } from './notes.mjs';
+import { verifyUser, fetchScope, supabaseConfigured, spaceBrief, callerName, inviteMember, joinWaitlist } from './notes.mjs';
 import { geminiConfigured } from './gemini.mjs';
 import { claudeConfigured } from './claude.mjs';
-import { emailConfigured, sendInviteEmail, sendNotesEmail } from './email.mjs';
+import { emailConfigured, sendInviteEmail, sendNotesEmail, sendWaitlistEmail } from './email.mjs';
 import * as studio from './studio.mjs';
 import { friendlyError } from './friendlyError.mjs';
 
@@ -195,6 +195,46 @@ app.post('/api/invite', withUser, async (req, res) => {
   } catch (e) {
     console.error('[invite] failed:', e.message);
     res.status(500).json({ error: friendlyError(e, 'invite') });
+  }
+});
+
+// ---- early access list + newsletter (public, no sign-in) --------------------
+// A hidden "website" field catches simple bots; a small per-IP limit stops a
+// script from filling the list. The same answer comes back whether or not the
+// email was already on the list, so the form cannot be used to test addresses.
+const waitlistHits = new Map();
+function tooMany(ip) {
+  const now = Date.now();
+  const recent = (waitlistHits.get(ip) ?? []).filter((t) => now - t < 10 * 60 * 1000);
+  recent.push(now);
+  waitlistHits.set(ip, recent);
+  return recent.length > 6;
+}
+app.post('/api/waitlist', async (req, res) => {
+  try {
+    const b = req.body ?? {};
+    if (b.website) return res.json({ ok: true });
+    const email = String(b.email ?? '').trim().toLowerCase();
+    if (!EMAIL_RE.test(email) || email.length > 254) return res.status(400).json({ error: 'That doesn’t look like an email address.' });
+    const ip = String(req.headers['x-forwarded-for'] ?? req.socket?.remoteAddress ?? '').split(',')[0].trim();
+    if (tooMany(ip)) return res.status(429).json({ error: 'Too many tries from here. Wait a few minutes and try again.' });
+    if (!supabaseConfigured()) return res.status(503).json({ error: 'The early access list is not open yet. Try again soon.' });
+    const out = await joinWaitlist({
+      email,
+      name: String(b.name ?? '').slice(0, 80),
+      team: String(b.team ?? '').slice(0, 80),
+      newsletter: b.newsletter === true,
+      source: String(b.source ?? '').slice(0, 40),
+    });
+    if (out?.new && emailConfigured()) {
+      sendWaitlistEmail({ to: email, newsletter: b.newsletter === true, appUrl: appUrlFor(req) })
+        .catch((e) => console.error('[waitlist] email failed:', e.message));
+    }
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[waitlist] failed:', e.message);
+    if (e.code === 'NO_TABLE') return res.status(503).json({ error: 'The early access list is not open yet. Try again soon.' });
+    res.status(500).json({ error: 'We could not add you just now. Try again in a minute.' });
   }
 });
 

@@ -126,3 +126,21 @@ export function corpus(notes) {
   }
   return out.trim();
 }
+
+// The early access list. Visitors are not signed in, so this runs with the
+// anon key; join_waitlist() (sql/09_waitlist.sql) is the only way in and can
+// only add or update one email. Returns { ok, new } or throws.
+export async function joinWaitlist({ email, name, team, newsletter, source }) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/join_waitlist`, {
+    method: 'POST',
+    headers: headers(ANON_KEY),
+    body: JSON.stringify({ p_email: email, p_name: name || null, p_team: team || null, p_newsletter: !!newsletter, p_source: source || null }),
+  });
+  if (res.status === 404) {
+    const err = new Error('waitlist table missing: run sql/09_waitlist.sql in Supabase');
+    err.code = 'NO_TABLE';
+    throw err;
+  }
+  if (!res.ok) throw new Error(`supabase rpc join_waitlist ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  return res.json();
+}

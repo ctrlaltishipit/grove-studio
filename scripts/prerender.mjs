@@ -5,8 +5,9 @@
 // app as usual. Run by `npm run build` after `vite build`.
 import fs from 'node:fs';
 import path from 'node:path';
-import { HOME_FAQ, WHY_FAQ } from '../src/lib/faq.js';
+import { HOME_FAQ, WHY_FAQ, FEATURES_FAQ } from '../src/lib/faq.js';
 import { WORKFLOW, TOUR } from '../src/lib/tourSteps.js';
+import { PRIVACY, TERMS, legalHtml } from '../src/lib/legal.js';
 
 const SITE = 'https://www.grovestudio.io';
 const DIST = path.resolve('dist');
@@ -56,15 +57,30 @@ const ROUTES = [
   },
   {
     path: '/features', title: 'GroveStudio features: live notes, AI Studio, Kanban board, dashboard and check-ins',
-    description: 'Everything GroveStudio does: live shared notes with named cursors and version history, an AI Studio that makes summaries, slides, mind maps, infographics and audio, a Kanban board, check-ins and a personal dashboard.',
-    ld: [ORG, APP, crumbs('Features', '/features')],
-    body: `<h1>Everything your notes can do here</h1><h2>From sign-in to follow-up, step by step</h2>${stepsHtml(TOUR)}`,
+    description: 'Try GroveStudio before you sign in: a working preview of live notes, the AI Studio, the Kanban board and your dashboard. See what is inside, how teams work across countries, and join early access.',
+    ld: [ORG, APP, crumbs('Features', '/features'), faqLd(FEATURES_FAQ)],
+    body: `<h1>Notes, Studio and board. One place.</h1><p>Write it together. See it your way. Get it done. Try a working preview of the app before you sign in, or join the early access list.</p>
+<h2>From sign-in to follow-up</h2>${stepsHtml(TOUR)}
+<h2>Work from anywhere</h2><p>Your team can be in any country and still write in the same note at the same time. Tasks, mentions, comments and check-ins reach the right person wherever they work.</p>
+<h2>Frequently asked</h2>${faqHtml(FEATURES_FAQ)}`,
   },
   {
     path: '/why', title: 'Why GroveStudio? Meeting notes that turn into tasks, slides and audio',
     description: 'GroveStudio is a note-taking app for teams. Write notes together, turn decisions into tasks with owners and dates, and turn notes into slides, mind maps, infographics and audio.',
     ld: [ORG, crumbs('Why GroveStudio', '/why'), faqLd(WHY_FAQ)],
     body: `<h1>Most meeting notes are never read again. Yours will be.</h1><p>Every team writes notes. Few teams use them. GroveStudio keeps notes, tasks and follow-up together.</p><h2>Questions people ask</h2>${faqHtml(WHY_FAQ)}`,
+  },
+  {
+    path: '/privacy', title: 'Privacy note | GroveStudio',
+    description: 'How GroveStudio handles your data: what we collect, how the Studio uses AI providers, who can see your notes, cookies, and your rights.',
+    ld: [ORG, crumbs('Privacy note', '/privacy')],
+    body: legalHtml(PRIVACY, esc),
+  },
+  {
+    path: '/terms', title: 'Terms of use | GroveStudio',
+    description: 'The terms for using GroveStudio: your content, acceptable use, AI outputs, early access and our responsibilities, in plain words.',
+    ld: [ORG, crumbs('Terms of use', '/terms')],
+    body: legalHtml(TERMS, esc),
   },
 ];
 
@@ -118,11 +134,13 @@ fs.writeFileSync(path.join(DIST, 'llms.txt'), `# GroveStudio
 - [Product tour](${SITE}/tour): the app step by step, from sign-in to follow-up
 - [Features](${SITE}/features): every feature, grouped
 - [Why GroveStudio](${SITE}/why): the problem it solves and common questions
+- [Privacy note](${SITE}/privacy): what data GroveStudio collects and how it is used
+- [Terms of use](${SITE}/terms): the rules for using GroveStudio
 
 ## How it works
 ${TOUR.map((s, i) => `${i + 1}. ${s.title}: ${s.body}`).join('\n')}
 
 ## Questions
-${[...HOME_FAQ, ...WHY_FAQ].map(([q, a]) => `- ${q} ${a}`).join('\n')}
+${[...HOME_FAQ, ...FEATURES_FAQ].map(([q, a]) => `- ${q} ${a}`).join('\n')}
 `);
 console.log('prerendered', ROUTES.map((r) => r.path).join(' '), '+ sitemap.xml robots.txt llms.txt');

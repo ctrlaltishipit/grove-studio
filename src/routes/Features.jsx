@@ -1,19 +1,23 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import PublicNav, { CloseBand, SiteFooter, Arrow, useInView, usePageMeta } from '../components/PublicNav';
+import PublicNav, { SiteFooter, Arrow, useInView, usePageMeta } from '../components/PublicNav';
 import { StepMark } from '../components/Tour';
+import AppDemo from '../components/AppDemo';
+import WaitlistBand from '../components/Waitlist';
+import { IsoHero, IsoArt, Globe, InsideStack } from '../components/Visuals';
 import { TOUR } from '../lib/tourSteps';
+import { FEATURES_FAQ } from '../lib/faq';
 
-// One line per step for the Features page's story strip.
+// One line per step for the guided strip.
 const SHORT = [
-  'Google or guest, in any browser.',
+  'Google or guest. Nothing to install.',
   'Private for you, shared for the team.',
   'Everyone types in one note, live.',
-  'Summary, mind map, slides, infographic, audio.',
-  'Owner and due date, linked to the note.',
+  'Summary, mind map, slides, audio.',
+  'Owner and due date, from the note.',
   'To do, In progress, In review, Done.',
-  'Your tasks and notifications in one place.',
-  'On track, Blocked or Done. Comments on any note.',
+  'Your tasks and alerts in one place.',
+  'On track, Blocked or Done.',
 ];
 
 function StoryStrip() {
@@ -70,112 +74,148 @@ function Icon({ d }) {
 }
 
 const GROUPS = [
-  {
-    id: 'write', title: 'Write together',
-    intro: 'Your team works in the same note at the same time.',
-    items: [
-      [I.pen, 'Live co-writing', 'Shared notes update as teammates type. No refresh, no copies to merge.'],
-      [I.cursor, 'Named cursors', 'See where each person is writing, with their name at their cursor.'],
-      [I.mic, 'Dictation', 'Talk instead of typing, in notes, comments and Studio questions.'],
-      [I.clock, 'Version history', 'Every edit is saved with who made it. Restore any version in one click.'],
-      [I.comment, 'Comments on a line', 'Pin a comment to the exact line it is about, not the whole page.'],
-      [I.at, 'Mentions', 'Type @ and a name to bring a teammate in. They get a link straight to the note.'],
-    ],
-  },
-  {
-    id: 'studio', title: 'Turn notes into visuals',
-    intro: 'The same notes, in the shape each person takes in best.',
-    items: [
-      [I.search, 'Ask, with sources', 'Ask anything about your notes. The answer shows which note it came from.'],
-      [I.list, 'Summary', 'What happened, what was decided, and what comes next.'],
-      [I.slides, 'Slide deck', 'A designed deck built from the notes. Present it or download it.'],
-      [I.map, 'Mind map', 'The main themes across your notes, drawn as one picture.'],
-      [I.chart, 'Infographic', 'One image of the whole meeting that is easy to share.'],
-      [I.audio, 'Audio overview', 'A short two-voice episode about your notes, saved for the whole space.'],
-    ],
-  },
-  {
-    id: 'work', title: 'Make work move',
-    intro: 'Decisions leave the page and get done.',
-    items: [
-      [I.board, 'A board in every shared space', 'To do, In progress, In review, Done. Drag cards and reassign in one click.'],
-      [I.task, 'Assign from a note', 'Turn a sentence into a task with an owner and a date. The note stays linked.'],
-      [I.spark, 'Check-ins', 'A short question before the deadline asks how the task is going.'],
-      [I.users, 'Roles', 'Admins, editors and view-only members, set for each person.'],
-      [I.lock, 'Note locks', 'Authors can make a note "only I can edit" while others still read it.'],
-      [I.bell, 'Useful notifications', 'Every task, mention and comment links to the right place.'],
-    ],
-  },
-  {
-    id: 'share', title: 'Share in seconds',
-    intro: 'Getting a teammate in takes a moment, not a setup call.',
-    items: [
-      [I.key, 'Six-character codes', 'Read the code out loud and they are in. Nothing to install.'],
-      [I.mail, 'Email invites', 'Send an invite with a join link and the code from any Share button.'],
-      [I.send, 'Email a note', 'Send the full text of any note to anyone. They do not need an account.'],
-      [I.link, 'Sample spaces', 'New accounts start with working examples, so the first minute makes sense.'],
-    ],
-  },
+  { id: 'write', title: 'Write together', line: 'One note, the whole team, live.',
+    items: [[I.pen, 'Live co-writing'], [I.cursor, 'Named cursors'], [I.mic, 'Dictation'], [I.clock, 'Version history'], [I.comment, 'Line comments'], [I.at, 'Mentions']] },
+  { id: 'studio', title: 'See it your way', line: 'The same notes, in the shape you take in best.',
+    items: [[I.search, 'Ask with sources'], [I.list, 'Summary'], [I.slides, 'Slide deck'], [I.map, 'Mind map'], [I.chart, 'Infographic'], [I.audio, 'Audio overview']] },
+  { id: 'work', title: 'Make work move', line: 'Decisions leave the page and get done.',
+    items: [[I.board, 'Kanban board'], [I.task, 'Tasks from notes'], [I.spark, 'Check-ins'], [I.bell, 'Notifications'], [I.users, 'Roles'], [I.lock, 'Note locks']] },
+  { id: 'share', title: 'Share in seconds', line: 'A code or an email, and they are in.',
+    items: [[I.key, 'Six-character codes'], [I.mail, 'Email invites'], [I.send, 'Email a note'], [I.link, 'Sample space']] },
+];
+
+const T = '/tour/';
+const INSIDE = [
+  { label: 'Notes', icon: I.pen, line: 'Write together, live, with every change saved.', media: { src: T + 'note.webp', alt: 'A shared note with its summary, text and comments' }, url: 'grovestudio.io/app/space' },
+  { label: 'Board', icon: I.board, line: 'Every task, its owner and its date.', media: { src: T + 'board.webp', alt: 'The Kanban board with four columns of tasks' }, url: 'grovestudio.io/app/space/board' },
+  { label: 'Studio', icon: I.spark, line: 'Turn notes into what you need.', media: { video: T + 'clip-studio.mp4', poster: T + 'clip-studio-poster.webp', alt: 'The Studio making a summary, mind map and slides' }, url: 'grovestudio.io/app/space' },
+  { label: 'Mind map', icon: I.map, line: 'The meeting as one picture.', media: { src: T + 'mindmap.webp', alt: 'A mind map made by the Studio' } },
+  { label: 'Slides', icon: I.slides, line: 'A deck to present or download.', media: { src: T + 'deck.webp', alt: 'A slide deck made by the Studio' } },
+  { label: 'Dashboard', icon: I.bell, line: 'Your work across every project.', media: { src: T + 'dashboard.webp', alt: 'The personal dashboard with tasks and a notification' }, url: 'grovestudio.io/app' },
+  { label: 'Comments', icon: I.comment, line: 'Talk about any note, right on it.', media: { src: T + 'comments.webp', alt: 'Comments on a note with a reply box' } },
+];
+
+const ANYWHERE = [
+  [I.cursor, 'Same note, live', 'Cursors with names, wherever people sit.'],
+  [I.bell, 'Nobody misses a thing', 'Tasks, mentions and comments find the right person.'],
+  [I.spark, 'Follow-up built in', 'Check-ins ask before a deadline slips.'],
 ];
 
 export default function Features() {
   usePageMeta(
-    'GroveStudio features: live notes, tasks, check-ins, slides, mind maps and audio',
-    'Everything GroveStudio does: live shared notes with named cursors and version history, tasks and check-ins on a board, and slides, mind maps, infographics and audio made from your notes.'
+    'GroveStudio features: live notes, AI Studio, Kanban board, dashboard and check-ins',
+    'Try GroveStudio before you sign in: a working preview of live notes, the AI Studio, the Kanban board and your dashboard. See what is inside, how teams work across countries, and join early access.'
   );
   return (
     <div className="site">
       <PublicNav />
       <main id="main">
-        <section className="page-hero">
+        <section className="hero f-hero">
           <div className="hero-ground" aria-hidden="true" />
-          <div className="wrap page-hero-inner">
-            <p className="eyebrow enter" style={{ '--d': 0 }}><span className="sprout-dot" />Features</p>
-            <h1 className="enter" style={{ '--d': 1 }}>Everything your notes <span className="ink-accent">can do here</span></h1>
-            <p className="hero-sub enter" style={{ '--d': 2 }}>
-              From the first word typed in a meeting to the finished task. Write it once, then let GroveStudio
-              reshape it, share it, and follow it up.
-            </p>
-            <nav className="jump enter" style={{ '--d': 3 }} aria-label="Feature groups">
-              {GROUPS.map((g) => <a key={g.id} href={`#${g.id}`}>{g.title}</a>)}
-            </nav>
+          <div className="wrap hero-grid">
+            <div className="hero-copy">
+              <p className="eyebrow enter" style={{ '--d': 0 }}><span className="sprout-dot" />Features</p>
+              <h1 className="enter" style={{ '--d': 1 }}>Notes, Studio and board. <span className="ink-accent shimmer">One place.</span></h1>
+              <p className="hero-sub enter" style={{ '--d': 2 }}>Write it together. See it your way. Get it done.</p>
+              <div className="hero-actions enter" style={{ '--d': 3 }}>
+                <a className="s-btn s-btn-primary s-btn-lg" href="#preview">Try the preview <Arrow /></a>
+                <a className="s-btn s-btn-quiet s-btn-lg" href="#early-access">Get early access</a>
+              </div>
+            </div>
+            <div className="hero-visual enter" style={{ '--d': 2 }}><IsoHero /></div>
           </div>
         </section>
 
-        <section className="band band-sunken" aria-labelledby="story-h">
+        <section className="band band-sunken" id="preview" aria-labelledby="preview-h">
+          <div className="wrap">
+            <div className="sec-head center rv">
+              <p className="eyebrow">Try it before you sign in</p>
+              <h2 id="preview-h">A working preview of the app</h2>
+              <p className="lead">Watch it play, or click in and use it.</p>
+            </div>
+            <div className="rv"><AppDemo /></div>
+          </div>
+        </section>
+
+        <section className="band" aria-labelledby="story-h">
           <div className="wrap">
             <div className="sec-head rv">
-              <p className="eyebrow">How it works</p>
-              <h2 id="story-h">From sign&#8209;in to follow&#8209;up, step by step</h2>
-              <p className="lead">Eight steps, in the order your team will use them. Open any step to see it in the real app.</p>
+              <p className="eyebrow">Your first ten minutes</p>
+              <h2 id="story-h">From sign&#8209;in to follow&#8209;up</h2>
             </div>
             <StoryStrip />
-            <div className="center-link rv"><Link to="/tour" className="text-link">Watch the full tour <Arrow /></Link></div>
+            <div className="center-link rv"><Link to="/tour" className="text-link">Watch every step in the real app <Arrow /></Link></div>
           </div>
         </section>
 
-        {GROUPS.map((g, gi) => (
-          <section key={g.id} id={g.id} className={'band' + (gi % 2 ? '' : ' band-sunken')} aria-labelledby={`${g.id}-h`}>
-            <div className="wrap">
-              <div className="sec-head rv">
-                <p className="eyebrow">0{gi + 1}</p>
-                <h2 id={`${g.id}-h`}>{g.title}</h2>
-                <p className="lead">{g.intro}</p>
-              </div>
-              <ul className="feature-grid">
-                {g.items.map(([d, name, line], ii) => (
-                  <li key={name} className="feature rv" style={{ '--rv': ii }}>
-                    <span className="feature-icon"><Icon d={d} /></span>
-                    <h3>{name}</h3>
-                    <p>{line}</p>
+        <section className="band band-sunken" aria-labelledby="inside-h">
+          <div className="wrap">
+            <div className="sec-head center rv">
+              <p className="eyebrow">What’s inside GroveStudio</p>
+              <h2 id="inside-h">The real screens</h2>
+            </div>
+            <div className="rv"><InsideStack items={INSIDE} /></div>
+          </div>
+        </section>
+
+        <section className="band band-deep globe-band" aria-labelledby="world-h">
+          <div className="wrap globe-grid">
+            <div className="split-head rv">
+              <p className="eyebrow">Work from anywhere</p>
+              <h2 id="world-h">Your team, in every time zone. One note.</h2>
+              <ul className="anywhere">
+                {ANYWHERE.map(([d, t, l], i) => (
+                  <li key={t} className="rv" style={{ '--rv': i + 1 }}>
+                    <span className="anywhere-ic"><Icon d={d} /></span>
+                    <span><b>{t}</b>{l}</span>
                   </li>
                 ))}
               </ul>
             </div>
-          </section>
-        ))}
+            <div className="rv" style={{ '--rv': 1 }}><Globe /></div>
+          </div>
+        </section>
 
-        <CloseBand title="See it with your own notes" line="Sample spaces show every feature working the moment you sign in." action="Open GroveStudio" />
+        <section className="band" aria-labelledby="groups-h">
+          <div className="wrap">
+            <div className="sec-head center rv">
+              <p className="eyebrow">Everything in it</p>
+              <h2 id="groups-h">Four things, done well</h2>
+            </div>
+            <ul className="fgroups">
+              {GROUPS.map((g, gi) => (
+                <li key={g.id} id={g.id} className="fgroup rv" style={{ '--rv': gi }}>
+                  <div className="fgroup-art"><IsoArt kind={g.id} /></div>
+                  <h3>{g.title}</h3>
+                  <p>{g.line}</p>
+                  <ul className="fchips">
+                    {g.items.map(([d, n]) => <li key={n}><Icon d={d} />{n}</li>)}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section className="band band-sunken" aria-labelledby="faq-h">
+          <div className="wrap split">
+            <div className="split-head rv">
+              <p className="eyebrow">Questions</p>
+              <h2 id="faq-h">Frequently asked</h2>
+              <p className="lead">Something else on your mind? Join the list below and reply to our first email.</p>
+            </div>
+            <div className="faq-list rv">
+              {FEATURES_FAQ.map(([q, a], i) => (
+                <details key={q} className="faq-item" open={i === 0}>
+                  <summary>{q}<span className="faq-plus" aria-hidden="true" /></summary>
+                  <p>{a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <WaitlistBand source="features" />
       </main>
       <SiteFooter />
     </div>

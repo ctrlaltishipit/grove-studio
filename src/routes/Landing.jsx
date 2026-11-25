@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../state/Store';
-import PublicNav, { CloseBand, SiteFooter, Arrow, usePageMeta } from '../components/PublicNav';
+import PublicNav, { SiteFooter, Arrow, usePageMeta } from '../components/PublicNav';
+import WaitlistBand from '../components/Waitlist';
 import HeroMock from '../components/HeroMock';
 import { StoryScroll, Bento, BentoArt, Marquee } from '../components/Tour';
 import { WORKFLOW } from '../lib/tourSteps';
@@ -180,7 +181,7 @@ export default function Landing() {
           </div>
         </section>
 
-        <CloseBand title="End your next meeting with a plan" line="Start a space, invite your team, and write the first note together. Tasks, owners and follow-ups come with it." />
+        <WaitlistBand source="home" />
       </main>
       <SiteFooter />
     </div>

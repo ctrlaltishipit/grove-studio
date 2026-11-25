@@ -22,6 +22,14 @@
       "destination": "/why/index.html"
     },
     {
+      "source": "/privacy",
+      "destination": "/privacy/index.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/terms/index.html"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/app.html"
     }

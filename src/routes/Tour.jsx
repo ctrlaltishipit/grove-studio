@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import PublicNav, { CloseBand, SiteFooter, Arrow, usePageMeta } from '../components/PublicNav';
+import PublicNav, { SiteFooter, Arrow, usePageMeta } from '../components/PublicNav';
+import WaitlistBand from '../components/Waitlist';
 import { StoryScroll, AppFrame } from '../components/Tour';
 import { TOUR, STUDIO_GALLERY } from '../lib/tourSteps';
 
@@ -54,7 +55,7 @@ export default function Tour() {
           </div>
         </section>
 
-        <CloseBand title="Try it with the sample space" line="Sign in and the sample space is already there, with notes, a board and Studio outputs to explore." action="Open GroveStudio" />
+        <WaitlistBand source="tour" />
       </main>
       <SiteFooter />
     </div>

@@ -1,5 +1,6 @@
 import React from 'react';
-import PublicNav, { CloseBand, SiteFooter, usePageMeta } from '../components/PublicNav';
+import PublicNav, { SiteFooter, usePageMeta } from '../components/PublicNav';
+import WaitlistBand from '../components/Waitlist';
 import { WHY_FAQ as FAQ } from '../lib/faq';
 import { VisualsFromNotes, DecisionFlow, LiveWriting, PrivacyRoles } from '../components/StoryVisuals';
 
@@ -108,7 +109,7 @@ export default function Why() {
           </div>
         </section>
 
-        <CloseBand title="Give your notes a second life" line="Start a space, write a note, and turn it into a plan your team can follow." />
+        <WaitlistBand source="why" />
       </main>
       <SiteFooter />
     </div>

@@ -102,6 +102,7 @@ export default function PublicNav() {
             <button className="icon-btn" onClick={toggleTheme} aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'} title={dark ? 'Light mode' : 'Dark mode'}>
               <SunMoon dark={dark} />
             </button>
+            <a className="s-btn s-btn-quiet s-btn-sm hide-sm" href="#early-access">Early access</a>
             <button className="s-btn s-btn-primary s-btn-sm hide-sm" onClick={go}>
               {user ? 'Open GroveStudio' : 'Sign in'}
             </button>
@@ -118,6 +119,7 @@ export default function PublicNav() {
             <NavLink key={to} to={to} end className={({ isActive }) => 'site-menu-link' + (isActive ? ' on' : '')}>{label}</NavLink>
           ))}
         </nav>
+        <a className="s-btn s-btn-quiet s-btn-lg s-btn-block" href="#early-access" onClick={() => setOpen(false)}>Get early access</a>
         <button className="s-btn s-btn-primary s-btn-lg s-btn-block" onClick={go}>
           {user ? 'Open GroveStudio' : 'Sign in'} <Arrow />
         </button>
@@ -160,7 +162,10 @@ export function SiteFooter() {
           <Link to="/signin">Sign in</Link>
         </nav>
       </div>
-      <div className="wrap footer-base">© {new Date().getFullYear()} GroveStudio</div>
+      <div className="wrap footer-base">
+        <span>© {new Date().getFullYear()} GroveStudio</span>
+        <span className="footer-legal"><Link to="/privacy">Privacy note</Link><Link to="/terms">Terms of use</Link></span>
+      </div>
     </footer>
   );
 }
