@@ -10,7 +10,7 @@ import { Wordmark } from './ui';
 const LINKS = [
   ['/', 'Home'],
   ['/tour', 'Product tour'],
-  ['/features', 'Features'],
+  ['/features', 'Inside the app'],
   ['/why', 'Why GroveStudio'],
 ];
 
@@ -157,7 +157,7 @@ export function SiteFooter() {
         </div>
         <nav className="footer-links" aria-label="Footer">
           <Link to="/tour">Product tour</Link>
-          <Link to="/features">Features</Link>
+          <Link to="/features">Inside the app</Link>
           <Link to="/why">Why GroveStudio</Link>
           <Link to="/signin">Sign in</Link>
         </nav>

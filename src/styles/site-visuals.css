@@ -115,7 +115,7 @@
 .dm-btn { height: 40px; border-radius: 11px; border: 0; background: var(--acc); color: var(--acc-ink); font: 700 14.5px var(--font-sans); cursor: pointer; }
 .dm-btn:hover { background: var(--acc-hover); }
 
-.dm-app { display: grid; grid-template-columns: 188px minmax(0, 1fr); }
+.dm-app { display: grid; grid-template-columns: 188px minmax(0, 1fr); background: var(--surface); }
 .dm-side { display: flex; flex-direction: column; gap: 4px; padding: 14px 10px; border-right: 1px solid var(--border); background: var(--bg); }
 .dm-side-brand { display: flex; align-items: center; gap: 7px; padding: 2px 8px 12px; font-size: 13.5px; }
 .dm-side-h { margin: 12px 8px 4px; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
@@ -453,3 +453,15 @@
 @media (prefers-reduced-motion: reduce) { .la-line, .la-tick { animation: none; stroke-dashoffset: 0; } }
 .iso-slab:has(> .iso-top.iso-b) .iso-char { fill: #F7F9F6; }
 @media (max-width: 960px) { .globe-grid > .rv:last-child { margin-top: 56px; } }
+
+/* storyline: time and person on each step */
+.story-when { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.story-when > b { font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--acc); }
+:root:not([data-theme="dark"]) .story-when > b { color: var(--emerald-teal); }
+.story-who { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 3px; border-radius: 99px; background: var(--surface); border: 1px solid var(--border); font-weight: 650; color: var(--ink); }
+.story-who i { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 99px; color: #fff; font-style: normal; font-size: 9.5px; font-weight: 800; }
+:root[data-theme="dark"] .story-who i { color: #0A0F0D; }
+.storyline-cast { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.storyline-cast li { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px 6px 6px; border-radius: 99px; background: var(--surface); border: 1px solid var(--border); font-size: 14px; }
+.storyline-cast i { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 99px; color: #fff; font-style: normal; font-size: 11px; font-weight: 800; }
+.storyline-cast small { color: var(--muted); }

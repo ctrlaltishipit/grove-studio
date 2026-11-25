@@ -73,3 +73,67 @@ export const STUDIO_GALLERY = [
   { src: T + 'deck.webp', alt: 'A slide deck made by the Studio, ready to play or download', label: 'Slide deck' },
   { src: T + 'infographic.webp', alt: 'An infographic made by the Studio from the notes', label: 'Infographic' },
 ];
+
+// "A week with GroveStudio": one team, one meeting, every screen real.
+// Captured from a staged shared space with two guest users (public/tour/story).
+const S = '/tour/story/';
+export const CAST = [
+  ['Priya R.', 'runs the weekly sync', 'var(--o5)'],
+  ['Arjun M.', 'owns the sales deck', 'var(--o3)'],
+  ['Sam', 'missed the meeting', 'var(--o1)'],
+];
+export const STORYLINE = [
+  {
+    mark: 'write', when: 'Monday, 10:00', who: 'Priya R.', whoColor: 'var(--o5)',
+    title: 'The meeting starts in one shared note',
+    body: 'Priya opens the Weekly sync note and Arjun joins from his laptop. They write in the same note together. Each sees the other’s cursor with a name on it, so nobody writes the same line twice and nothing waits for a clean copy later.',
+    points: ['Live cursors with names', 'Saved on every keystroke'],
+    media: { focus: [52, 42, 1.6], video: S + 'cowrite.mp4', poster: S + 'cowrite-poster.webp', alt: 'Two people typing in the same note, each with a named cursor' },
+  },
+  {
+    mark: 'assign', when: 'Monday, 10:18', who: 'Priya R.', whoColor: 'var(--o5)',
+    title: 'A decision becomes a task before the call ends',
+    body: 'They agree Arjun will send the updated deck by the end of the week. Priya turns that line into a task, picks Arjun as the owner and sets the date. The task keeps a link to the note where it was agreed.',
+    points: ['Owner and due date in one step', 'Linked back to the note'],
+    media: { focus: [57, 48, 1.45], src: S + 'assign.webp', alt: 'Creating a task and choosing Arjun as its owner' },
+  },
+  {
+    mark: 'bell', when: 'Monday, 10:19', who: 'Arjun M.', whoColor: 'var(--o3)',
+    title: 'Arjun hears about it straight away',
+    body: 'A notification lands in Arjun’s bell: Priya R. assigned you “Send the updated deck”. One click takes him to it. Mentions and comments arrive the same way, so nobody has to chase anyone on chat.',
+    media: { focus: [68, 40, 1.85], src: S + 'notification.webp', alt: 'The notifications bell open, showing that Priya assigned Arjun a task' },
+  },
+  {
+    mark: 'dashboard', when: 'Tuesday, 09:00', who: 'Arjun M.', whoColor: 'var(--o3)',
+    title: 'Everything on his plate, in one place',
+    body: 'Arjun starts his day on his dashboard. Every task assigned to him, across every project, sits in one list with its due date, so he knows what matters this week without opening five spaces.',
+    media: { focus: [62, 40, 1.4], src: S + 'dashboard.webp', alt: 'Arjun’s dashboard listing the tasks assigned to him with due dates' },
+  },
+  {
+    mark: 'board', when: 'Wednesday, 11:00', who: 'Priya R.', whoColor: 'var(--o5)',
+    title: 'The team reviews progress on the board',
+    body: 'In the mid-week check, Priya opens the board. Cards move from To do to In progress to In review. She can see who owns what, reassign a card in one click, and spot anything that has stalled.',
+    points: ['To do, In progress, In review, Done', 'Reassign in one click'],
+    media: { focus: [60, 36, 1.3], src: S + 'board.webp', alt: 'The Weekly sync Kanban board with cards owned by Priya and Arjun' },
+  },
+  {
+    mark: 'studio', when: 'Thursday, 15:00', who: 'Sam', whoColor: 'var(--o1)',
+    title: 'Sam missed the meeting. The Studio catches him up.',
+    body: 'Sam does not want to read every note. He opens the Studio and gets a summary of what was decided. If a picture works better for him, the same notes become a mind map, slides, an infographic or a short audio overview.',
+    points: ['Summary, mind map, slides, infographic, audio', 'Made only from your notes'],
+    media: { focus: [100, 46, 1.6], src: S + 'studio.webp', alt: 'The Studio showing an output made from the space’s notes' },
+  },
+  {
+    mark: 'studio', when: 'Thursday, 15:05', who: 'Sam', whoColor: 'var(--o1)',
+    title: 'Or he sees the whole meeting as one picture',
+    body: 'If text is not how Sam takes things in, the same notes become a mind map, a slide deck, an infographic or a short audio overview. He can also ask the Studio a question and see which note the answer came from.',
+    media: { src: '/tour/mindmap.webp', alt: 'A mind map made by the Studio from the space’s notes' },
+  },
+  {
+    mark: 'respond', when: 'Friday, 09:00', who: 'Arjun M.', whoColor: 'var(--o3)',
+    title: 'The check-in closes the loop',
+    body: 'Before the deadline, Arjun gets a check-in on his dashboard: still on track? He answers On track, I’m blocked or Mark done. If he is blocked, Priya is told straight away. The deck goes out on time, and the meeting actually turned into finished work.',
+    points: ['On track, Blocked or Done', 'Blocked alerts the assigner'],
+    media: { src: S + 'checkin.webp', alt: 'A task check-in with On track, Blocked and Done' },
+  },
+];

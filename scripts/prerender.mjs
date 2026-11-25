@@ -6,7 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { HOME_FAQ, WHY_FAQ, FEATURES_FAQ } from '../src/lib/faq.js';
-import { WORKFLOW, TOUR } from '../src/lib/tourSteps.js';
+import { TOUR, STORYLINE } from '../src/lib/tourSteps.js';
 import { PRIVACY, TERMS, legalHtml } from '../src/lib/legal.js';
 
 const SITE = 'https://www.grovestudio.io';
@@ -39,9 +39,10 @@ const ROUTES = [
     description: 'GroveStudio is a collaborative workspace for teams. Write meeting notes together, turn them into summaries, slides and audio, assign tasks on a Kanban board, and track everything from one dashboard.',
     ld: [ORG, APP, { '@type': 'WebSite', '@id': `${SITE}/#site`, name: 'GroveStudio', url: SITE, publisher: { '@id': `${SITE}/#org` } }, faqLd(HOME_FAQ)],
     body: `<h1>Meeting notes that turn into finished work.</h1>
-<p>Write notes together in real time. When text is not enough, turn them into a summary, slides or audio. Assign the tasks, track them on a board, and follow up from one dashboard.</p>
-<h2>From the meeting to done, in one place</h2>${stepsHtml(WORKFLOW)}
-<h2>Built for teams that collaborate every day</h2><p>Roles for every person, private spaces, version history and answers that cite their source note.</p>
+<p>Write notes together in real time. When text is not enough, turn them into a summary, a mind map, slides or audio. Assign the tasks before the call ends, review them on a board, and follow up from one dashboard with check-ins and notifications.</p>
+<h2>The meeting ends. The work never starts.</h2><p>Notes go nowhere, nobody owns the next step, deadlines pass quietly, and people who missed the meeting lose the context. GroveStudio keeps one live note, gives every decision an owner, checks in before deadlines, and lets everyone catch up in the format they like.</p>
+<h2>A week with GroveStudio: one meeting, followed all the way to done</h2><ol>${STORYLINE.map((s) => `<li><h3>${esc(s.when)}: ${esc(s.title)}</h3><p>${esc(s.body)}</p></li>`).join('')}</ol>
+<h2>Built for teams that collaborate every day, from anywhere</h2><p>Roles for every person, private spaces, version history and answers that cite their source note, for teams in different cities and time zones.</p>
 <h2>GroveStudio in short</h2>${faqHtml(HOME_FAQ)}`,
   },
   {

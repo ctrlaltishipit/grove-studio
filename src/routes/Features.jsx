@@ -6,6 +6,7 @@ import AppDemo from '../components/AppDemo';
 import WaitlistBand from '../components/Waitlist';
 import { IsoHero, IsoArt, Globe, InsideStack } from '../components/Visuals';
 import { TOUR } from '../lib/tourSteps';
+import { MarginNote } from '../components/Origin';
 import { FEATURES_FAQ } from '../lib/faq';
 
 // One line per step for the guided strip.
@@ -114,7 +115,7 @@ export default function Features() {
           <div className="hero-ground" aria-hidden="true" />
           <div className="wrap hero-grid">
             <div className="hero-copy">
-              <p className="eyebrow enter" style={{ '--d': 0 }}><span className="sprout-dot" />Features</p>
+              <p className="eyebrow enter" style={{ '--d': 0 }}><span className="sprout-dot" />Inside the app</p>
               <h1 className="enter" style={{ '--d': 1 }}>Notes, Studio and board. <span className="ink-accent shimmer">One place.</span></h1>
               <p className="hero-sub enter" style={{ '--d': 2 }}>Write it together. See it your way. Get it done.</p>
               <div className="hero-actions enter" style={{ '--d': 3 }}>
@@ -127,7 +128,8 @@ export default function Features() {
         </section>
 
         <section className="band band-sunken" id="preview" aria-labelledby="preview-h">
-          <div className="wrap">
+          <div className="wrap has-note">
+            <MarginNote id="preview" side="right" tilt={2} />
             <div className="sec-head center rv">
               <p className="eyebrow">Try it before you sign in</p>
               <h2 id="preview-h">A working preview of the app</h2>
@@ -177,9 +179,10 @@ export default function Features() {
         </section>
 
         <section className="band" aria-labelledby="groups-h">
-          <div className="wrap">
+          <div className="wrap has-note">
+            <MarginNote id="features" side="left" tilt={-2} />
             <div className="sec-head center rv">
-              <p className="eyebrow">Everything in it</p>
+              <p className="eyebrow">Check out the app</p>
               <h2 id="groups-h">Four things, done well</h2>
             </div>
             <ul className="fgroups">

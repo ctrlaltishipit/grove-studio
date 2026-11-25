@@ -22,7 +22,8 @@ export function AppFrame({ media, label = 'app.grovestudio.io', className = '' }
   );
 }
 
-export function Media({ src, video, poster, alt, eager = false }) {
+export function Media({ src, video, poster, alt, eager = false, focus }) {
+  const fx = focus ? { className: 'app-media focus', style: { '--fx': focus[0] + '%', '--fy': focus[1] + '%', '--fs': focus[2] } } : { className: 'app-media' };
   const ref = useRef(null);
   // Clips only play while on screen, and never under reduced motion.
   useEffect(() => {
@@ -38,11 +39,11 @@ export function Media({ src, video, poster, alt, eager = false }) {
   }, [video]);
   if (video) {
     return (
-      <video ref={ref} className="app-media" src={video} poster={poster} muted loop playsInline preload="metadata"
+      <video ref={ref} {...fx} src={video} poster={poster} muted loop playsInline preload="metadata"
         aria-label={alt} width="1280" height="800" />
     );
   }
-  return <img className="app-media" src={src} alt={alt} width="1440" height="900" loading={eager ? 'eager' : 'lazy'} decoding="async" />;
+  return <img {...fx} src={src} alt={alt} width="1440" height="900" loading={eager ? 'eager' : 'lazy'} decoding="async" />;
 }
 
 /* -------------------------------------------------------- step marks -- */
@@ -116,6 +117,22 @@ export function StepMark({ kind }) {
           <circle cx="44" cy="20" r="5" className="m-dot m-ping" />
         </svg>
       );
+    case 'chat':
+      return (
+        <svg {...common}>
+          <rect x="8" y="12" width="34" height="18" rx="8" className="m-soft m-b1" />
+          <rect x="22" y="34" width="34" height="18" rx="8" className="m-fill m-b2" />
+          <path d="M28 43h22" className="m-stroke m-type" />
+        </svg>
+      );
+    case 'bell':
+      return (
+        <svg {...common}>
+          <path d="M20 42V31a12 12 0 0 1 24 0v11l3 4H17l3-4Z" className="m-line m-ring" />
+          <path d="M28 50h8" className="m-stroke" />
+          <rect x="34" y="10" width="24" height="12" rx="6" className="m-fill m-pop" />
+        </svg>
+      );
     case 'respond':
       return (
         <svg {...common}>
@@ -157,7 +174,9 @@ export function StoryScroll({ steps, idPrefix = 'step' }) {
             className={'story-step' + (i === active ? ' on' : '')}>
             <div className="story-head">
               <span className="story-mark"><StepMark kind={s.mark} /></span>
-              <span className="story-n">Step {i + 1}</span>
+              {s.when
+                ? <span className="story-when"><b>{s.when}</b>{s.who && <span className="story-who"><i style={{ background: s.whoColor || 'var(--acc)' }}>{s.who.split(' ').map((w) => w[0]).join('').slice(0, 2)}</i>{s.who}</span>}</span>
+                : <span className="story-n">Step {i + 1}</span>}
             </div>
             <h3>{s.title}</h3>
             <p>{s.body}</p>

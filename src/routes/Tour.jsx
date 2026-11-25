@@ -51,7 +51,7 @@ export default function Tour() {
                 </li>
               ))}
             </ul>
-            <div className="center-link rv"><Link to="/features" className="text-link">See every feature <Arrow /></Link></div>
+            <div className="center-link rv"><Link to="/features" className="text-link">Look inside the app <Arrow /></Link></div>
           </div>
         </section>
 

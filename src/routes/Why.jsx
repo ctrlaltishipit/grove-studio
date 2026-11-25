@@ -1,6 +1,7 @@
 import React from 'react';
 import PublicNav, { SiteFooter, usePageMeta } from '../components/PublicNav';
 import WaitlistBand from '../components/Waitlist';
+import { OriginStory } from '../components/Origin';
 import { WHY_FAQ as FAQ } from '../lib/faq';
 import { VisualsFromNotes, DecisionFlow, LiveWriting, PrivacyRoles } from '../components/StoryVisuals';
 
@@ -62,6 +63,8 @@ export default function Why() {
             </p>
           </div>
         </section>
+
+        <OriginStory id="origin" />
 
         {STORY.map((s, i) => (
           <section key={s.title} className={'band' + (i % 2 ? ' band-sunken' : '')} aria-labelledby={`story-${i}`}>
