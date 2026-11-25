@@ -1,7 +1,7 @@
 import React from 'react';
 import PublicNav, { SiteFooter, usePageMeta } from '../components/PublicNav';
 import WaitlistBand from '../components/Waitlist';
-import { OriginStory } from '../components/Origin';
+import { OriginStory, HackathonStory } from '../components/Origin';
 import { WHY_FAQ as FAQ } from '../lib/faq';
 import { VisualsFromNotes, DecisionFlow, LiveWriting, PrivacyRoles } from '../components/StoryVisuals';
 
@@ -64,7 +64,19 @@ export default function Why() {
           </div>
         </section>
 
+        <HackathonStory />
+
         <OriginStory id="origin" />
+
+        <section className="band band-sunken showcase-head" aria-labelledby="showcase-h">
+          <div className="wrap">
+            <div className="sec-head center rv" style={{ marginBottom: 0 }}>
+              <p className="eyebrow">What we built</p>
+              <h2 id="showcase-h">Four things GroveStudio does for your team</h2>
+              <p className="lead">Write together, turn decisions into tasks, understand notes your way, and keep private work private.</p>
+            </div>
+          </div>
+        </section>
 
         {STORY.map((s, i) => (
           <section key={s.title} className={'band' + (i % 2 ? ' band-sunken' : '')} aria-labelledby={`story-${i}`}>

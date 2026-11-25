@@ -3,16 +3,17 @@ import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../state/Store';
 import { cycleTheme, currentTheme } from '../lib/theme';
 import { Wordmark } from './ui';
+import { NEXT } from '../lib/origin';
 
 // The public site's shared chrome: header, footer, closing band, and the
 // small hooks the pages use. Styles live in styles/site.css under .site.
 
 const LINKS = [
   ['/', 'Home'],
-  ['/tour', 'Product tour'],
+  ['/why', 'Why GroveStudio'],
   ['/features', 'Features'],
   ['/inside', 'Inside the app'],
-  ['/why', 'Why GroveStudio'],
+  ['/tour', 'Product tour'],
 ];
 
 // Reveal-on-scroll for any .rv element on the page. Adds .in once, then
@@ -199,8 +200,27 @@ function FooterArt() {
   );
 }
 
+// "Keep reading": the next page in the site's story, at the end of each page.
+function NextPage() {
+  const { pathname } = useLocation();
+  const n = NEXT[pathname.replace(/\/$/, '') || '/'];
+  if (!n) return null;
+  return (
+    <nav className="wrap next-page" aria-label="Keep reading">
+      <Link to={n.to} className="next-card">
+        <span className="next-k">{n.eyebrow}</span>
+        <span className="next-t">{n.title}</span>
+        <span className="next-l">{n.line}</span>
+        <span className="next-go" aria-hidden="true"><Arrow /></span>
+      </Link>
+    </nav>
+  );
+}
+
 export function SiteFooter() {
   return (
+    <>
+    <NextPage />
     <footer className="site-footer sf">
       <FooterArt />
       <div className="wrap sf-grid">
@@ -210,7 +230,7 @@ export function SiteFooter() {
           <p className="sf-tag"><em>Write it together. See it your way. Get it done.</em></p>
         </div>
         <nav className="sf-cols" aria-label="Footer">
-          <div><span className="sf-h">Product</span><Link to="/tour">Product tour</Link><Link to="/features">Features</Link><Link to="/inside">Inside the app</Link></div>
+          <div><span className="sf-h">Product</span><Link to="/features">Features</Link><Link to="/inside">Inside the app</Link><Link to="/tour">Product tour</Link></div>
           <div><span className="sf-h">Company</span><Link to="/why">Why GroveStudio</Link><a href="#early-access">Early access</a><Link to="/signin">Sign in</Link></div>
           <div><span className="sf-h">Legal</span><Link to="/privacy">Privacy note</Link><Link to="/terms">Terms of use</Link></div>
         </nav>
@@ -220,6 +240,7 @@ export function SiteFooter() {
         <span className="sf-made">Made for teams that meet every day</span>
       </div>
     </footer>
+    </>
   );
 }
 

@@ -9,6 +9,7 @@ import { HOME_FAQ, WHY_FAQ, FEATURES_FAQ } from '../src/lib/faq.js';
 import { TOUR, STORYLINE } from '../src/lib/tourSteps.js';
 import { PRIVACY, TERMS, legalHtml } from '../src/lib/legal.js';
 import { FILM } from '../src/lib/film.js';
+import { HACKATHON } from '../src/lib/origin.js';
 
 const SITE = 'https://www.grovestudio.io';
 const DIST = path.resolve('dist');
@@ -79,7 +80,7 @@ const ROUTES = [
     path: '/why', title: 'Why GroveStudio? Meeting notes that turn into tasks, slides and audio',
     description: 'GroveStudio is a note-taking app for teams. Write notes together, turn decisions into tasks with owners and dates, and turn notes into slides, mind maps, infographics and audio.',
     ld: [ORG, crumbs('Why GroveStudio', '/why'), faqLd(WHY_FAQ)],
-    body: `<h1>Most meeting notes are never read again. Yours will be.</h1><p>Every team writes notes. Few teams use them. GroveStudio keeps notes, tasks and follow-up together.</p><h2>Questions people ask</h2>${faqHtml(WHY_FAQ)}`,
+    body: `<h1>Most meeting notes are never read again. Yours will be.</h1><h2>${esc(HACKATHON.title)}</h2>${HACKATHON.paras.map((t) => `<p>${esc(t)}</p>`).join('')}<p>${esc(HACKATHON.quote)}</p><ul>${HACKATHON.shipped.map((t) => `<li>${esc(t)}</li>`).join('')}</ul><p>Every team writes notes. Few teams use them. GroveStudio keeps notes, tasks and follow-up together.</p><h2>Questions people ask</h2>${faqHtml(WHY_FAQ)}`,
   },
   {
     path: '/privacy', title: 'Privacy note | GroveStudio',
